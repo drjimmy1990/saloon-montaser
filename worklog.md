@@ -59,3 +59,30 @@ Stage Summary:
 - Toggle switches now have clear ON/OFF visual indicators
 - Active/inactive states use color-coded badges with dots
 - Dark mode support maintained
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Fix chat scroll issue, redesign ON/OFF toggle, compact chat layout, add block button to clients
+
+Work Log:
+- Fixed chat section layout: changed from space-y-6 flow layout to flex column with h-full
+- Updated page.tsx to use overflow-hidden + flex-col for chat section (prevents page scroll)
+- Made chat header compact single line (username, channel, msg count inline)
+- Made blocked banner more compact (smaller text, padding)
+- Made message input area more compact (p-2 instead of p-4)
+- Made sender labels more compact (9px text, 2.5px icons, 0.5px spacing)
+- Made message spacing tighter (space-y-3 instead of space-y-4)
+- Narrowed conversation list sidebar (w-64 instead of w-72)
+- Redesigned ON/OFF toggle in Channels section - custom toggle button with ON/OFF text labels
+- Added blocked field to Client interface and initial data
+- Added Block/Unblock button per user in Clients section with confirmation dialog
+- Added blocked badge next to client name in table
+- Verified lint passes (only 1 pre-existing warning)
+
+Stage Summary:
+- Chat section now fills viewport height without causing page scroll
+- Chat header is compact single-line with block button
+- ON/OFF toggle is now a prominent custom toggle with ON/OFF text
+- Every client in the Clients table has a Block/Unblock button with confirmation
+- Catalog categories already had full CRUD (add/edit/delete via Manage Categories dialog)

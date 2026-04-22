@@ -14,6 +14,8 @@ import {
   MapPin,
   StickyNote,
   User,
+  ShieldBan,
+  Ban,
 } from "lucide-react";
 import {
   Card,
@@ -64,6 +66,7 @@ interface Client {
   addressAr: string;
   notes: string;
   notesAr: string;
+  blocked: boolean;
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
@@ -79,6 +82,7 @@ const initialClients: Client[] = [
     addressAr: "23 طريق الملك فهد، الرياض",
     notes: "VIP customer, prefers WhatsApp communication",
     notesAr: "عميل مميز، يفضل التواصل عبر واتساب",
+    blocked: false,
   },
   {
     id: 2,
@@ -90,6 +94,7 @@ const initialClients: Client[] = [
     addressAr: "15 أبراج النخيل، جدة",
     notes: "Regular client, monthly cleaning service",
     notesAr: "عميلة منتظمة، خدمة تنظيف شهرية",
+    blocked: false,
   },
   {
     id: 3,
@@ -101,6 +106,7 @@ const initialClients: Client[] = [
     addressAr: "8 حي العليا، الرياض",
     notes: "Corporate account - Al Nasser Holdings",
     notesAr: "حساب مؤسسي - مجموعة الناصر القابضة",
+    blocked: false,
   },
   {
     id: 4,
@@ -112,6 +118,7 @@ const initialClients: Client[] = [
     addressAr: "42 مارينا ووك، جدة",
     notes: "Prefers afternoon appointments",
     notesAr: "تفضل المواعيد بعد الظهر",
+    blocked: false,
   },
   {
     id: 5,
@@ -123,6 +130,7 @@ const initialClients: Client[] = [
     addressAr: "7 طريق الكورنيش، الدمام",
     notes: "Has annual maintenance contract",
     notesAr: "لديه عقد صيانة سنوي",
+    blocked: false,
   },
   {
     id: 6,
@@ -134,6 +142,7 @@ const initialClients: Client[] = [
     addressAr: "19 النخيل، الرياض",
     notes: "New client, referred by Sara Mansour",
     notesAr: "عميلة جديدة، أحالتها سارة منصور",
+    blocked: false,
   },
 ];
 
@@ -149,6 +158,8 @@ export function ClientsSection() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
+  const [blockingClient, setBlockingClient] = useState<Client | null>(null);
 
   // Form state
   const [formName, setFormName] = useState("");
@@ -241,6 +252,7 @@ export function ClientsSection() {
         addressAr: formAddressAr || "",
         notes: formNotes,
         notesAr: formNotesAr,
+        blocked: false,
       };
       setClients((prev) => [...prev, newClient]);
     }
@@ -253,6 +265,22 @@ export function ClientsSection() {
     setClients((prev) => prev.filter((c) => c.id !== selectedClient.id));
     setDeleteDialogOpen(false);
     setSelectedClient(null);
+  };
+
+  const handleToggleBlock = () => {
+    if (!blockingClient) return;
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === blockingClient.id ? { ...c, blocked: !c.blocked } : c
+      )
+    );
+    setBlockDialogOpen(false);
+    setBlockingClient(null);
+  };
+
+  const openBlockDialog = (client: Client) => {
+    setBlockingClient(client);
+    setBlockDialogOpen(true);
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -387,7 +415,14 @@ export function ClientsSection() {
                           <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
                             <User className="w-3.5 h-3.5 text-primary" />
                           </div>
-                          {rtl ? client.nameAr : client.name}
+                          <div className="flex items-center gap-1.5">
+                            {rtl ? client.nameAr : client.name}
+                            {client.blocked && (
+                              <Badge variant="destructive" className="text-[8px] px-1 h-3.5 leading-none shrink-0">
+                                {rtl ? "محظور" : "Blocked"}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell
@@ -424,6 +459,28 @@ export function ClientsSection() {
                           >
                             <Pencil className="h-4 w-4 text-muted-foreground" />
                             <span className="sr-only">{t(locale, "edit")}</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              "h-8 w-8",
+                              client.blocked
+                                ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                                : "text-muted-foreground hover:text-destructive"
+                            )}
+                            onClick={() => openBlockDialog(client)}
+                          >
+                            {client.blocked ? (
+                              <ShieldBan className="h-4 w-4" />
+                            ) : (
+                              <Ban className="h-4 w-4" />
+                            )}
+                            <span className="sr-only">
+                              {client.blocked
+                                ? (rtl ? "إلغاء الحظر" : "Unblock")
+                                : (rtl ? "حظر" : "Block")}
+                            </span>
                           </Button>
                           <Button
                             variant="ghost"
@@ -609,6 +666,73 @@ export function ClientsSection() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {t(locale, "delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Block/Unblock Confirmation Dialog */}
+      <AlertDialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
+        <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
+          <AlertDialogHeader className={cn(rtl && "text-right items-end")}>
+            <AlertDialogTitle className={cn(rtl && "font-arabic text-right")}>
+              {blockingClient?.blocked
+                ? (rtl ? "إلغاء حظر العميل" : "Unblock Client")
+                : (rtl ? "حظر العميل" : "Block Client")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className={cn(rtl && "font-arabic text-right")}>
+              {blockingClient?.blocked
+                ? (rtl
+                    ? "هل أنت متأكد من إلغاء حظر هذا العميل؟ سيتمكن من التواصل مرة أخرى."
+                    : "Are you sure you want to unblock this client? They will be able to communicate again.")
+                : (rtl
+                    ? "هل أنت متأكد من حظر هذا العميل؟ لن يتمكن من التواصل مع البوت."
+                    : "Are you sure you want to block this client? They won't be able to communicate with the bot.")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {blockingClient && (
+            <div
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-lg bg-muted/50",
+                rtl && "flex-row-reverse"
+              )}
+            >
+              <div className={cn(
+                "p-2 rounded-lg shrink-0",
+                blockingClient.blocked
+                  ? "bg-emerald-50 dark:bg-emerald-900/20"
+                  : "bg-destructive/10"
+              )}>
+                {blockingClient.blocked ? (
+                  <ShieldBan className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                ) : (
+                  <Ban className="w-4 h-4 text-destructive" />
+                )}
+              </div>
+              <div className={cn("min-w-0", rtl && "text-right")}>
+                <p className={cn("font-medium", rtl && "font-arabic")}>
+                  {rtl ? blockingClient.nameAr : blockingClient.name}
+                </p>
+                <p className="text-sm text-muted-foreground tabular-nums">
+                  {blockingClient.phone}
+                </p>
+              </div>
+            </div>
+          )}
+          <AlertDialogFooter className={cn(rtl && "flex-row-reverse sm:flex-row-reverse")}>
+            <AlertDialogCancel className={rtl ? "font-arabic" : ""}>
+              {t(locale, "cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleToggleBlock}
+              className={cn(
+                !blockingClient?.blocked && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+                blockingClient?.blocked && "bg-emerald-600 hover:bg-emerald-700 text-white"
+              )}
+            >
+              {blockingClient?.blocked
+                ? (rtl ? "إلغاء الحظر" : "Unblock")
+                : (rtl ? "حظر" : "Block")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

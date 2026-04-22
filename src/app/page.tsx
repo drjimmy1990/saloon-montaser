@@ -44,10 +44,16 @@ export default function Home() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
           <MobileHeader />
-          <main className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar">
+          <main className={cn(
+            "flex-1 p-4 md:p-6 custom-scrollbar",
+            activeSection === "chat" ? "overflow-hidden flex flex-col" : "overflow-auto"
+          )}>
             <div
               key={activeSection}
-              className="animate-in fade-in-0 duration-200"
+              className={cn(
+                "animate-in fade-in-0 duration-200",
+                activeSection === "chat" && "flex-1 min-h-0"
+              )}
             >
               <SectionComponent />
             </div>

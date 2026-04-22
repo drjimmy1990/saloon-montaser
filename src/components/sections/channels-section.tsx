@@ -1304,25 +1304,37 @@ function ChannelCard({
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <div className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
-              channel.active
-                ? "bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400"
-                : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
-            )}>
-              <div className={cn(
-                "w-1.5 h-1.5 rounded-full",
-                channel.active ? "bg-sage-500" : "bg-red-500"
-              )} />
-              <span className={cn(rtl && "font-arabic")}>
-                {channel.active ? t(locale, "active") : t(locale, "inactive")}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={channel.active}
+              onClick={() => onToggleActive(channel.id)}
+              className={cn(
+                "relative inline-flex h-7 w-[3.5rem] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                channel.active
+                  ? "bg-sage-500 dark:bg-sage-600"
+                  : "bg-gray-300 dark:bg-gray-600"
+              )}
+            >
+              <span
+                className={cn(
+                  "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+                  channel.active
+                    ? (rtl ? "-translate-x-6" : "translate-x-6")
+                    : "translate-x-0"
+                )}
+              />
+              <span className={cn(
+                "absolute text-[8px] font-bold uppercase tracking-wide text-white",
+                channel.active
+                  ? (rtl ? "right-2" : "left-2")
+                  : (rtl ? "left-2" : "right-2")
+              )}>
+                {channel.active
+                  ? (rtl ? "يعمل" : "ON")
+                  : (rtl ? "مقفل" : "OFF")}
               </span>
-            </div>
-            <Switch
-              id={`switch-${channel.id}`}
-              checked={channel.active}
-              onCheckedChange={() => onToggleActive(channel.id)}
-            />
+            </button>
           </div>
         </div>
       </CardHeader>
