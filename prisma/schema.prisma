@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Channel {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // whatsapp, facebook, instagram
+  isActive    Boolean  @default(false)
+  credentials String   @default("[]") // JSON array of {key, value}
+  variables   String   @default("{}") // JSON object
+  imageSets   String   @default("[]") // JSON array of {name, images: [url]}
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  nameAr      String   @default("")
+  description String   @default("")
+  descriptionAr String @default("")
+  price       Float    @default(0)
+  image       String   @default("")
+  isAvailable Boolean  @default(true)
+  category    String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  clientName    String
+  clientPhone   String   @default("")
+  clientAddress String   @default("")
+  serviceSummary String
+  channelType   String   // whatsapp, facebook, instagram
+  bookingDate   DateTime @default(now())
+  status        String   @default("pending") // pending, confirmed, cancelled, completed
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  address   String   @default("")
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlacklistEntry {
+  id             String   @id @default(cuid())
+  identifier     String
+  identifierType String   @default("phone") // phone, id
+  reason         String   @default("")
+  createdAt      DateTime @default(now())
+}
+
+model Conversation {
+  id          String   @id @default(cuid())
+  channelType String
+  clientName  String
+  clientPhone String   @default("")
+  messages    String   @default("[]") // JSON array of {sender, text, time}
+  status      String   @default("active") // active, closed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DashboardStat {
+  id              String   @id @default(cuid())
+  activeChannels  Int      @default(0)
+  totalMessages   Int      @default(0)
+  totalBookings   Int      @default(0)
+  conversionRate  Float    @default(0)
+  updatedAt       DateTime @updatedAt
+}

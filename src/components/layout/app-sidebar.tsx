@@ -1,0 +1,253 @@
+"use client";
+
+import React from "react";
+import { useAppStore } from "@/lib/store";
+import { t, isRTL } from "@/lib/i18n";
+import {
+  LayoutDashboard,
+  Radio,
+  ShoppingBag,
+  CalendarCheck,
+  Users,
+  MessageSquare,
+  ShieldBan,
+  ChevronRight,
+  Bot,
+  Globe,
+  Moon,
+  Sun,
+  Menu,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
+import type { ActiveSection } from "@/lib/store";
+
+const navItems: { id: ActiveSection; icon: React.ElementType; labelKey: string }[] = [
+  { id: "dashboard", icon: LayoutDashboard, labelKey: "nav.dashboard" },
+  { id: "channels", icon: Radio, labelKey: "nav.channels" },
+  { id: "catalog", icon: ShoppingBag, labelKey: "nav.catalog" },
+  { id: "bookings", icon: CalendarCheck, labelKey: "nav.bookings" },
+  { id: "clients", icon: Users, labelKey: "nav.clients" },
+  { id: "chat", icon: MessageSquare, labelKey: "nav.chat" },
+  { id: "blacklist", icon: ShieldBan, labelKey: "nav.blacklist" },
+];
+
+export function AppSidebar() {
+  const { locale, setLocale, activeSection, setActiveSection } = useAppStore();
+  const rtl = isRTL(locale);
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <aside
+      className={cn(
+        "flex flex-col h-full bg-card",
+        rtl ? "border-l" : "border-r",
+        "border-border w-64 shrink-0"
+      )}
+    >
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-4 py-5">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground">
+          <Bot className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h1 className={cn("text-sm font-bold truncate", rtl && "font-arabic text-right")}>
+            {t(locale, "appTitle")}
+          </h1>
+          <p className={cn("text-[10px] text-muted-foreground truncate", rtl && "text-right")}>
+            SaaS Dashboard
+          </p>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Navigation */}
+      <ScrollArea className="flex-1 py-3">
+        <nav className="px-3 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={cn(
+                  "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                  rtl && "flex-row-reverse text-right",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                )}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className={cn("truncate", rtl && "font-arabic")}>
+                  {t(locale, item.labelKey)}
+                </span>
+                {isActive && (
+                  <ChevronRight
+                    className={cn(
+                      "w-4 h-4 shrink-0 ml-auto opacity-70",
+                      rtl && "rotate-180 mr-auto ml-0"
+                    )}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </ScrollArea>
+
+      <Separator />
+
+      {/* Footer controls */}
+      <div className="p-3 space-y-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn("w-full justify-start gap-2", rtl && "flex-row-reverse justify-end")}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
+          {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          <span className={cn("text-xs", rtl && "font-arabic")}>
+            {theme === "dark" ? "Light Mode" : "الوضع الداكن"}
+          </span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn("w-full justify-start gap-2", rtl && "flex-row-reverse justify-end")}
+          onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
+        >
+          <Globe className="w-4 h-4" />
+          <span className="text-xs">
+            {locale === "ar" ? "English" : "العربية"}
+          </span>
+        </Button>
+      </div>
+    </aside>
+  );
+}
+
+export function MobileSidebar() {
+  const { locale, setLocale, activeSection, setActiveSection, sidebarOpen, setSidebarOpen } = useAppStore();
+  const rtl = isRTL(locale);
+  const { theme, setTheme } = useTheme();
+
+  if (!sidebarOpen) return null;
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 bg-black/50 z-40"
+        onClick={() => setSidebarOpen(false)}
+      />
+      <aside
+        className={cn(
+          "fixed top-0 z-50 h-full w-64 bg-card shadow-xl transition-transform duration-300",
+          rtl ? "right-0" : "left-0"
+        )}
+      >
+        <div className="flex items-center gap-3 px-4 py-5">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground">
+            <Bot className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className={cn("text-sm font-bold truncate", rtl && "font-arabic text-right")}>
+              {t(locale, "appTitle")}
+            </h1>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 w-8 h-8"
+            onClick={() => setSidebarOpen(false)}
+          >
+            ✕
+          </Button>
+        </div>
+
+        <Separator />
+
+        <ScrollArea className="py-3" style={{ height: "calc(100% - 180px)" }}>
+          <nav className="px-3 space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeSection === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveSection(item.id);
+                    setSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                    rtl && "flex-row-reverse text-right",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                  )}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className={cn("truncate", rtl && "font-arabic")}>
+                    {t(locale, item.labelKey)}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+        </ScrollArea>
+
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border space-y-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn("w-full justify-start gap-2", rtl && "flex-row-reverse justify-end")}
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            <span className="text-xs">{theme === "dark" ? "Light Mode" : "الوضع الداكن"}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn("w-full justify-start gap-2", rtl && "flex-row-reverse justify-end")}
+            onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
+          >
+            <Globe className="w-4 h-4" />
+            <span className="text-xs">{locale === "ar" ? "English" : "العربية"}</span>
+          </Button>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+export function MobileHeader() {
+  const { locale, setSidebarOpen, activeSection } = useAppStore();
+  const rtl = isRTL(locale);
+  const activeItem = navItems.find((item) => item.id === activeSection);
+  const Icon = activeItem?.icon || LayoutDashboard;
+
+  return (
+    <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card md:hidden">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="shrink-0"
+        onClick={() => setSidebarOpen(true)}
+      >
+        <Menu className="w-5 h-5" />
+      </Button>
+      <Icon className="w-5 h-5 text-primary" />
+      <h1 className={cn("text-sm font-semibold", rtl && "font-arabic")}>
+        {activeItem ? t(locale, activeItem.labelKey) : ""}
+      </h1>
+    </header>
+  );
+}
