@@ -14,6 +14,8 @@ import {
   Phone,
   Instagram,
   Facebook,
+  ShieldBan,
+  Ban,
 } from "lucide-react";
 import {
   Card,
@@ -23,6 +25,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +59,7 @@ interface Conversation {
   lastMessageAr: string;
   lastTime: string;
   messages: ChatMessage[];
+  blocked: boolean;
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
@@ -59,6 +73,7 @@ const mockConversations: Conversation[] = [
     lastMessage: "I need to reschedule my cleaning appointment",
     lastMessageAr: "أحتاج لتغيير موعد التنظيف",
     lastTime: "10:32 AM",
+    blocked: false,
     messages: [
       {
         id: 1,
@@ -105,6 +120,7 @@ const mockConversations: Conversation[] = [
     lastMessage: "What's included in the AC maintenance package?",
     lastMessageAr: "وش يشمل باقة صيانة المكيفات؟",
     lastTime: "9:45 AM",
+    blocked: false,
     messages: [
       {
         id: 1,
@@ -137,6 +153,7 @@ const mockConversations: Conversation[] = [
     lastMessage: "Can I get a quote for plumbing repair?",
     lastMessageAr: "أقدر أحصل عرض سعر لإصلاح سباكة؟",
     lastTime: "Yesterday",
+    blocked: false,
     messages: [
       {
         id: 1,
@@ -266,6 +283,7 @@ export function ChatSection() {
   const [activeConvId, setActiveConvId] = useState<number | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [mobileShowChat, setMobileShowChat] = useState(false);
+  const [blockDialogConvId, setBlockDialogConvId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeConversation = conversations.find((c) => c.id === activeConvId) || null;
@@ -323,6 +341,7 @@ export function ChatSection() {
       lastMessageAr: "محادثة جديدة",
       lastTime: "Now",
       messages: [],
+      blocked: false,
     };
     setConversations((prev) => [newConv, ...prev]);
     setActiveConvId(newConv.id);
@@ -331,6 +350,15 @@ export function ChatSection() {
 
   const handleBackToList = () => {
     setMobileShowChat(false);
+  };
+
+  const handleToggleBlock = (convId: number) => {
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === convId ? { ...conv, blocked: !conv.blocked } : conv
+      )
+    );
+    setBlockDialogConvId(null);
   };
 
   // ─── Render Helpers ───────────────────────────────────────────────────────
@@ -372,23 +400,73 @@ export function ChatSection() {
     }
   };
 
+  // ─── Block/Unblock AlertDialog ────────────────────────────────────────────
+
+  const blockTargetConv = conversations.find((c) => c.id === blockDialogConvId) || null;
+
+  const blockAlertDialog = (
+    <AlertDialog
+      open={blockDialogConvId !== null}
+      onOpenChange={(open) => {
+        if (!open) setBlockDialogConvId(null);
+      }}
+    >
+      <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
+        <AlertDialogHeader>
+          <AlertDialogTitle className={cn(rtl && "font-arabic")}>
+            {blockTargetConv?.blocked
+              ? t(locale, "chat.unblockUser")
+              : t(locale, "chat.blockUser")}
+          </AlertDialogTitle>
+          <AlertDialogDescription className={cn(rtl && "font-arabic")}>
+            {blockTargetConv?.blocked
+              ? rtl
+                ? "هل أنت متأكد من إلغاء حظر هذا المستخدم؟"
+                : "Are you sure you want to unblock this user? They will be able to chat again."
+              : t(locale, "chat.blockConfirm")}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className={cn(rtl && "font-arabic")}>
+            {t(locale, "cancel")}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              if (blockDialogConvId !== null) {
+                handleToggleBlock(blockDialogConvId);
+              }
+            }}
+            className={cn(
+              !blockTargetConv?.blocked && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+              rtl && "font-arabic"
+            )}
+          >
+            {blockTargetConv?.blocked
+              ? t(locale, "chat.unblockUser")
+              : t(locale, "chat.blockUser")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   // ─── Conversation List Panel ──────────────────────────────────────────────
 
   const conversationListPanel = (
     <div className="flex flex-col h-full" dir={rtl ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className={cn("font-semibold text-sm", rtl && "font-arabic")}>
+      <div className="px-3 py-3 border-b">
+        <div className="flex items-center justify-between">
+          <h3 className={cn("font-semibold text-xs", rtl && "font-arabic")}>
             {t(locale, "chat.conversations")}
           </h3>
           <Button
             variant="outline"
             size="sm"
             onClick={handleNewConversation}
-            className={cn("gap-1.5 text-xs h-8", rtl && "font-arabic")}
+            className={cn("gap-1 text-[10px] h-7 px-2", rtl && "font-arabic")}
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-3 h-3" />
             {t(locale, "chat.newConversation")}
           </Button>
         </div>
@@ -396,7 +474,7 @@ export function ChatSection() {
 
       {/* Conversation List */}
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
+        <div className="p-1.5 space-y-0.5">
           {conversations.length === 0 ? (
             <div className={cn("p-6 text-center text-muted-foreground", rtl && "font-arabic")}>
               <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -408,36 +486,73 @@ export function ChatSection() {
               const ChannelIcon = chConfig.icon;
               const isActive = conv.id === activeConvId;
               return (
-                <button
+                <div
                   key={conv.id}
-                  onClick={() => handleSelectConversation(conv.id)}
                   className={cn(
-                    "w-full text-start p-3 rounded-lg transition-colors duration-150 hover:bg-muted/80",
-                    isActive && "bg-muted",
-                    rtl && "text-right"
+                    "group relative w-full rounded-md transition-colors duration-150",
+                    isActive && "bg-muted"
                   )}
                 >
-                  <div className="flex items-start gap-3">
-                    {/* Avatar */}
-                    <div className={cn("p-2 rounded-full shrink-0", chConfig.bgColor)}>
-                      <ChannelIcon className={cn("w-4 h-4", chConfig.color)} />
-                    </div>
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className={cn("text-sm font-medium truncate", rtl && "font-arabic")}>
-                          {rtl ? conv.clientNameAr : conv.clientName}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums" dir="ltr">
-                          {conv.lastTime}
-                        </span>
+                  <button
+                    onClick={() => handleSelectConversation(conv.id)}
+                    className={cn(
+                      "w-full text-start p-2 rounded-md hover:bg-muted/80 transition-colors",
+                      rtl && "text-right"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      {/* Avatar — compact */}
+                      <div className={cn("p-1.5 rounded-full shrink-0", chConfig.bgColor)}>
+                        <ChannelIcon className={cn("w-3.5 h-3.5", chConfig.color)} />
                       </div>
-                      <p className={cn("text-xs text-muted-foreground truncate mt-0.5", rtl && "font-arabic")}>
-                        {rtl ? conv.lastMessageAr : conv.lastMessage}
-                      </p>
+                      {/* Content — compact */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span className={cn("text-xs font-medium truncate", rtl && "font-arabic")}>
+                              {rtl ? conv.clientNameAr : conv.clientName}
+                            </span>
+                            {conv.blocked && (
+                              <Badge
+                                variant="destructive"
+                                className="text-[8px] px-1 py-0 h-3.5 leading-none shrink-0"
+                              >
+                                {rtl ? "محظور" : "Blocked"}
+                              </Badge>
+                            )}
+                          </div>
+                          <span className="text-[9px] text-muted-foreground shrink-0 tabular-nums" dir="ltr">
+                            {conv.lastTime}
+                          </span>
+                        </div>
+                        <p className={cn("text-[10px] text-muted-foreground truncate mt-0.5", rtl && "font-arabic")}>
+                          {rtl ? conv.lastMessageAr : conv.lastMessage}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                  {/* Block icon button — visible on hover or always subtle */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setBlockDialogConvId(conv.id);
+                    }}
+                    className={cn(
+                      "absolute top-1.5 shrink-0 p-0.5 rounded-sm transition-opacity",
+                      rtl ? "left-1.5" : "right-1.5",
+                      conv.blocked
+                        ? "opacity-70 text-destructive hover:opacity-100 hover:text-destructive"
+                        : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground hover:text-destructive"
+                    )}
+                    title={conv.blocked ? t(locale, "chat.unblockUser") : t(locale, "chat.blockUser")}
+                  >
+                    {conv.blocked ? (
+                      <Ban className="w-3 h-3" />
+                    ) : (
+                      <ShieldBan className="w-3 h-3" />
+                    )}
+                  </button>
+                </div>
               );
             })
           )}
@@ -451,37 +566,93 @@ export function ChatSection() {
   const chatAreaPanel = activeConversation ? (
     <div className="flex flex-col h-full" dir={rtl ? "rtl" : "ltr"}>
       {/* Chat Header */}
-      <div className="p-4 border-b shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="px-4 py-2.5 border-b shrink-0">
+        <div className="flex items-center gap-2">
           {/* Back button (mobile only) */}
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden h-8 w-8 shrink-0"
+            className="md:hidden h-7 w-7 shrink-0"
             onClick={handleBackToList}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={rtl ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
             </svg>
           </Button>
-          <div className={cn("p-2 rounded-full", channelConfig[activeConversation.channel].bgColor)}>
+          <div className={cn("p-1.5 rounded-full", channelConfig[activeConversation.channel].bgColor)}>
             {renderChannelIcon(activeConversation.channel)}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className={cn("font-semibold text-sm", rtl && "font-arabic")}>
-              {rtl ? activeConversation.clientNameAr : activeConversation.clientName}
-            </h3>
-            <p className={cn("text-xs text-muted-foreground", rtl && "font-arabic")}>
+            <div className="flex items-center gap-1.5">
+              <h3 className={cn("font-semibold text-sm truncate", rtl && "font-arabic")}>
+                {rtl ? activeConversation.clientNameAr : activeConversation.clientName}
+              </h3>
+              {activeConversation.blocked && (
+                <Badge variant="destructive" className="text-[9px] px-1.5 h-4 shrink-0">
+                  {rtl ? "محظور" : "Blocked"}
+                </Badge>
+              )}
+            </div>
+            <p className={cn("text-[10px] text-muted-foreground", rtl && "font-arabic")}>
               {rtl
                 ? channelConfig[activeConversation.channel].labelAr
                 : channelConfig[activeConversation.channel].label}
             </p>
           </div>
+          {/* Block/Unblock button in header */}
+          <Button
+            variant={activeConversation.blocked ? "outline" : "ghost"}
+            size="sm"
+            onClick={() => setBlockDialogConvId(activeConversation.id)}
+            className={cn(
+              "gap-1 shrink-0 text-xs h-7",
+              activeConversation.blocked
+                ? "text-destructive border-destructive/30 hover:bg-destructive/10"
+                : "text-muted-foreground hover:text-destructive",
+              rtl && "font-arabic"
+            )}
+          >
+            {activeConversation.blocked ? (
+              <Ban className="w-3.5 h-3.5" />
+            ) : (
+              <ShieldBan className="w-3.5 h-3.5" />
+            )}
+            {activeConversation.blocked
+              ? t(locale, "chat.unblockUser")
+              : t(locale, "chat.blockUser")}
+          </Button>
           <Badge variant="outline" className={cn("shrink-0 text-[10px]", rtl && "font-arabic")}>
             {activeConversation.messages.length} {rtl ? "رسالة" : "msgs"}
           </Badge>
         </div>
       </div>
+
+      {/* Blocked Banner */}
+      {activeConversation.blocked && (
+        <div className="px-4 py-2 bg-destructive/10 border-b shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Ban className="w-4 h-4 text-destructive shrink-0" />
+              <p className={cn("text-xs text-destructive font-medium", rtl && "font-arabic")}>
+                {rtl
+                  ? "هذا المستخدم محظور. ألغِ الحظر للاستمرار في المحادثة."
+                  : "This user is blocked. Unblock to continue chatting."}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setBlockDialogConvId(activeConversation.id)}
+              className={cn(
+                "gap-1 shrink-0 text-xs h-6 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive",
+                rtl && "font-arabic"
+              )}
+            >
+              {t(locale, "chat.unblockUser")}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-4">
@@ -526,14 +697,19 @@ export function ChatSection() {
         </div>
       </ScrollArea>
 
-      {/* Message Input */}
+      {/* Message Input — disabled when blocked */}
       <div className="p-4 border-t shrink-0">
         <div className="flex items-center gap-2">
           <Input
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
-            placeholder={t(locale, "chat.typeMessage")}
+            placeholder={
+              activeConversation.blocked
+                ? t(locale, "chat.userBlocked")
+                : t(locale, "chat.typeHere")
+            }
             className={cn("flex-1", rtl && "font-arabic")}
+            disabled={activeConversation.blocked}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -546,7 +722,7 @@ export function ChatSection() {
             onClick={handleSendMessage}
             size="icon"
             className="shrink-0"
-            disabled={!messageInput.trim()}
+            disabled={!messageInput.trim() || activeConversation.blocked}
           >
             <Send className={cn("w-4 h-4", rtl && "rotate-180")} />
             <span className="sr-only">{t(locale, "chat.send")}</span>
@@ -585,7 +761,7 @@ export function ChatSection() {
             {/* Conversation List — Hidden on mobile when chat is shown */}
             <div
               className={cn(
-                "w-full md:w-80 lg:w-96 shrink-0 h-full",
+                "w-full md:w-72 shrink-0 h-full",
                 rtl ? "border-l border-r-0" : "border-r",
                 mobileShowChat && "hidden md:block"
               )}
@@ -605,6 +781,9 @@ export function ChatSection() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Block/Unblock AlertDialog */}
+      {blockAlertDialog}
     </div>
   );
 }

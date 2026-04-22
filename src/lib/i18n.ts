@@ -112,6 +112,14 @@ export const translations = {
       deleteProduct: "Delete Product",
       deleteConfirm: "Are you sure you want to delete this product?",
       allCategories: "All Categories",
+      manageCategories: "Manage Categories",
+      addCategory: "Add Category",
+      editCategory: "Edit Category",
+      deleteCategory: "Delete Category",
+      categoryName: "Category Name",
+      categoryNameAr: "Category Name (Arabic)",
+      deleteCategoryConfirm: "Are you sure you want to delete this category? Products in this category will become uncategorized.",
+      uncategorized: "Uncategorized",
     },
 
     // Bookings
@@ -175,6 +183,11 @@ export const translations = {
       newConversation: "New Conversation",
       endConversation: "End Conversation",
       noConversations: "No active conversations",
+      blockUser: "Block User",
+      unblockUser: "Unblock User",
+      blockConfirm: "Are you sure you want to block this user? They will be added to the blacklist.",
+      userBlocked: "User Blocked",
+      typeHere: "Type here...",
     },
   },
   ar: {
@@ -288,6 +301,14 @@ export const translations = {
       deleteProduct: "حذف المنتج",
       deleteConfirm: "هل أنت متأكد من حذف هذا المنتج؟",
       allCategories: "جميع الفئات",
+      manageCategories: "إدارة الفئات",
+      addCategory: "إضافة فئة",
+      editCategory: "تعديل الفئة",
+      deleteCategory: "حذف الفئة",
+      categoryName: "اسم الفئة",
+      categoryNameAr: "اسم الفئة (عربي)",
+      deleteCategoryConfirm: "هل أنت متأكد من حذف هذه الفئة؟ المنتجات في هذه الفئة ستصبح غير مصنفة.",
+      uncategorized: "غير مصنف",
     },
 
     // Bookings
@@ -351,6 +372,11 @@ export const translations = {
       newConversation: "محادثة جديدة",
       endConversation: "إنهاء المحادثة",
       noConversations: "لا توجد محادثات نشطة",
+      blockUser: "حظر المستخدم",
+      unblockUser: "إلغاء الحظر",
+      blockConfirm: "هل أنت متأكد من حظر هذا المستخدم؟ سيتم إضافته إلى القائمة السوداء.",
+      userBlocked: "تم حظر المستخدم",
+      typeHere: "اكتب هنا...",
     },
   },
 } as const;

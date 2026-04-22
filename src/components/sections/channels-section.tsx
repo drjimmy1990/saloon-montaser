@@ -1285,17 +1285,16 @@ function ChannelCard({
                 <Badge
                   variant="outline"
                   className={cn(
-                    "text-[11px] font-medium border gap-1",
+                    "text-[11px] font-medium border gap-1.5",
                     channel.active
                       ? "bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400 border-sage-200 dark:border-sage-800/40"
-                      : "bg-muted text-muted-foreground border-border"
+                      : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/40"
                   )}
                 >
-                  {channel.active ? (
-                    <Wifi className="w-3 h-3" />
-                  ) : (
-                    <WifiOff className="w-3 h-3" />
-                  )}
+                  <div className={cn(
+                    "w-1.5 h-1.5 rounded-full",
+                    channel.active ? "bg-sage-500" : "bg-red-500"
+                  )} />
                   {channel.active
                     ? t(locale, "active")
                     : t(locale, "inactive")}
@@ -1304,21 +1303,21 @@ function ChannelCard({
             </div>
           </div>
 
-          <div
-            className={cn(
-              "flex items-center gap-3 shrink-0",
-              rtl && "flex-row-reverse"
-            )}
-          >
-            <Label
-              htmlFor={`switch-${channel.id}`}
-              className={cn(
-                "text-xs text-muted-foreground cursor-pointer hidden sm:inline",
-                rtl && "font-arabic"
-              )}
-            >
-              {t(locale, "channels.toggleActive")}
-            </Label>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium",
+              channel.active
+                ? "bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400"
+                : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
+            )}>
+              <div className={cn(
+                "w-1.5 h-1.5 rounded-full",
+                channel.active ? "bg-sage-500" : "bg-red-500"
+              )} />
+              <span className={cn(rtl && "font-arabic")}>
+                {channel.active ? t(locale, "active") : t(locale, "inactive")}
+              </span>
+            </div>
             <Switch
               id={`switch-${channel.id}`}
               checked={channel.active}

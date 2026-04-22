@@ -14,6 +14,7 @@ import {
   XCircle,
   DollarSign,
   Tag,
+  Settings2,
 } from "lucide-react";
 import {
   Card,
@@ -53,7 +54,12 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Category = "skincare" | "hair" | "nails" | "makeup";
+interface CategoryItem {
+  id: string;
+  labelEn: string;
+  labelAr: string;
+  color: string; // "sage" | "sand" | "terracotta" | "pink" | "amber" | "emerald"
+}
 
 interface Product {
   id: number;
@@ -63,7 +69,7 @@ interface Product {
   descriptionAr: string;
   price: number;
   imageUrl: string;
-  category: Category;
+  category: string; // category id or "" for uncategorized
   available: boolean;
 }
 
@@ -74,87 +80,114 @@ interface ProductFormData {
   descriptionAr: string;
   price: string;
   imageUrl: string;
-  category: Category;
+  category: string;
   available: boolean;
 }
 
-// ─── Category Config ──────────────────────────────────────────────────────────
+interface CategoryFormData {
+  labelEn: string;
+  labelAr: string;
+  color: string;
+}
 
-const categoryConfig: Record<
-  Category,
-  { label: string; labelAr: string; bgColor: string; textColor: string; borderColor: string }
-> = {
-  skincare: {
-    label: "Skincare",
-    labelAr: "العناية بالبشرة",
-    bgColor: "bg-sage-50 dark:bg-sage-900/20",
-    textColor: "text-sage-700 dark:text-sage-400",
-    borderColor: "border-sage-200 dark:border-sage-800/40",
-  },
-  hair: {
-    label: "Hair",
-    labelAr: "الشعر",
-    bgColor: "bg-amber-50 dark:bg-amber-900/20",
-    textColor: "text-amber-700 dark:text-amber-400",
-    borderColor: "border-amber-200 dark:border-amber-800/40",
-  },
-  nails: {
-    label: "Nails",
-    labelAr: "الأظافر",
-    bgColor: "bg-pink-50 dark:bg-pink-900/20",
-    textColor: "text-pink-700 dark:text-pink-400",
-    borderColor: "border-pink-200 dark:border-pink-800/40",
-  },
-  makeup: {
-    label: "Makeup",
-    labelAr: "المكياج",
-    bgColor: "bg-terracotta-50 dark:bg-terracotta-900/20",
-    textColor: "text-terracotta-700 dark:text-terracotta-400",
-    borderColor: "border-terracotta-200 dark:border-terracotta-800/40",
-  },
-};
+// ─── Color Map ────────────────────────────────────────────────────────────────
 
-const categoryPillColors: Record<
-  Category,
-  { activeBg: string; activeText: string; activeBorder: string }
-> = {
-  skincare: {
+const colorMap: Record<string, {
+  bg: string;
+  iconBg: string;
+  text: string;
+  border: string;
+  activeBg: string;
+  activeText: string;
+  activeBorder: string;
+}> = {
+  sage: {
+    bg: "bg-sage-50 dark:bg-sage-900/20",
+    iconBg: "bg-sage-100 dark:bg-sage-900/30",
+    text: "text-sage-700 dark:text-sage-400",
+    border: "border-sage-200 dark:border-sage-800/40",
     activeBg: "bg-sage-100 dark:bg-sage-800/40",
     activeText: "text-sage-700 dark:text-sage-300",
     activeBorder: "border-sage-300 dark:border-sage-700",
   },
-  hair: {
-    activeBg: "bg-amber-100 dark:bg-amber-800/40",
-    activeText: "text-amber-700 dark:text-amber-300",
-    activeBorder: "border-amber-300 dark:border-amber-700",
+  sand: {
+    bg: "bg-sand-50 dark:bg-sand-900/20",
+    iconBg: "bg-sand-100 dark:bg-sand-900/30",
+    text: "text-sand-700 dark:text-sand-400",
+    border: "border-sand-200 dark:border-sand-800/40",
+    activeBg: "bg-sand-100 dark:bg-sand-800/40",
+    activeText: "text-sand-700 dark:text-sand-300",
+    activeBorder: "border-sand-300 dark:border-sand-700",
   },
-  nails: {
-    activeBg: "bg-pink-100 dark:bg-pink-800/40",
-    activeText: "text-pink-700 dark:text-pink-300",
-    activeBorder: "border-pink-300 dark:border-pink-700",
-  },
-  makeup: {
+  terracotta: {
+    bg: "bg-terracotta-50 dark:bg-terracotta-900/20",
+    iconBg: "bg-terracotta-100 dark:bg-terracotta-900/30",
+    text: "text-terracotta-700 dark:text-terracotta-400",
+    border: "border-terracotta-200 dark:border-terracotta-800/40",
     activeBg: "bg-terracotta-100 dark:bg-terracotta-800/40",
     activeText: "text-terracotta-700 dark:text-terracotta-300",
     activeBorder: "border-terracotta-300 dark:border-terracotta-700",
   },
+  pink: {
+    bg: "bg-pink-50 dark:bg-pink-900/20",
+    iconBg: "bg-pink-100 dark:bg-pink-900/30",
+    text: "text-pink-700 dark:text-pink-400",
+    border: "border-pink-200 dark:border-pink-800/40",
+    activeBg: "bg-pink-100 dark:bg-pink-800/40",
+    activeText: "text-pink-700 dark:text-pink-300",
+    activeBorder: "border-pink-300 dark:border-pink-700",
+  },
+  amber: {
+    bg: "bg-amber-50 dark:bg-amber-900/20",
+    iconBg: "bg-amber-100 dark:bg-amber-900/30",
+    text: "text-amber-700 dark:text-amber-400",
+    border: "border-amber-200 dark:border-amber-800/40",
+    activeBg: "bg-amber-100 dark:bg-amber-800/40",
+    activeText: "text-amber-700 dark:text-amber-300",
+    activeBorder: "border-amber-300 dark:border-amber-700",
+  },
+  emerald: {
+    bg: "bg-emerald-50 dark:bg-emerald-900/20",
+    iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
+    text: "text-emerald-700 dark:text-emerald-400",
+    border: "border-emerald-200 dark:border-emerald-800/40",
+    activeBg: "bg-emerald-100 dark:bg-emerald-800/40",
+    activeText: "text-emerald-700 dark:text-emerald-300",
+    activeBorder: "border-emerald-300 dark:border-emerald-700",
+  },
 };
 
-const productImageColors: Record<Category, string> = {
-  skincare: "bg-sage-100 dark:bg-sage-900/30",
-  hair: "bg-amber-100 dark:bg-amber-900/30",
-  nails: "bg-pink-100 dark:bg-pink-900/30",
-  makeup: "bg-terracotta-100 dark:bg-terracotta-900/30",
+const availableColors = ["sage", "sand", "terracotta", "pink", "amber", "emerald"] as const;
+
+// Color circle preview swatches for the color picker
+const colorCircleMap: Record<string, string> = {
+  sage: "bg-sage-400",
+  sand: "bg-sand-400",
+  terracotta: "bg-terracotta-400",
+  pink: "bg-pink-400",
+  amber: "bg-amber-400",
+  emerald: "bg-emerald-400",
 };
 
-const productIconColors: Record<Category, string> = {
-  skincare: "text-sage-500 dark:text-sage-400",
-  hair: "text-amber-500 dark:text-amber-400",
-  nails: "text-pink-500 dark:text-pink-400",
-  makeup: "text-terracotta-500 dark:text-terracotta-400",
+// Fallback neutral styling for uncategorized or unknown categories
+const neutralStyles = {
+  bg: "bg-gray-50 dark:bg-gray-900/20",
+  iconBg: "bg-gray-100 dark:bg-gray-900/30",
+  text: "text-gray-700 dark:text-gray-400",
+  border: "border-gray-200 dark:border-gray-800/40",
+  activeBg: "bg-gray-100 dark:bg-gray-800/40",
+  activeText: "text-gray-700 dark:text-gray-300",
+  activeBorder: "border-gray-300 dark:border-gray-700",
 };
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── Initial Data ─────────────────────────────────────────────────────────────
+
+const initialCategories: CategoryItem[] = [
+  { id: "skincare", labelEn: "Skincare", labelAr: "العناية بالبشرة", color: "sage" },
+  { id: "hair", labelEn: "Hair", labelAr: "الشعر", color: "amber" },
+  { id: "nails", labelEn: "Nails", labelAr: "الأظافر", color: "pink" },
+  { id: "makeup", labelEn: "Makeup", labelAr: "المكياج", color: "terracotta" },
+];
 
 const initialProducts: Product[] = [
   {
@@ -225,18 +258,40 @@ const initialProducts: Product[] = [
   },
 ];
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const emptyFormData: ProductFormData = {
+const emptyProductFormData: ProductFormData = {
   nameEn: "",
   nameAr: "",
   descriptionEn: "",
   descriptionAr: "",
   price: "",
   imageUrl: "",
-  category: "skincare",
+  category: "",
   available: true,
 };
+
+const emptyCategoryFormData: CategoryFormData = {
+  labelEn: "",
+  labelAr: "",
+  color: "sage",
+};
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getCategoryStyles(cat: CategoryItem | undefined, key: "bg" | "iconBg" | "text" | "border" | "activeBg" | "activeText" | "activeBorder"): string {
+  if (!cat) return neutralStyles[key];
+  const map = colorMap[cat.color];
+  if (!map) return neutralStyles[key];
+  return map[key];
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -244,16 +299,40 @@ export function CatalogSection() {
   const { locale } = useAppStore();
   const rtl = isRTL(locale);
 
+  const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
 
-  // Dialog states
+  // Product dialog states
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState<ProductFormData>(emptyFormData);
+  const [formData, setFormData] = useState<ProductFormData>(emptyProductFormData);
+
+  // Category management dialog states
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [categoryFormData, setCategoryFormData] = useState<CategoryFormData>(emptyCategoryFormData);
+  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
+  const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
+  const [deletingCategory, setDeletingCategory] = useState<CategoryItem | null>(null);
+
+  // ─── Derived Data ─────────────────────────────────────────────────────────
+
+  const hasUncategorized = useMemo(() => {
+    return products.some((p) => !p.category || !categories.find((c) => c.id === p.category));
+  }, [products, categories]);
+
+  const getCategoryLabel = (catId: string): string => {
+    const cat = categories.find((c) => c.id === catId);
+    if (!cat) return t(locale, "catalog.uncategorized");
+    return rtl ? cat.labelAr : cat.labelEn;
+  };
+
+  const getCategoryById = (catId: string): CategoryItem | undefined => {
+    return categories.find((c) => c.id === catId);
+  };
 
   // ─── Filtering ────────────────────────────────────────────────────────────
 
@@ -262,17 +341,26 @@ export function CatalogSection() {
       const nameMatch = rtl
         ? p.nameAr.toLowerCase().includes(searchQuery.toLowerCase())
         : p.nameEn.toLowerCase().includes(searchQuery.toLowerCase());
-      const categoryMatch =
-        activeCategory === "all" || p.category === activeCategory;
+
+      let categoryMatch = true;
+      if (activeCategory === "uncategorized") {
+        categoryMatch = !p.category || !categories.find((c) => c.id === p.category);
+      } else if (activeCategory !== "all") {
+        categoryMatch = p.category === activeCategory;
+      }
+
       return nameMatch && categoryMatch;
     });
-  }, [products, searchQuery, activeCategory, rtl]);
+  }, [products, searchQuery, activeCategory, rtl, categories]);
 
-  // ─── Handlers ─────────────────────────────────────────────────────────────
+  // ─── Product Handlers ─────────────────────────────────────────────────────
 
   const handleOpenAdd = () => {
     setEditingProduct(null);
-    setFormData(emptyFormData);
+    setFormData({
+      ...emptyProductFormData,
+      category: categories.length > 0 ? categories[0].id : "",
+    });
     setProductDialogOpen(true);
   };
 
@@ -334,7 +422,7 @@ export function CatalogSection() {
 
     setProductDialogOpen(false);
     setEditingProduct(null);
-    setFormData(emptyFormData);
+    setFormData(emptyProductFormData);
   };
 
   const handleConfirmDelete = () => {
@@ -344,15 +432,89 @@ export function CatalogSection() {
     setDeletingProduct(null);
   };
 
+  // ─── Category Handlers ────────────────────────────────────────────────────
+
+  const handleOpenAddCategory = () => {
+    setEditingCategory(null);
+    setCategoryFormData(emptyCategoryFormData);
+  };
+
+  const handleOpenEditCategory = (cat: CategoryItem) => {
+    setEditingCategory(cat);
+    setCategoryFormData({
+      labelEn: cat.labelEn,
+      labelAr: cat.labelAr,
+      color: cat.color,
+    });
+  };
+
+  const handleSaveCategory = () => {
+    if (editingCategory) {
+      // Update existing category
+      setCategories((prev) =>
+        prev.map((c) =>
+          c.id === editingCategory.id
+            ? { ...c, labelEn: categoryFormData.labelEn, labelAr: categoryFormData.labelAr, color: categoryFormData.color }
+            : c
+        )
+      );
+      setEditingCategory(null);
+    } else {
+      // Add new category
+      const slug = slugify(categoryFormData.labelEn) || `cat-${Date.now()}`;
+      const newCategory: CategoryItem = {
+        id: slug,
+        labelEn: categoryFormData.labelEn,
+        labelAr: categoryFormData.labelAr,
+        color: categoryFormData.color,
+      };
+      setCategories((prev) => [...prev, newCategory]);
+    }
+    setCategoryFormData(emptyCategoryFormData);
+  };
+
+  const handleOpenDeleteCategory = (cat: CategoryItem) => {
+    setDeletingCategory(cat);
+    setDeleteCategoryDialogOpen(true);
+  };
+
+  const handleConfirmDeleteCategory = () => {
+    if (!deletingCategory) return;
+    // Move products in this category to uncategorized (category: "")
+    setProducts((prev) =>
+      prev.map((p) => (p.category === deletingCategory.id ? { ...p, category: "" } : p))
+    );
+    // Remove the category
+    setCategories((prev) => prev.filter((c) => c.id !== deletingCategory.id));
+    // If we were viewing this category, switch to all
+    if (activeCategory === deletingCategory.id) {
+      setActiveCategory("all");
+    }
+    setDeleteCategoryDialogOpen(false);
+    setDeletingCategory(null);
+  };
+
   // ─── Category Pills ──────────────────────────────────────────────────────
 
-  const categoryPills = [
-    { key: "all", labelEn: "All Categories", labelAr: "جميع الفئات" },
-    { key: "skincare", labelEn: "Skincare", labelAr: "العناية بالبشرة" },
-    { key: "hair", labelEn: "Hair", labelAr: "الشعر" },
-    { key: "nails", labelEn: "Nails", labelAr: "الأظافر" },
-    { key: "makeup", labelEn: "Makeup", labelAr: "المكياج" },
-  ];
+  const categoryPills = useMemo(() => {
+    const pills: { key: string; label: string; cat?: CategoryItem }[] = [
+      { key: "all", label: t(locale, "catalog.allCategories") },
+    ];
+    categories.forEach((cat) => {
+      pills.push({
+        key: cat.id,
+        label: rtl ? cat.labelAr : cat.labelEn,
+        cat,
+      });
+    });
+    if (hasUncategorized) {
+      pills.push({
+        key: "uncategorized",
+        label: t(locale, "catalog.uncategorized"),
+      });
+    }
+    return pills;
+  }, [categories, rtl, locale, hasUncategorized]);
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -369,7 +531,7 @@ export function CatalogSection() {
           </p>
         </div>
 
-        {/* Search + Add Button */}
+        {/* Search + Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 min-w-0">
             <Search
@@ -389,6 +551,17 @@ export function CatalogSection() {
             />
           </div>
           <Button
+            variant="outline"
+            onClick={() => {
+              setCategoryDialogOpen(true);
+              handleOpenAddCategory();
+            }}
+            className={cn("gap-2 shrink-0", rtl && "font-arabic")}
+          >
+            <Settings2 className="w-4 h-4" />
+            {t(locale, "catalog.manageCategories")}
+          </Button>
+          <Button
             onClick={handleOpenAdd}
             className={cn("gap-2 shrink-0", rtl && "font-arabic")}
           >
@@ -398,15 +571,13 @@ export function CatalogSection() {
         </div>
       </div>
 
-      {/* Category Filter Pills — simple flex-wrap, no flex-row-reverse */}
+      {/* Category Filter Pills */}
       <div className="flex flex-wrap gap-2">
         {categoryPills.map((pill) => {
           const isActive = activeCategory === pill.key;
-          const catKey = pill.key as Category;
-          const colors =
-            pill.key !== "all" && isActive
-              ? categoryPillColors[catKey]
-              : null;
+          const colors = pill.cat && isActive
+            ? colorMap[pill.cat.color]
+            : null;
 
           return (
             <button
@@ -417,7 +588,9 @@ export function CatalogSection() {
                 isActive
                   ? colors
                     ? cn(colors.activeBg, colors.activeText, colors.activeBorder)
-                    : "bg-primary/10 text-primary border-primary/30"
+                    : pill.key === "uncategorized"
+                      ? cn(neutralStyles.activeBg, neutralStyles.activeText, neutralStyles.activeBorder)
+                      : "bg-primary/10 text-primary border-primary/30"
                   : "bg-background text-muted-foreground border-border hover:bg-muted hover:text-foreground",
                 rtl && "font-arabic"
               )}
@@ -425,7 +598,7 @@ export function CatalogSection() {
               {pill.key !== "all" && (
                 <Tag className="w-3.5 h-3.5" />
               )}
-              {rtl ? pill.labelAr : pill.labelEn}
+              {pill.label}
             </button>
           );
         })}
@@ -440,7 +613,9 @@ export function CatalogSection() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((product) => {
-            const catConfig = categoryConfig[product.category];
+            const cat = getCategoryById(product.category);
+            const isUncategorized = !product.category || !cat;
+
             return (
               <Card
                 key={product.id}
@@ -453,7 +628,9 @@ export function CatalogSection() {
                 <div
                   className={cn(
                     "relative h-40 flex items-center justify-center",
-                    productImageColors[product.category]
+                    isUncategorized
+                      ? neutralStyles.iconBg
+                      : getCategoryStyles(cat, "iconBg")
                   )}
                 >
                   {product.imageUrl ? (
@@ -464,11 +641,16 @@ export function CatalogSection() {
                     />
                   ) : (
                     <Package
-                      className={cn("w-12 h-12", productIconColors[product.category])}
+                      className={cn(
+                        "w-12 h-12",
+                        isUncategorized
+                          ? "text-gray-500 dark:text-gray-400"
+                          : getCategoryStyles(cat, "text")
+                      )}
                     />
                   )}
 
-                  {/* Availability Badge — top-left in LTR, top-right in RTL */}
+                  {/* Availability Badge */}
                   <div className={cn("absolute top-2", rtl ? "right-2" : "left-2")}>
                     {product.available ? (
                       <Badge
@@ -499,18 +681,22 @@ export function CatalogSection() {
                     )}
                   </div>
 
-                  {/* Category Badge — top-right in LTR, top-left in RTL */}
+                  {/* Category Badge */}
                   <div className={cn("absolute top-2", rtl ? "left-2" : "right-2")}>
                     <Badge
                       variant="outline"
                       className={cn(
                         "gap-1 text-[10px] font-medium border",
-                        catConfig.bgColor,
-                        catConfig.textColor,
-                        catConfig.borderColor
+                        isUncategorized
+                          ? cn(neutralStyles.bg, neutralStyles.text, neutralStyles.border)
+                          : cn(
+                              getCategoryStyles(cat, "bg"),
+                              getCategoryStyles(cat, "text"),
+                              getCategoryStyles(cat, "border")
+                            )
                       )}
                     >
-                      {rtl ? catConfig.labelAr : catConfig.label}
+                      {isUncategorized ? t(locale, "catalog.uncategorized") : getCategoryLabel(product.category)}
                     </Badge>
                   </div>
                 </div>
@@ -537,7 +723,7 @@ export function CatalogSection() {
                     {rtl ? product.descriptionAr : product.descriptionEn}
                   </p>
 
-                  {/* Actions — no flex-row-reverse, direction handled by parent dir */}
+                  {/* Actions */}
                   <div className="flex items-center gap-2 pt-1">
                     <Button
                       variant="outline"
@@ -698,7 +884,7 @@ export function CatalogSection() {
                   onValueChange={(val) =>
                     setFormData((prev) => ({
                       ...prev,
-                      category: val as Category,
+                      category: val,
                     }))
                   }
                 >
@@ -706,13 +892,13 @@ export function CatalogSection() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {(Object.keys(categoryConfig) as Category[]).map((cat) => (
+                    {categories.map((cat) => (
                       <SelectItem
-                        key={cat}
-                        value={cat}
+                        key={cat.id}
+                        value={cat.id}
                         className={rtl ? "font-arabic" : ""}
                       >
-                        {rtl ? categoryConfig[cat].labelAr : categoryConfig[cat].label}
+                        {rtl ? cat.labelAr : cat.labelEn}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -786,7 +972,7 @@ export function CatalogSection() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation AlertDialog */}
+      {/* Delete Product Confirmation AlertDialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
           <AlertDialogHeader className={rtl && "items-end"}>
@@ -808,6 +994,233 @@ export function CatalogSection() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              {t(locale, "delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Manage Categories Dialog */}
+      <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
+        <DialogContent
+          className={cn("sm:max-w-lg", rtl && "font-arabic")}
+          dir={rtl ? "rtl" : "ltr"}
+        >
+          <DialogHeader className={rtl && "items-end"}>
+            <DialogTitle className={rtl && "text-right"}>
+              {t(locale, "catalog.manageCategories")}
+            </DialogTitle>
+            <DialogDescription className={rtl && "text-right"}>
+              {rtl
+                ? "أضف أو عدّل أو احذف فئات المنتجات"
+                : "Add, edit, or remove product categories"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1 custom-scrollbar">
+            {/* Add/Edit Category Form */}
+            <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
+              <h4 className={cn("text-sm font-semibold", rtl && "font-arabic")}>
+                {editingCategory ? t(locale, "catalog.editCategory") : t(locale, "catalog.addCategory")}
+              </h4>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* English Name */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs" htmlFor="catNameEn">
+                    {t(locale, "catalog.categoryName")}
+                  </Label>
+                  <Input
+                    id="catNameEn"
+                    value={categoryFormData.labelEn}
+                    onChange={(e) =>
+                      setCategoryFormData((prev) => ({ ...prev, labelEn: e.target.value }))
+                    }
+                    placeholder={rtl ? "اسم الفئة بالإنجليزية" : "Category name in English"}
+                    dir="ltr"
+                    className="text-sm"
+                  />
+                </div>
+
+                {/* Arabic Name */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-arabic text-right block" htmlFor="catNameAr">
+                    {t(locale, "catalog.categoryNameAr")}
+                  </Label>
+                  <Input
+                    id="catNameAr"
+                    value={categoryFormData.labelAr}
+                    onChange={(e) =>
+                      setCategoryFormData((prev) => ({ ...prev, labelAr: e.target.value }))
+                    }
+                    placeholder="اسم الفئة بالعربية"
+                    dir="rtl"
+                    className="text-sm text-right font-arabic"
+                  />
+                </div>
+              </div>
+
+              {/* Color Picker */}
+              <div className="space-y-1.5">
+                <Label className="text-xs">
+                  {rtl ? "اللون" : "Color"}
+                </Label>
+                <div className="flex items-center gap-2">
+                  {availableColors.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() =>
+                        setCategoryFormData((prev) => ({ ...prev, color }))
+                      }
+                      className={cn(
+                        "w-7 h-7 rounded-full transition-all duration-200 border-2",
+                        colorCircleMap[color],
+                        categoryFormData.color === color
+                          ? "border-foreground scale-110 ring-2 ring-foreground/20"
+                          : "border-transparent hover:scale-105"
+                      )}
+                      title={color}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Save / Cancel buttons for the form */}
+              <div className="flex items-center gap-2 pt-1">
+                <Button
+                  size="sm"
+                  onClick={handleSaveCategory}
+                  disabled={!categoryFormData.labelEn.trim() && !categoryFormData.labelAr.trim()}
+                  className={cn("gap-1.5 text-xs", rtl && "font-arabic")}
+                >
+                  <Plus className="w-3 h-3" />
+                  {editingCategory ? t(locale, "save") : t(locale, "add")}
+                </Button>
+                {editingCategory && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditingCategory(null);
+                      setCategoryFormData(emptyCategoryFormData);
+                    }}
+                    className={cn("text-xs", rtl && "font-arabic")}
+                  >
+                    {t(locale, "cancel")}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Category List */}
+            <div className="space-y-2">
+              {categories.length === 0 ? (
+                <p className={cn("text-sm text-muted-foreground text-center py-4", rtl && "font-arabic")}>
+                  {rtl ? "لا توجد فئات بعد" : "No categories yet"}
+                </p>
+              ) : (
+                categories.map((cat) => {
+                  const catColor = colorMap[cat.color];
+                  return (
+                    <div
+                      key={cat.id}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg border p-3 transition-colors",
+                        catColor
+                          ? cn(catColor.bg, catColor.border)
+                          : cn(neutralStyles.bg, neutralStyles.border)
+                      )}
+                    >
+                      {/* Color dot */}
+                      <div
+                        className={cn(
+                          "w-3 h-3 rounded-full shrink-0",
+                          colorCircleMap[cat.color] || "bg-gray-400"
+                        )}
+                      />
+
+                      {/* Category label */}
+                      <div className="flex-1 min-w-0">
+                        <span className={cn("text-sm font-medium", catColor ? catColor.text : neutralStyles.text)}>
+                          {rtl ? cat.labelAr : cat.labelEn}
+                        </span>
+                        <span className={cn("text-xs text-muted-foreground ms-2", rtl && "font-arabic")}>
+                          {rtl ? cat.labelEn : cat.labelAr}
+                        </span>
+                      </div>
+
+                      {/* Product count */}
+                      <span className={cn("text-xs text-muted-foreground tabular-nums shrink-0", rtl && "font-arabic")}>
+                        {products.filter((p) => p.category === cat.id).length}
+                      </span>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenEditCategory(cat)}
+                          className="gap-1 text-xs h-7 w-7 p-0"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleOpenDeleteCategory(cat)}
+                          className="gap-1 text-xs h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCategoryDialogOpen(false);
+                setEditingCategory(null);
+                setCategoryFormData(emptyCategoryFormData);
+              }}
+              className={rtl ? "font-arabic" : ""}
+            >
+              {t(locale, "close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Category Confirmation AlertDialog */}
+      <AlertDialog open={deleteCategoryDialogOpen} onOpenChange={setDeleteCategoryDialogOpen}>
+        <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
+          <AlertDialogHeader className={rtl && "items-end"}>
+            <AlertDialogTitle className={cn(rtl && "font-arabic text-right")}>
+              {t(locale, "catalog.deleteCategory")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className={cn(rtl && "font-arabic text-right")}>
+              {t(locale, "catalog.deleteCategoryConfirm")}
+              {deletingCategory && (
+                <span className="font-semibold block mt-1">
+                  &quot;{rtl ? deletingCategory.labelAr : deletingCategory.labelEn}&quot;
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className={rtl ? "font-arabic" : ""}>
+              {t(locale, "cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDeleteCategory}
               className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
             >
               {t(locale, "delete")}

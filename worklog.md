@@ -1,44 +1,61 @@
----
-Task ID: 1-13
-Agent: main
-Task: Build complete AI Bot Control Hub project
-
-Work Log:
-- Explored existing project structure and package.json
-- Created Prisma schema with 7 models
-- Pushed schema to SQLite database
-- Built i18n system with full Arabic/English translations
-- Built Zustand store for app state management
-- Updated globals.css with Natural Tones theme
-- Built sidebar navigation component (desktop + mobile)
-- Built all 7 section components
-- Created all API routes
-- Created seed API endpoint
-- Polished all components for production
-
-Stage Summary:
-- Complete AI Bot Control Hub application with 7 sections
-- Full Arabic/English bilingual support with RTL layout
-- Natural Tones color theme throughout
-- All components polished and production-ready
-- Zero lint errors
+# Worklog
 
 ---
-Task ID: Polish-Final
-Agent: main
-Task: Production polish pass
+Task ID: 1
+Agent: Main Agent
+Task: Fix Catalog section - Add/Delete categories functionality
 
 Work Log:
-- Dashboard: Fixed bar chart (Cell instead of rect), text overflow, hex colors for charts
-- Channels: Removed readOnly, fixed dialog buttons, added animations
-- Catalog: Fixed start/end CSS, RTL category pills, proper dir attribute
-- Chat: Fixed message alignment with margin-auto approach
-- Sidebar: Clean nav items, proper X icon, dir attribute for RTL
-- CSS: Smooth theme transitions, cross-browser scrollbar
-- i18n: Added missing translation keys
-- Final lint: 0 errors, 1 warning
+- Updated i18n.ts with new translation keys for category management (both EN and AR)
+- Rewrote catalog-section.tsx with dynamic CategoryItem system
+- Added CategoryItem interface with id, labelEn, labelAr, color fields
+- Implemented 6-color colorMap (sage, sand, terracotta, pink, amber, emerald)
+- Added "Manage Categories" dialog with add/edit/delete functionality
+- Category pills generated dynamically from state
+- Deleting a category moves its products to uncategorized
+- Color picker uses clickable colored circles
 
 Stage Summary:
-- All components polished and production-ready
-- Dual language with proper RTL/LTR support
-- Zero lint errors
+- Catalog now supports full dynamic category CRUD
+- Products can be assigned to any category
+- Uncategorized products get neutral/gray treatment
+- All i18n translations added for category management
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Fix Chat window - more space for chat, smaller username area, block button per user
+
+Work Log:
+- Narrowed conversation list from w-80/w-96 to w-72
+- Made conversation list items more compact (smaller avatars, text, padding)
+- Added `blocked` boolean field to Conversation interface
+- Added Block User button in chat header with ShieldBan icon
+- Added block icon button in each conversation list item
+- Implemented AlertDialog confirmation for block/unblock actions
+- Added blocked state UI: red banner, disabled input, red badge
+- Added Unblock button for blocked users
+
+Stage Summary:
+- Chat area now has significantly more space
+- Block/unblock user feature fully functional
+- Blocked users show red badge and cannot receive messages
+- All i18n translations added for block feature
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Fix On/Off toggle button styling on channels section
+
+Work Log:
+- Added colored status badge pill next to Switch in ChannelCard
+- Active state: sage dot + "Active"/"نشط" text
+- Inactive state: red dot + "Inactive"/"غير نشط" text
+- Updated card header badge to use colored dots instead of Wifi/WifiOff icons
+- Changed inactive styling from muted gray to red for better clarity
+- Applied same pattern to catalog section availability toggle
+
+Stage Summary:
+- Toggle switches now have clear ON/OFF visual indicators
+- Active/inactive states use color-coded badges with dots
+- Dark mode support maintained
