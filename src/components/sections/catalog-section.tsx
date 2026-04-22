@@ -134,9 +134,9 @@ const categoryPillColors: Record<
     activeBorder: "border-pink-300 dark:border-pink-700",
   },
   makeup: {
-    activeBg: "bg-orange-100 dark:bg-orange-800/40",
-    activeText: "text-orange-700 dark:text-orange-300",
-    activeBorder: "border-orange-300 dark:border-orange-700",
+    activeBg: "bg-terracotta-100 dark:bg-terracotta-800/40",
+    activeText: "text-terracotta-700 dark:text-terracotta-300",
+    activeBorder: "border-terracotta-300 dark:border-terracotta-700",
   },
 };
 
@@ -144,14 +144,14 @@ const productImageColors: Record<Category, string> = {
   skincare: "bg-sage-100 dark:bg-sage-900/30",
   hair: "bg-amber-100 dark:bg-amber-900/30",
   nails: "bg-pink-100 dark:bg-pink-900/30",
-  makeup: "bg-orange-100 dark:bg-orange-900/30",
+  makeup: "bg-terracotta-100 dark:bg-terracotta-900/30",
 };
 
 const productIconColors: Record<Category, string> = {
   skincare: "text-sage-500 dark:text-sage-400",
   hair: "text-amber-500 dark:text-amber-400",
   nails: "text-pink-500 dark:text-pink-400",
-  makeup: "text-orange-500 dark:text-orange-400",
+  makeup: "text-terracotta-500 dark:text-terracotta-400",
 };
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
@@ -300,7 +300,6 @@ export function CatalogSection() {
     const price = parseFloat(formData.price) || 0;
 
     if (editingProduct) {
-      // Update existing
       setProducts((prev) =>
         prev.map((p) =>
           p.id === editingProduct.id
@@ -319,7 +318,6 @@ export function CatalogSection() {
         )
       );
     } else {
-      // Add new
       const newProduct: Product = {
         id: Math.max(0, ...products.map((p) => p.id)) + 1,
         nameEn: formData.nameEn,
@@ -349,45 +347,30 @@ export function CatalogSection() {
   // ─── Category Pills ──────────────────────────────────────────────────────
 
   const categoryPills = [
-    { key: "all", labelEn: "All Categories", labelAr: "جميع الفئات", i18nKey: "catalog.allCategories" },
-    { key: "skincare", labelEn: "Skincare", labelAr: "العناية بالبشرة", i18nKey: "" },
-    { key: "hair", labelEn: "Hair", labelAr: "الشعر", i18nKey: "" },
-    { key: "nails", labelEn: "Nails", labelAr: "الأظافر", i18nKey: "" },
-    { key: "makeup", labelEn: "Makeup", labelAr: "المكياج", i18nKey: "" },
+    { key: "all", labelEn: "All Categories", labelAr: "جميع الفئات" },
+    { key: "skincare", labelEn: "Skincare", labelAr: "العناية بالبشرة" },
+    { key: "hair", labelEn: "Hair", labelAr: "الشعر" },
+    { key: "nails", labelEn: "Nails", labelAr: "الأظافر" },
+    { key: "makeup", labelEn: "Makeup", labelAr: "المكياج" },
   ];
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={rtl ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="space-y-4">
         <div className="space-y-1">
-          <h2
-            className={cn(
-              "text-2xl font-bold tracking-tight",
-              rtl && "font-arabic text-right"
-            )}
-          >
+          <h2 className={cn("text-2xl font-bold tracking-tight", rtl && "font-arabic")}>
             {t(locale, "catalog.title")}
           </h2>
-          <p
-            className={cn(
-              "text-muted-foreground text-sm",
-              rtl && "font-arabic text-right"
-            )}
-          >
+          <p className={cn("text-muted-foreground text-sm", rtl && "font-arabic")}>
             {t(locale, "catalog.subtitle")}
           </p>
         </div>
 
         {/* Search + Add Button */}
-        <div
-          className={cn(
-            "flex flex-col sm:flex-row gap-3",
-            rtl && "sm:flex-row-reverse"
-          )}
-        >
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 min-w-0">
             <Search
               className={cn(
@@ -401,16 +384,13 @@ export function CatalogSection() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
                 rtl ? "pr-9 pl-3" : "pl-9 pr-3",
-                rtl && "font-arabic text-right"
+                rtl && "font-arabic"
               )}
             />
           </div>
           <Button
             onClick={handleOpenAdd}
-            className={cn(
-              "gap-2 shrink-0",
-              rtl && "font-arabic flex-row-reverse"
-            )}
+            className={cn("gap-2 shrink-0", rtl && "font-arabic")}
           >
             <Plus className="w-4 h-4" />
             {t(locale, "catalog.addProduct")}
@@ -418,13 +398,8 @@ export function CatalogSection() {
         </div>
       </div>
 
-      {/* Category Filter Pills */}
-      <div
-        className={cn(
-          "flex flex-wrap gap-2",
-          rtl && "flex-row-reverse justify-end"
-        )}
-      >
+      {/* Category Filter Pills — simple flex-wrap, no flex-row-reverse */}
+      <div className="flex flex-wrap gap-2">
         {categoryPills.map((pill) => {
           const isActive = activeCategory === pill.key;
           const catKey = pill.key as Category;
@@ -458,12 +433,7 @@ export function CatalogSection() {
 
       {/* Product Grid */}
       {filteredProducts.length === 0 ? (
-        <div
-          className={cn(
-            "flex flex-col items-center justify-center py-16 text-muted-foreground",
-            rtl && "font-arabic"
-          )}
-        >
+        <div className={cn("flex flex-col items-center justify-center py-16 text-muted-foreground", rtl && "font-arabic")}>
           <Package className="w-12 h-12 mb-3 opacity-30" />
           <p className="text-sm">{t(locale, "noData")}</p>
         </div>
@@ -494,15 +464,12 @@ export function CatalogSection() {
                     />
                   ) : (
                     <Package
-                      className={cn(
-                        "w-12 h-12",
-                        productIconColors[product.category]
-                      )}
+                      className={cn("w-12 h-12", productIconColors[product.category])}
                     />
                   )}
 
-                  {/* Availability Badge */}
-                  <div className="absolute top-2 start-2">
+                  {/* Availability Badge — top-left in LTR, top-right in RTL */}
+                  <div className={cn("absolute top-2", rtl ? "right-2" : "left-2")}>
                     {product.available ? (
                       <Badge
                         variant="outline"
@@ -532,8 +499,8 @@ export function CatalogSection() {
                     )}
                   </div>
 
-                  {/* Category Badge */}
-                  <div className="absolute top-2 end-2">
+                  {/* Category Badge — top-right in LTR, top-left in RTL */}
+                  <div className={cn("absolute top-2", rtl ? "left-2" : "right-2")}>
                     <Badge
                       variant="outline"
                       className={cn(
@@ -551,60 +518,32 @@ export function CatalogSection() {
                 <CardContent className="p-4 space-y-3">
                   {/* Name & Price */}
                   <div>
-                    <h3
-                      className={cn(
-                        "font-semibold text-sm leading-tight line-clamp-1",
-                        rtl && "font-arabic text-right"
-                      )}
-                    >
+                    <h3 className={cn("font-semibold text-sm leading-tight line-clamp-1", rtl && "font-arabic")}>
                       {rtl ? product.nameAr : product.nameEn}
                     </h3>
-                    <div
-                      className={cn(
-                        "flex items-center gap-1 mt-1",
-                        rtl && "flex-row-reverse"
-                      )}
-                    >
+                    <div className="flex items-center gap-1 mt-1">
                       <DollarSign className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span className="text-sm font-bold text-primary tabular-nums">
                         {product.price}
                       </span>
-                      <span
-                        className={cn(
-                          "text-xs text-muted-foreground",
-                          rtl && "font-arabic"
-                        )}
-                      >
+                      <span className={cn("text-xs text-muted-foreground", rtl && "font-arabic")}>
                         {rtl ? "ر.س" : "SAR"}
                       </span>
                     </div>
                   </div>
 
                   {/* Description Snippet */}
-                  <p
-                    className={cn(
-                      "text-xs text-muted-foreground line-clamp-2 leading-relaxed",
-                      rtl && "font-arabic text-right"
-                    )}
-                  >
+                  <p className={cn("text-xs text-muted-foreground line-clamp-2 leading-relaxed", rtl && "font-arabic")}>
                     {rtl ? product.descriptionAr : product.descriptionEn}
                   </p>
 
-                  {/* Actions */}
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 pt-1",
-                      rtl && "flex-row-reverse"
-                    )}
-                  >
+                  {/* Actions — no flex-row-reverse, direction handled by parent dir */}
+                  <div className="flex items-center gap-2 pt-1">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenEdit(product)}
-                      className={cn(
-                        "gap-1.5 text-xs h-8 flex-1",
-                        rtl && "font-arabic flex-row-reverse"
-                      )}
+                      className={cn("gap-1.5 text-xs h-8 flex-1", rtl && "font-arabic")}
                     >
                       <Pencil className="w-3 h-3" />
                       {t(locale, "edit")}
@@ -615,7 +554,7 @@ export function CatalogSection() {
                       onClick={() => handleOpenDelete(product)}
                       className={cn(
                         "gap-1.5 text-xs h-8 flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800/40",
-                        rtl && "font-arabic flex-row-reverse"
+                        rtl && "font-arabic"
                       )}
                     >
                       <Trash2 className="w-3 h-3" />
@@ -635,13 +574,13 @@ export function CatalogSection() {
           className={cn("sm:max-w-lg", rtl && "font-arabic")}
           dir={rtl ? "rtl" : "ltr"}
         >
-          <DialogHeader className={cn(rtl && "text-right items-end")}>
-            <DialogTitle className={rtl && "font-arabic text-right"}>
+          <DialogHeader className={rtl && "items-end"}>
+            <DialogTitle className={rtl && "text-right"}>
               {editingProduct
                 ? t(locale, "catalog.editProduct")
                 : t(locale, "catalog.addProduct")}
             </DialogTitle>
-            <DialogDescription className={rtl && "font-arabic text-right"}>
+            <DialogDescription className={rtl && "text-right"}>
               {editingProduct
                 ? rtl
                   ? "قم بتعديل تفاصيل المنتج"
@@ -652,13 +591,10 @@ export function CatalogSection() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1 custom-scrollbar">
             {/* English Name */}
             <div className="space-y-2">
-              <Label
-                className={cn(rtl && "font-arabic text-right block")}
-                htmlFor="nameEn"
-              >
+              <Label className={rtl && "text-right block"} htmlFor="nameEn">
                 {t(locale, "catalog.productName")}
               </Label>
               <Input
@@ -667,19 +603,14 @@ export function CatalogSection() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, nameEn: e.target.value }))
                 }
-                placeholder={
-                  rtl ? "اسم المنتج بالإنجليزية" : "Product name in English"
-                }
-                className={rtl ? "text-left font-sans" : ""}
+                placeholder={rtl ? "اسم المنتج بالإنجليزية" : "Product name in English"}
+                dir="ltr"
               />
             </div>
 
             {/* Arabic Name */}
             <div className="space-y-2">
-              <Label
-                className={cn("font-arabic text-right block")}
-                htmlFor="nameAr"
-              >
+              <Label className="text-right block font-arabic" htmlFor="nameAr">
                 {t(locale, "catalog.productNameAr")}
               </Label>
               <Input
@@ -696,10 +627,7 @@ export function CatalogSection() {
 
             {/* English Description */}
             <div className="space-y-2">
-              <Label
-                className={cn(rtl && "font-arabic text-right block")}
-                htmlFor="descEn"
-              >
+              <Label className={rtl && "text-right block"} htmlFor="descEn">
                 {t(locale, "catalog.productDescription")}
               </Label>
               <Textarea
@@ -711,20 +639,15 @@ export function CatalogSection() {
                     descriptionEn: e.target.value,
                   }))
                 }
-                placeholder={
-                  rtl ? "الوصف بالإنجليزية" : "Description in English"
-                }
+                placeholder={rtl ? "الوصف بالإنجليزية" : "Description in English"}
                 rows={3}
-                className={rtl ? "text-left font-sans" : ""}
+                dir="ltr"
               />
             </div>
 
             {/* Arabic Description */}
             <div className="space-y-2">
-              <Label
-                className={cn("font-arabic text-right block")}
-                htmlFor="descAr"
-              >
+              <Label className="text-right block font-arabic" htmlFor="descAr">
                 {t(locale, "catalog.productDescriptionAr")}
               </Label>
               <Textarea
@@ -747,10 +670,7 @@ export function CatalogSection() {
             <div className="grid grid-cols-2 gap-3">
               {/* Price */}
               <div className="space-y-2">
-                <Label
-                  className={cn(rtl && "font-arabic text-right block")}
-                  htmlFor="price"
-                >
+                <Label className={rtl && "text-right block"} htmlFor="price">
                   {t(locale, "catalog.productPrice")}
                 </Label>
                 <Input
@@ -764,14 +684,13 @@ export function CatalogSection() {
                   }
                   placeholder="0.00"
                   className="tabular-nums"
+                  dir="ltr"
                 />
               </div>
 
               {/* Category */}
               <div className="space-y-2">
-                <Label
-                  className={cn(rtl && "font-arabic text-right block")}
-                >
+                <Label className={rtl && "text-right block"}>
                   {t(locale, "catalog.productCategory")}
                 </Label>
                 <Select
@@ -793,9 +712,7 @@ export function CatalogSection() {
                         value={cat}
                         className={rtl ? "font-arabic" : ""}
                       >
-                        {rtl
-                          ? categoryConfig[cat].labelAr
-                          : categoryConfig[cat].label}
+                        {rtl ? categoryConfig[cat].labelAr : categoryConfig[cat].label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -805,10 +722,7 @@ export function CatalogSection() {
 
             {/* Image URL */}
             <div className="space-y-2">
-              <Label
-                className={cn(rtl && "font-arabic text-right block")}
-                htmlFor="imageUrl"
-              >
+              <Label className={rtl && "text-right block"} htmlFor="imageUrl">
                 {t(locale, "catalog.productImage")}
               </Label>
               <Input
@@ -821,28 +735,16 @@ export function CatalogSection() {
                   }))
                 }
                 placeholder={rtl ? "رابط الصورة (اختياري)" : "Image URL (optional)"}
-                className={rtl ? "font-arabic text-right" : ""}
+                dir="ltr"
               />
             </div>
 
             {/* Availability Toggle */}
-            <div
-              className={cn(
-                "flex items-center justify-between rounded-lg border p-3",
-                "bg-muted/30",
-                rtl && "flex-row-reverse"
-              )}
-            >
-              <Label
-                className={cn(
-                  "cursor-pointer",
-                  rtl && "font-arabic text-right"
-                )}
-                htmlFor="availability"
-              >
+            <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/30">
+              <Label className={cn("cursor-pointer", rtl && "font-arabic")} htmlFor="availability">
                 {t(locale, "catalog.availability")}
               </Label>
-              <div className={cn("flex items-center gap-2", rtl && "flex-row-reverse")}>
+              <div className="flex items-center gap-2">
                 <span
                   className={cn(
                     "text-xs",
@@ -852,9 +754,7 @@ export function CatalogSection() {
                     rtl && "font-arabic"
                   )}
                 >
-                  {formData.available
-                    ? t(locale, "available")
-                    : t(locale, "unavailable")}
+                  {formData.available ? t(locale, "available") : t(locale, "unavailable")}
                 </span>
                 <Switch
                   id="availability"
@@ -867,9 +767,7 @@ export function CatalogSection() {
             </div>
           </div>
 
-          <DialogFooter
-            className={cn(rtl && "flex-row-reverse sm:flex-row-reverse")}
-          >
+          <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setProductDialogOpen(false)}
@@ -891,29 +789,20 @@ export function CatalogSection() {
       {/* Delete Confirmation AlertDialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
-          <AlertDialogHeader
-            className={cn(rtl && "text-right items-end")}
-          >
-            <AlertDialogTitle
-              className={cn(rtl && "font-arabic text-right")}
-            >
+          <AlertDialogHeader className={rtl && "items-end"}>
+            <AlertDialogTitle className={cn(rtl && "font-arabic text-right")}>
               {t(locale, "catalog.deleteProduct")}
             </AlertDialogTitle>
-            <AlertDialogDescription
-              className={cn(rtl && "font-arabic text-right")}
-            >
+            <AlertDialogDescription className={cn(rtl && "font-arabic text-right")}>
               {t(locale, "catalog.deleteConfirm")}
               {deletingProduct && (
                 <span className="font-semibold block mt-1">
-                  &quot;{rtl ? deletingProduct.nameAr : deletingProduct.nameEn}
-                  &quot;
+                  &quot;{rtl ? deletingProduct.nameAr : deletingProduct.nameEn}&quot;
                 </span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter
-            className={cn(rtl && "flex-row-reverse sm:flex-row-reverse")}
-          >
+          <AlertDialogFooter>
             <AlertDialogCancel className={rtl ? "font-arabic" : ""}>
               {t(locale, "cancel")}
             </AlertDialogCancel>

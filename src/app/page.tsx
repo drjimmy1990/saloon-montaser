@@ -26,14 +26,15 @@ const sectionComponents: Record<string, React.ComponentType> = {
 export default function Home() {
   const { locale, activeSection } = useAppStore();
   const rtl = isRTL(locale);
+  const dir = rtl ? "rtl" : "ltr";
 
   const SectionComponent = sectionComponents[activeSection] || DashboardSection;
 
   return (
-    <div className={cn("min-h-screen flex flex-col", rtl && "font-arabic")} dir={rtl ? "rtl" : "ltr"}>
+    <div className={cn("min-h-screen flex flex-col", rtl && "font-arabic")} dir={dir}>
       <div className="flex flex-1 min-h-0">
         {/* Desktop Sidebar */}
-        <div className="hidden md:block">
+        <div className="hidden md:block" dir={dir}>
           <AppSidebar />
         </div>
 
@@ -44,7 +45,12 @@ export default function Home() {
         <div className="flex-1 flex flex-col min-w-0">
           <MobileHeader />
           <main className="flex-1 overflow-auto p-4 md:p-6 custom-scrollbar">
-            <SectionComponent />
+            <div
+              key={activeSection}
+              className="animate-in fade-in-0 duration-200"
+            >
+              <SectionComponent />
+            </div>
           </main>
         </div>
       </div>

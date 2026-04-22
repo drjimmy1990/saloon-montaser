@@ -39,12 +39,20 @@ import {
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   AreaChart,
   Area,
 } from "recharts";
+
+// ─── Direct hex colors (NOT CSS variable references) ─────────────────────────
+const COLORS = {
+  sage: "#778a7e",
+  sand: "#b09e7c",
+  terracotta: "#d9703e",
+} as const;
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
@@ -84,10 +92,17 @@ const kpiData = [
 ];
 
 const channelPerformanceData = [
-  { channel: "WhatsApp", channelAr: "واتساب", messages: 1420, fill: "var(--color-whatsapp)" },
-  { channel: "Facebook", channelAr: "فيسبوك", messages: 856, fill: "var(--color-facebook)" },
-  { channel: "Instagram", channelAr: "انستجرام", messages: 571, fill: "var(--color-instagram)" },
+  { channel: "WhatsApp", channelAr: "واتساب", messages: 1420 },
+  { channel: "Facebook", channelAr: "فيسبوك", messages: 856 },
+  { channel: "Instagram", channelAr: "انستجرام", messages: 571 },
 ];
+
+/** Per-bar fill colors mapped by channel name */
+const channelColors: Record<string, string> = {
+  WhatsApp: COLORS.sage,
+  Facebook: COLORS.sand,
+  Instagram: COLORS.terracotta,
+};
 
 const weeklyTrendData = [
   { day: "Mon", dayAr: "الإثنين", messages: 320, bookings: 22 },
@@ -103,7 +118,7 @@ const recentBookings = [
   {
     id: 1,
     clientName: "Ahmed Al-Rashid",
-    clientNameAr: "أمد الراشد",
+    clientNameAr: "أحمد الراشد",
     service: "Home Cleaning",
     serviceAr: "تنظيف المنزل",
     channel: "WhatsApp",
@@ -158,6 +173,7 @@ const recentBookings = [
 ];
 
 // ─── Chart Configs ───────────────────────────────────────────────────────────
+// Colors are direct hex values so recharts can render them without CSS resolution
 
 const channelChartConfig = {
   messages: {
@@ -165,26 +181,26 @@ const channelChartConfig = {
   },
   whatsapp: {
     label: "WhatsApp",
-    color: "var(--color-sage-500)",
+    color: COLORS.sage,
   },
   facebook: {
     label: "Facebook",
-    color: "var(--color-sand-500)",
+    color: COLORS.sand,
   },
   instagram: {
     label: "Instagram",
-    color: "var(--color-terracotta-500)",
+    color: COLORS.terracotta,
   },
 } satisfies ChartConfig;
 
 const weeklyChartConfig = {
   messages: {
     label: "Messages",
-    color: "var(--color-sage-500)",
+    color: COLORS.sage,
   },
   bookings: {
     label: "Bookings",
-    color: "var(--color-terracotta-500)",
+    color: COLORS.terracotta,
   },
 } satisfies ChartConfig;
 
@@ -217,7 +233,14 @@ const kpiColorMap = {
   },
 };
 
-const statusConfig: Record<string, { label: string; labelAr: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const statusConfig: Record<
+  string,
+  {
+    label: string;
+    labelAr: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
   confirmed: { label: "Confirmed", labelAr: "مؤكد", variant: "default" },
   pending: { label: "Pending", labelAr: "قيد الانتظار", variant: "secondary" },
   completed: { label: "Completed", labelAr: "مكتمل", variant: "outline" },
@@ -232,17 +255,27 @@ export function DashboardSection() {
 
   return (
     <div className="space-y-6">
-      {/* Title Area */}
+      {/* ── Title Area ──────────────────────────────────────────────────── */}
       <div className="space-y-1">
-        <h2 className={cn("text-2xl font-bold tracking-tight", rtl && "font-arabic text-right")}>
+        <h2
+          className={cn(
+            "text-2xl font-bold tracking-tight",
+            rtl && "font-arabic text-right"
+          )}
+        >
           {t(locale, "dashboard.title")}
         </h2>
-        <p className={cn("text-muted-foreground text-sm", rtl && "font-arabic text-right")}>
+        <p
+          className={cn(
+            "text-muted-foreground text-sm",
+            rtl && "font-arabic text-right"
+          )}
+        >
           {t(locale, "dashboard.subtitle")}
         </p>
       </div>
 
-      {/* KPI Cards */}
+      {/* ── KPI Cards ───────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiData.map((kpi) => {
           const Icon = kpi.icon;
@@ -251,22 +284,52 @@ export function DashboardSection() {
             <Card
               key={kpi.key}
               className={cn(
-                "border hover:shadow-md transition-shadow duration-200 cursor-default",
+                "overflow-hidden border hover:shadow-md transition-shadow duration-200 cursor-default",
                 colors.border,
                 colors.bg
               )}
             >
               <CardContent className="p-4 sm:p-6">
-                <div className={cn("flex items-center gap-3", rtl && "flex-row-reverse")}>
-                  <div className={cn("p-2.5 rounded-xl shrink-0", colors.iconBg)}>
+                <div
+                  className={cn(
+                    "flex items-center gap-3",
+                    rtl && "flex-row-reverse"
+                  )}
+                >
+                  {/* Icon circle */}
+                  <div
+                    className={cn(
+                      "p-2.5 rounded-xl shrink-0",
+                      colors.iconBg
+                    )}
+                  >
                     <Icon className={cn("w-5 h-5", colors.iconText)} />
                   </div>
-                  <div className={cn("flex-1 min-w-0", rtl && "text-right")}>
-                    <p className={cn("text-xs font-medium text-muted-foreground truncate", rtl && "font-arabic")}>
+
+                  {/* Text content */}
+                  <div
+                    className={cn(
+                      "flex-1 min-w-0 overflow-hidden",
+                      rtl && "text-right"
+                    )}
+                  >
+                    <p
+                      className={cn(
+                        "text-xs font-medium text-muted-foreground truncate",
+                        rtl && "font-arabic"
+                      )}
+                    >
                       {t(locale, `dashboard.${kpi.key}`)}
                     </p>
-                    <div className={cn("flex items-baseline gap-2 mt-1", rtl && "flex-row-reverse")}>
-                      <span className="text-2xl font-bold tabular-nums">{kpi.value}</span>
+                    <div
+                      className={cn(
+                        "flex items-baseline flex-wrap gap-2 mt-1",
+                        rtl && "flex-row-reverse"
+                      )}
+                    >
+                      <span className="text-2xl font-bold tabular-nums">
+                        {kpi.value}
+                      </span>
                       <span
                         className={cn(
                           "text-xs font-medium flex items-center gap-0.5",
@@ -291,15 +354,19 @@ export function DashboardSection() {
         })}
       </div>
 
-      {/* Charts Section */}
+      {/* ── Charts Section ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Channel Performance - Bar Chart */}
+        {/* Channel Performance — Horizontal Bar Chart */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className={cn("text-base", rtl && "font-arabic text-right")}>
+            <CardTitle
+              className={cn("text-base", rtl && "font-arabic text-right")}
+            >
               {t(locale, "dashboard.channelPerformance")}
             </CardTitle>
-            <CardDescription className={cn(rtl && "font-arabic text-right")}>
+            <CardDescription
+              className={cn(rtl && "font-arabic text-right")}
+            >
               {t(locale, "dashboard.messagesByChannel")}
             </CardDescription>
           </CardHeader>
@@ -308,7 +375,12 @@ export function DashboardSection() {
               <BarChart
                 data={channelPerformanceData}
                 layout="vertical"
-                margin={{ top: 8, right: rtl ? 0 : 16, left: rtl ? 16 : 0, bottom: 8 }}
+                margin={{
+                  top: 8,
+                  right: rtl ? 16 : 0,
+                  left: rtl ? 0 : 16,
+                  bottom: 8,
+                }}
               >
                 <CartesianGrid horizontal={false} strokeDasharray="3 3" />
                 <XAxis type="number" hide />
@@ -317,19 +389,20 @@ export function DashboardSection() {
                   dataKey={rtl ? "channelAr" : "channel"}
                   tickLine={false}
                   axisLine={false}
-                  width={rtl ? 60 : 80}
+                  width={rtl ? 65 : 80}
                   tick={{ fontSize: 12 }}
                 />
-                <ChartTooltip
-                  content={<ChartTooltipContent />}
-                />
+                <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
                   dataKey="messages"
                   radius={[0, 6, 6, 0]}
                   maxBarSize={36}
                 >
-                  {channelPerformanceData.map((entry, index) => (
-                    <rect key={index} fill={entry.fill} />
+                  {channelPerformanceData.map((entry) => (
+                    <Cell
+                      key={entry.channel}
+                      fill={channelColors[entry.channel]}
+                    />
                   ))}
                 </Bar>
               </BarChart>
@@ -337,30 +410,49 @@ export function DashboardSection() {
           </CardContent>
         </Card>
 
-        {/* Weekly Trend - Area Chart */}
+        {/* Weekly Trend — Area Chart */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className={cn("text-base", rtl && "font-arabic text-right")}>
+            <CardTitle
+              className={cn("text-base", rtl && "font-arabic text-right")}
+            >
               {t(locale, "dashboard.weeklyTrend")}
             </CardTitle>
-            <CardDescription className={cn(rtl && "font-arabic text-right")}>
-              {locale === "ar" ? "الرسائل والحجوزات خلال الأسبوع" : "Messages & bookings over the week"}
+            <CardDescription
+              className={cn(rtl && "font-arabic text-right")}
+            >
+              {locale === "ar"
+                ? "الرسائل والحجوزات خلال الأسبوع"
+                : "Messages & bookings over the week"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={weeklyChartConfig} className="h-[260px] w-full">
               <AreaChart
                 data={weeklyTrendData}
-                margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
+                margin={{
+                  top: 8,
+                  right: rtl ? 0 : 8,
+                  left: rtl ? 8 : 0,
+                  bottom: 8,
+                }}
               >
                 <defs>
                   <linearGradient id="fillMessages" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-sage-500)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="var(--color-sage-500)" stopOpacity={0.05} />
+                    <stop offset="5%" stopColor={COLORS.sage} stopOpacity={0.3} />
+                    <stop offset="95%" stopColor={COLORS.sage} stopOpacity={0.05} />
                   </linearGradient>
                   <linearGradient id="fillBookings" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-terracotta-500)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="var(--color-terracotta-500)" stopOpacity={0.05} />
+                    <stop
+                      offset="5%"
+                      stopColor={COLORS.terracotta}
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor={COLORS.terracotta}
+                      stopOpacity={0.05}
+                    />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -376,23 +468,19 @@ export function DashboardSection() {
                   tick={{ fontSize: 11 }}
                   width={40}
                 />
-                <ChartTooltip
-                  content={<ChartTooltipContent />}
-                />
-                <ChartLegend
-                  content={<ChartLegendContent />}
-                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
                 <Area
                   type="monotone"
                   dataKey="messages"
-                  stroke="var(--color-sage-500)"
+                  stroke={COLORS.sage}
                   strokeWidth={2}
                   fill="url(#fillMessages)"
                 />
                 <Area
                   type="monotone"
                   dataKey="bookings"
-                  stroke="var(--color-terracotta-500)"
+                  stroke={COLORS.terracotta}
                   strokeWidth={2}
                   fill="url(#fillBookings)"
                 />
@@ -402,7 +490,7 @@ export function DashboardSection() {
         </Card>
       </div>
 
-      {/* Recent Bookings Table */}
+      {/* ── Recent Bookings Table ───────────────────────────────────────── */}
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className={cn("text-base", rtl && "font-arabic text-right")}>
@@ -410,56 +498,89 @@ export function DashboardSection() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className={cn(rtl && "text-right font-arabic")}>
-                  {t(locale, "bookings.clientName")}
-                </TableHead>
-                <TableHead className={cn(rtl && "text-right font-arabic")}>
-                  {t(locale, "catalog.productCategory")}
-                </TableHead>
-                <TableHead className={cn(rtl && "text-right font-arabic")}>
-                  {t(locale, "bookings.channelSource")}
-                </TableHead>
-                <TableHead className={cn(rtl && "text-right font-arabic")}>
-                  {t(locale, "date")}
-                </TableHead>
-                <TableHead className={cn(rtl && "text-right font-arabic")}>
-                  {t(locale, "status")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recentBookings.map((booking) => {
-                const status = statusConfig[booking.status];
-                return (
-                  <TableRow key={booking.id} className="hover:bg-muted/50">
-                    <TableCell className={cn("font-medium", rtl && "text-right font-arabic")}>
-                      {rtl ? booking.clientNameAr : booking.clientName}
-                    </TableCell>
-                    <TableCell className={cn(rtl && "text-right font-arabic")}>
-                      {rtl ? booking.serviceAr : booking.service}
-                    </TableCell>
-                    <TableCell className={cn(rtl && "text-right font-arabic")}>
-                      {rtl ? booking.channelAr : booking.channel}
-                    </TableCell>
-                    <TableCell className={cn("tabular-nums", rtl && "text-right")}>
-                      {booking.date}
-                    </TableCell>
-                    <TableCell className={rtl && "text-right"}>
-                      <Badge
-                        variant={status.variant}
-                        className={cn("text-[11px]", rtl && "font-arabic")}
+          {/* Horizontal scroll wrapper for mobile */}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead
+                    className={cn("whitespace-nowrap", rtl && "text-right font-arabic")}
+                  >
+                    {t(locale, "bookings.clientName")}
+                  </TableHead>
+                  <TableHead
+                    className={cn("whitespace-nowrap", rtl && "text-right font-arabic")}
+                  >
+                    {t(locale, "catalog.productCategory")}
+                  </TableHead>
+                  <TableHead
+                    className={cn("whitespace-nowrap", rtl && "text-right font-arabic")}
+                  >
+                    {t(locale, "bookings.channelSource")}
+                  </TableHead>
+                  <TableHead
+                    className={cn("whitespace-nowrap", rtl && "text-right font-arabic")}
+                  >
+                    {t(locale, "date")}
+                  </TableHead>
+                  <TableHead
+                    className={cn("whitespace-nowrap", rtl && "text-right font-arabic")}
+                  >
+                    {t(locale, "status")}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentBookings.map((booking) => {
+                  const status = statusConfig[booking.status];
+                  return (
+                    <TableRow key={booking.id} className="hover:bg-muted/50">
+                      <TableCell
+                        className={cn(
+                          "font-medium whitespace-nowrap",
+                          rtl && "text-right font-arabic"
+                        )}
                       >
-                        {rtl ? status.labelAr : status.label}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                        {rtl ? booking.clientNameAr : booking.clientName}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "whitespace-nowrap",
+                          rtl && "text-right font-arabic"
+                        )}
+                      >
+                        {rtl ? booking.serviceAr : booking.service}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "whitespace-nowrap",
+                          rtl && "text-right font-arabic"
+                        )}
+                      >
+                        {rtl ? booking.channelAr : booking.channel}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "tabular-nums whitespace-nowrap",
+                          rtl && "text-right"
+                        )}
+                      >
+                        {booking.date}
+                      </TableCell>
+                      <TableCell className={cn(rtl && "text-right")}>
+                        <Badge
+                          variant={status.variant}
+                          className={cn("text-[11px]", rtl && "font-arabic")}
+                        >
+                          {rtl ? status.labelAr : status.label}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

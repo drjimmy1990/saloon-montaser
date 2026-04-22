@@ -11,12 +11,12 @@ import {
   Users,
   MessageSquare,
   ShieldBan,
-  ChevronRight,
   Bot,
   Globe,
   Moon,
   Sun,
   Menu,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -40,8 +40,16 @@ export function AppSidebar() {
   const rtl = isRTL(locale);
   const { theme, setTheme } = useTheme();
 
+  const themeLabel =
+    theme === "dark"
+      ? rtl ? "الوضع الفاتح" : "Light Mode"
+      : rtl ? "الوضع الداكن" : "Dark Mode";
+
+  const langLabel = locale === "ar" ? "English" : "العربية";
+
   return (
     <aside
+      dir={rtl ? "rtl" : "ltr"}
       className={cn(
         "flex flex-col h-full bg-card",
         rtl ? "border-l" : "border-r",
@@ -50,14 +58,14 @@ export function AppSidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5">
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground">
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground shrink-0">
           <Bot className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className={cn("text-sm font-bold truncate", rtl && "font-arabic text-right")}>
+          <h1 className={cn("text-sm font-bold truncate", rtl && "font-arabic")}>
             {t(locale, "appTitle")}
           </h1>
-          <p className={cn("text-[10px] text-muted-foreground truncate", rtl && "text-right")}>
+          <p className="text-[10px] text-muted-foreground truncate">
             SaaS Dashboard
           </p>
         </div>
@@ -77,7 +85,6 @@ export function AppSidebar() {
                 onClick={() => setActiveSection(item.id)}
                 className={cn(
                   "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                  rtl && "flex-row-reverse text-right",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
@@ -87,14 +94,6 @@ export function AppSidebar() {
                 <span className={cn("truncate", rtl && "font-arabic")}>
                   {t(locale, item.labelKey)}
                 </span>
-                {isActive && (
-                  <ChevronRight
-                    className={cn(
-                      "w-4 h-4 shrink-0 ml-auto opacity-70",
-                      rtl && "rotate-180 mr-auto ml-0"
-                    )}
-                  />
-                )}
               </button>
             );
           })}
@@ -108,24 +107,24 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           size="sm"
-          className={cn("w-full justify-start gap-2", rtl && "flex-row-reverse justify-end")}
+          className="w-full flex items-center gap-3 px-3"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
-          {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          {theme === "dark" ? <Sun className="w-4 h-4 shrink-0" /> : <Moon className="w-4 h-4 shrink-0" />}
           <span className={cn("text-xs", rtl && "font-arabic")}>
-            {theme === "dark" ? "Light Mode" : "الوضع الداكن"}
+            {themeLabel}
           </span>
         </Button>
 
         <Button
           variant="ghost"
           size="sm"
-          className={cn("w-full justify-start gap-2", rtl && "flex-row-reverse justify-end")}
+          className="w-full flex items-center gap-3 px-3"
           onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
         >
-          <Globe className="w-4 h-4" />
+          <Globe className="w-4 h-4 shrink-0" />
           <span className="text-xs">
-            {locale === "ar" ? "English" : "العربية"}
+            {langLabel}
           </span>
         </Button>
       </div>
@@ -140,6 +139,13 @@ export function MobileSidebar() {
 
   if (!sidebarOpen) return null;
 
+  const themeLabel =
+    theme === "dark"
+      ? rtl ? "الوضع الفاتح" : "Light Mode"
+      : rtl ? "الوضع الداكن" : "Dark Mode";
+
+  const langLabel = locale === "ar" ? "English" : "العربية";
+
   return (
     <>
       <div
@@ -147,17 +153,18 @@ export function MobileSidebar() {
         onClick={() => setSidebarOpen(false)}
       />
       <aside
+        dir={rtl ? "rtl" : "ltr"}
         className={cn(
           "fixed top-0 z-50 h-full w-64 bg-card shadow-xl transition-transform duration-300",
           rtl ? "right-0" : "left-0"
         )}
       >
         <div className="flex items-center gap-3 px-4 py-5">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-primary-foreground shrink-0">
             <Bot className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className={cn("text-sm font-bold truncate", rtl && "font-arabic text-right")}>
+            <h1 className={cn("text-sm font-bold truncate", rtl && "font-arabic")}>
               {t(locale, "appTitle")}
             </h1>
           </div>
@@ -167,7 +174,7 @@ export function MobileSidebar() {
             className="shrink-0 w-8 h-8"
             onClick={() => setSidebarOpen(false)}
           >
-            ✕
+            <X className="w-4 h-4" />
           </Button>
         </div>
 
@@ -187,7 +194,6 @@ export function MobileSidebar() {
                   }}
                   className={cn(
                     "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                    rtl && "flex-row-reverse text-right",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
@@ -207,20 +213,24 @@ export function MobileSidebar() {
           <Button
             variant="ghost"
             size="sm"
-            className={cn("w-full justify-start gap-2", rtl && "flex-row-reverse justify-end")}
+            className="w-full flex items-center gap-3 px-3"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           >
-            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            <span className="text-xs">{theme === "dark" ? "Light Mode" : "الوضع الداكن"}</span>
+            {theme === "dark" ? <Sun className="w-4 h-4 shrink-0" /> : <Moon className="w-4 h-4 shrink-0" />}
+            <span className={cn("text-xs", rtl && "font-arabic")}>
+              {themeLabel}
+            </span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className={cn("w-full justify-start gap-2", rtl && "flex-row-reverse justify-end")}
+            className="w-full flex items-center gap-3 px-3"
             onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
           >
-            <Globe className="w-4 h-4" />
-            <span className="text-xs">{locale === "ar" ? "English" : "العربية"}</span>
+            <Globe className="w-4 h-4 shrink-0" />
+            <span className="text-xs">
+              {langLabel}
+            </span>
           </Button>
         </div>
       </aside>

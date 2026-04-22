@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import { t, isRTL } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageCircle,
   Camera,
@@ -12,13 +13,16 @@ import {
   Key,
   Variable,
   ImageIcon,
-  ChevronDown,
   Wifi,
   WifiOff,
+  Pencil,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -149,9 +153,7 @@ const initialChannels: Channel[] = [
     nameAr: "انستجرام دايركت",
     type: "instagram",
     active: false,
-    credentials: [
-      { key: "ACCESS_TOKEN", value: "IGQVJYZAh..." },
-    ],
+    credentials: [{ key: "ACCESS_TOKEN", value: "IGQVJYZAh..." }],
     variables: [
       { name: "response_delay", value: "5" },
       { name: "auto_reply", value: "false" },
@@ -165,7 +167,7 @@ const initialChannels: Channel[] = [
   },
 ];
 
-// ─── Channel Config ───────────────────────────────────────────────────────────
+// ─── Channel Type Config ──────────────────────────────────────────────────────
 
 const channelTypeConfig: Record<
   ChannelType,
@@ -177,6 +179,7 @@ const channelTypeConfig: Record<
     textColor: string;
     borderColor: string;
     iconBg: string;
+    accentBorder: string;
   }
 > = {
   whatsapp: {
@@ -187,15 +190,17 @@ const channelTypeConfig: Record<
     textColor: "text-emerald-700 dark:text-emerald-400",
     borderColor: "border-emerald-200 dark:border-emerald-800/40",
     iconBg: "bg-emerald-100 dark:bg-emerald-800/30",
+    accentBorder: "border-l-emerald-500 dark:border-l-emerald-400",
   },
   facebook: {
     label: "Facebook",
     labelAr: "ماسنجر",
     icon: MessageCircle,
-    bgColor: "bg-blue-50 dark:bg-blue-900/20",
-    textColor: "text-blue-700 dark:text-blue-400",
-    borderColor: "border-blue-200 dark:border-blue-800/40",
-    iconBg: "bg-blue-100 dark:bg-blue-800/30",
+    bgColor: "bg-sky-50 dark:bg-sky-900/20",
+    textColor: "text-sky-700 dark:text-sky-400",
+    borderColor: "border-sky-200 dark:border-sky-800/40",
+    iconBg: "bg-sky-100 dark:bg-sky-800/30",
+    accentBorder: "border-l-sky-500 dark:border-l-sky-400",
   },
   instagram: {
     label: "Instagram",
@@ -205,10 +210,37 @@ const channelTypeConfig: Record<
     textColor: "text-pink-700 dark:text-pink-400",
     borderColor: "border-pink-200 dark:border-pink-800/40",
     iconBg: "bg-pink-100 dark:bg-pink-800/30",
+    accentBorder: "border-l-pink-500 dark:border-l-pink-400",
   },
 };
 
-// ─── Helper: empty channel form ──────────────────────────────────────────────
+// ─── Accent colors per section ────────────────────────────────────────────────
+
+const sectionAccents = {
+  credentials: {
+    iconColor: "text-terracotta-600 dark:text-terracotta-400",
+    badgeBg: "bg-terracotta-50 dark:bg-terracotta-900/20",
+    badgeText: "text-terracotta-700 dark:text-terracotta-400",
+    badgeBorder: "border-terracotta-200 dark:border-terracotta-800/40",
+    dotColor: "bg-terracotta-500",
+  },
+  variables: {
+    iconColor: "text-sage-600 dark:text-sage-400",
+    badgeBg: "bg-sage-50 dark:bg-sage-900/20",
+    badgeText: "text-sage-700 dark:text-sage-400",
+    badgeBorder: "border-sage-200 dark:border-sage-800/40",
+    dotColor: "bg-sage-500",
+  },
+  imageSets: {
+    iconColor: "text-amber-600 dark:text-amber-400",
+    badgeBg: "bg-amber-50 dark:bg-amber-900/20",
+    badgeText: "text-amber-700 dark:text-amber-400",
+    badgeBorder: "border-amber-200 dark:border-amber-800/40",
+    dotColor: "bg-amber-500",
+  },
+};
+
+// ─── Helper ───────────────────────────────────────────────────────────────────
 
 function createEmptyChannelForm(): Omit<Channel, "id"> {
   return {
@@ -222,7 +254,19 @@ function createEmptyChannelForm(): Omit<Channel, "id"> {
   };
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+function deepCloneChannel(ch: Channel): Omit<Channel, "id"> {
+  return {
+    name: ch.name,
+    nameAr: ch.nameAr,
+    type: ch.type,
+    active: ch.active,
+    credentials: ch.credentials.map((c) => ({ ...c })),
+    variables: ch.variables.map((v) => ({ ...v })),
+    imageSets: ch.imageSets.map((s) => ({ ...s, urls: [...s.urls] })),
+  };
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ChannelsSection() {
   const { locale } = useAppStore();
@@ -231,37 +275,44 @@ export function ChannelsSection() {
   const [channels, setChannels] = useState<Channel[]>(initialChannels);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
-  const [formData, setFormData] = useState<Omit<Channel, "id">>(createEmptyChannelForm());
+  const [formData, setFormData] = useState<Omit<Channel, "id">>(
+    createEmptyChannelForm()
+  );
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // ─── Dialog Handlers ─────────────────────────────────────────────────────
 
-  const openAddDialog = () => {
+  const openAddDialog = useCallback(() => {
     setEditingChannel(null);
     setFormData(createEmptyChannelForm());
     setDialogOpen(true);
-  };
+  }, []);
 
-  const openEditDialog = (channel: Channel) => {
+  const openEditDialog = useCallback((channel: Channel) => {
     setEditingChannel(channel);
-    setFormData({
-      name: channel.name,
-      nameAr: channel.nameAr,
-      type: channel.type,
-      active: channel.active,
-      credentials: channel.credentials.map((c) => ({ ...c })),
-      variables: channel.variables.map((v) => ({ ...v })),
-      imageSets: channel.imageSets.map((s) => ({ ...s, urls: [...s.urls] })),
-    });
+    setFormData(deepCloneChannel(channel));
     setDialogOpen(true);
-  };
+  }, []);
 
-  const handleSave = () => {
+  const handleDialogClose = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setDialogOpen(false);
+        setEditingChannel(null);
+      }
+    },
+    []
+  );
+
+  const handleSave = useCallback(() => {
     if (!formData.name.trim()) return;
 
-    // Filter out empty credentials/variables/imageSets
-    const cleanedCredentials = formData.credentials.filter((c) => c.key.trim());
-    const cleanedVariables = formData.variables.filter((v) => v.name.trim());
+    const cleanedCredentials = formData.credentials.filter(
+      (c) => c.key.trim()
+    );
+    const cleanedVariables = formData.variables.filter(
+      (v) => v.name.trim()
+    );
     const cleanedImageSets = formData.imageSets
       .map((s) => ({ ...s, urls: s.urls.filter((u) => u.trim()) }))
       .filter((s) => s.name.trim());
@@ -298,92 +349,96 @@ export function ChannelsSection() {
     }
     setDialogOpen(false);
     setEditingChannel(null);
-  };
+  }, [formData, editingChannel]);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     setChannels((prev) => prev.filter((ch) => ch.id !== id));
     setDeleteConfirmId(null);
-  };
+  }, []);
 
-  const toggleChannelActive = (id: string) => {
+  const toggleChannelActive = useCallback((id: string) => {
     setChannels((prev) =>
       prev.map((ch) => (ch.id === id ? { ...ch, active: !ch.active } : ch))
     );
-  };
+  }, []);
 
-  // ─── Form Helpers ────────────────────────────────────────────────────────
+  // ─── Form Data Helpers ───────────────────────────────────────────────────
 
-  const updateCredential = (index: number, field: "key" | "value", val: string) => {
-    setFormData((prev) => {
-      const creds = [...prev.credentials];
-      creds[index] = { ...creds[index], [field]: val };
-      return { ...prev, credentials: creds };
-    });
-  };
+  const updateFormCredential = useCallback(
+    (index: number, field: "key" | "value", val: string) => {
+      setFormData((prev) => {
+        const creds = [...prev.credentials];
+        creds[index] = { ...creds[index], [field]: val };
+        return { ...prev, credentials: creds };
+      });
+    },
+    []
+  );
 
-  const addCredential = () => {
+  const addFormCredential = useCallback(() => {
     setFormData((prev) => ({
       ...prev,
       credentials: [...prev.credentials, { key: "", value: "" }],
     }));
-  };
+  }, []);
 
-  const removeCredential = (index: number) => {
+  const removeFormCredential = useCallback((index: number) => {
     setFormData((prev) => ({
       ...prev,
       credentials: prev.credentials.filter((_, i) => i !== index),
     }));
-  };
+  }, []);
 
-  const updateVariable = (index: number, field: "name" | "value", val: string) => {
-    setFormData((prev) => {
-      const vars = [...prev.variables];
-      vars[index] = { ...vars[index], [field]: val };
-      return { ...prev, variables: vars };
-    });
-  };
+  const updateFormVariable = useCallback(
+    (index: number, field: "name" | "value", val: string) => {
+      setFormData((prev) => {
+        const vars = [...prev.variables];
+        vars[index] = { ...vars[index], [field]: val };
+        return { ...prev, variables: vars };
+      });
+    },
+    []
+  );
 
-  const addVariable = () => {
+  const addFormVariable = useCallback(() => {
     setFormData((prev) => ({
       ...prev,
       variables: [...prev.variables, { name: "", value: "" }],
     }));
-  };
+  }, []);
 
-  const removeVariable = (index: number) => {
+  const removeFormVariable = useCallback((index: number) => {
     setFormData((prev) => ({
       ...prev,
       variables: prev.variables.filter((_, i) => i !== index),
     }));
-  };
+  }, []);
 
-  const updateImageSet = (
-    setIndex: number,
-    field: "name",
-    val: string
-  ) => {
-    setFormData((prev) => {
-      const sets = [...prev.imageSets];
-      sets[setIndex] = { ...sets[setIndex], [field]: val };
-      return { ...prev, imageSets: sets };
-    });
-  };
+  const updateFormImageSetName = useCallback(
+    (setIndex: number, val: string) => {
+      setFormData((prev) => {
+        const sets = [...prev.imageSets];
+        sets[setIndex] = { ...sets[setIndex], name: val };
+        return { ...prev, imageSets: sets };
+      });
+    },
+    []
+  );
 
-  const updateImageSetUrl = (
-    setIndex: number,
-    urlIndex: number,
-    val: string
-  ) => {
-    setFormData((prev) => {
-      const sets = [...prev.imageSets];
-      const urls = [...sets[setIndex].urls];
-      urls[urlIndex] = val;
-      sets[setIndex] = { ...sets[setIndex], urls };
-      return { ...prev, imageSets: sets };
-    });
-  };
+  const updateFormImageSetUrl = useCallback(
+    (setIndex: number, urlIndex: number, val: string) => {
+      setFormData((prev) => {
+        const sets = [...prev.imageSets];
+        const urls = [...sets[setIndex].urls];
+        urls[urlIndex] = val;
+        sets[setIndex] = { ...sets[setIndex], urls };
+        return { ...prev, imageSets: sets };
+      });
+    },
+    []
+  );
 
-  const addImageSetUrl = (setIndex: number) => {
+  const addFormImageSetUrl = useCallback((setIndex: number) => {
     setFormData((prev) => {
       const sets = [...prev.imageSets];
       sets[setIndex] = {
@@ -392,157 +447,208 @@ export function ChannelsSection() {
       };
       return { ...prev, imageSets: sets };
     });
-  };
+  }, []);
 
-  const removeImageSetUrl = (setIndex: number, urlIndex: number) => {
-    setFormData((prev) => {
-      const sets = [...prev.imageSets];
-      sets[setIndex] = {
-        ...sets[setIndex],
-        urls: sets[setIndex].urls.filter((_, i) => i !== urlIndex),
-      };
-      return { ...prev, imageSets: sets };
-    });
-  };
-
-  const addImageSet = () => {
-    setFormData((prev) => ({
-      ...prev,
-      imageSets: [...prev.imageSets, { name: "", urls: [""] }],
-    }));
-  };
-
-  const removeImageSet = (setIndex: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      imageSets: prev.imageSets.filter((_, i) => i !== setIndex),
-    }));
-  };
-
-  // ─── Inline Edit Helpers for Cards ───────────────────────────────────────
-
-  const updateChannelCredential = (
-    channelId: string,
-    index: number,
-    field: "key" | "value",
-    val: string
-  ) => {
-    setChannels((prev) =>
-      prev.map((ch) => {
-        if (ch.id !== channelId) return ch;
-        const creds = [...ch.credentials];
-        creds[index] = { ...creds[index], [field]: val };
-        return { ...ch, credentials: creds };
-      })
-    );
-  };
-
-  const addChannelCredential = (channelId: string) => {
-    setChannels((prev) =>
-      prev.map((ch) => {
-        if (ch.id !== channelId) return ch;
-        return { ...ch, credentials: [...ch.credentials, { key: "", value: "" }] };
-      })
-    );
-  };
-
-  const removeChannelCredential = (channelId: string, index: number) => {
-    setChannels((prev) =>
-      prev.map((ch) => {
-        if (ch.id !== channelId) return ch;
-        return {
-          ...ch,
-          credentials: ch.credentials.filter((_, i) => i !== index),
-        };
-      })
-    );
-  };
-
-  const updateChannelVariable = (
-    channelId: string,
-    index: number,
-    field: "name" | "value",
-    val: string
-  ) => {
-    setChannels((prev) =>
-      prev.map((ch) => {
-        if (ch.id !== channelId) return ch;
-        const vars = [...ch.variables];
-        vars[index] = { ...vars[index], [field]: val };
-        return { ...ch, variables: vars };
-      })
-    );
-  };
-
-  const addChannelVariable = (channelId: string) => {
-    setChannels((prev) =>
-      prev.map((ch) => {
-        if (ch.id !== channelId) return ch;
-        return { ...ch, variables: [...ch.variables, { name: "", value: "" }] };
-      })
-    );
-  };
-
-  const removeChannelVariable = (channelId: string, index: number) => {
-    setChannels((prev) =>
-      prev.map((ch) => {
-        if (ch.id !== channelId) return ch;
-        return {
-          ...ch,
-          variables: ch.variables.filter((_, i) => i !== index),
-        };
-      })
-    );
-  };
-
-  const addChannelImageSetUrl = (channelId: string, setIndex: number) => {
-    setChannels((prev) =>
-      prev.map((ch) => {
-        if (ch.id !== channelId) return ch;
-        const sets = [...ch.imageSets];
-        sets[setIndex] = {
-          ...sets[setIndex],
-          urls: [...sets[setIndex].urls, ""],
-        };
-        return { ...ch, imageSets: sets };
-      })
-    );
-  };
-
-  const removeChannelImageSetUrl = (
-    channelId: string,
-    setIndex: number,
-    urlIndex: number
-  ) => {
-    setChannels((prev) =>
-      prev.map((ch) => {
-        if (ch.id !== channelId) return ch;
-        const sets = [...ch.imageSets];
+  const removeFormImageSetUrl = useCallback(
+    (setIndex: number, urlIndex: number) => {
+      setFormData((prev) => {
+        const sets = [...prev.imageSets];
         sets[setIndex] = {
           ...sets[setIndex],
           urls: sets[setIndex].urls.filter((_, i) => i !== urlIndex),
         };
-        return { ...ch, imageSets: sets };
-      })
+        return { ...prev, imageSets: sets };
+      });
+    },
+    []
+  );
+
+  const addFormImageSet = useCallback(() => {
+    setFormData((prev) => ({
+      ...prev,
+      imageSets: [...prev.imageSets, { name: "", urls: [""] }],
+    }));
+  }, []);
+
+  const removeFormImageSet = useCallback((setIndex: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      imageSets: prev.imageSets.filter((_, i) => i !== setIndex),
+    }));
+  }, []);
+
+  // ─── Inline Card State Update Helpers ────────────────────────────────────
+
+  const updateChannelCredential = useCallback(
+    (channelId: string, index: number, field: "key" | "value", val: string) => {
+      setChannels((prev) =>
+        prev.map((ch) => {
+          if (ch.id !== channelId) return ch;
+          const creds = [...ch.credentials];
+          creds[index] = { ...creds[index], [field]: val };
+          return { ...ch, credentials: creds };
+        })
+      );
+    },
+    []
+  );
+
+  const addChannelCredential = useCallback((channelId: string) => {
+    setChannels((prev) =>
+      prev.map((ch) =>
+        ch.id === channelId
+          ? { ...ch, credentials: [...ch.credentials, { key: "", value: "" }] }
+          : ch
+      )
     );
-  };
+  }, []);
+
+  const removeChannelCredential = useCallback(
+    (channelId: string, index: number) => {
+      setChannels((prev) =>
+        prev.map((ch) =>
+          ch.id === channelId
+            ? {
+                ...ch,
+                credentials: ch.credentials.filter((_, i) => i !== index),
+              }
+            : ch
+        )
+      );
+    },
+    []
+  );
+
+  const updateChannelVariable = useCallback(
+    (channelId: string, index: number, field: "name" | "value", val: string) => {
+      setChannels((prev) =>
+        prev.map((ch) => {
+          if (ch.id !== channelId) return ch;
+          const vars = [...ch.variables];
+          vars[index] = { ...vars[index], [field]: val };
+          return { ...ch, variables: vars };
+        })
+      );
+    },
+    []
+  );
+
+  const addChannelVariable = useCallback((channelId: string) => {
+    setChannels((prev) =>
+      prev.map((ch) =>
+        ch.id === channelId
+          ? { ...ch, variables: [...ch.variables, { name: "", value: "" }] }
+          : ch
+      )
+    );
+  }, []);
+
+  const removeChannelVariable = useCallback(
+    (channelId: string, index: number) => {
+      setChannels((prev) =>
+        prev.map((ch) =>
+          ch.id === channelId
+            ? {
+                ...ch,
+                variables: ch.variables.filter((_, i) => i !== index),
+              }
+            : ch
+        )
+      );
+    },
+    []
+  );
+
+  const updateChannelImageSetName = useCallback(
+    (channelId: string, setIndex: number, val: string) => {
+      setChannels((prev) =>
+        prev.map((ch) => {
+          if (ch.id !== channelId) return ch;
+          const sets = [...ch.imageSets];
+          sets[setIndex] = { ...sets[setIndex], name: val };
+          return { ...ch, imageSets: sets };
+        })
+      );
+    },
+    []
+  );
+
+  const addChannelImageSetUrl = useCallback(
+    (channelId: string, setIndex: number) => {
+      setChannels((prev) =>
+        prev.map((ch) => {
+          if (ch.id !== channelId) return ch;
+          const sets = [...ch.imageSets];
+          sets[setIndex] = {
+            ...sets[setIndex],
+            urls: [...sets[setIndex].urls, ""],
+          };
+          return { ...ch, imageSets: sets };
+        })
+      );
+    },
+    []
+  );
+
+  const removeChannelImageSetUrl = useCallback(
+    (channelId: string, setIndex: number, urlIndex: number) => {
+      setChannels((prev) =>
+        prev.map((ch) => {
+          if (ch.id !== channelId) return ch;
+          const sets = [...ch.imageSets];
+          sets[setIndex] = {
+            ...sets[setIndex],
+            urls: sets[setIndex].urls.filter((_, i) => i !== urlIndex),
+          };
+          return { ...ch, imageSets: sets };
+        })
+      );
+    },
+    []
+  );
+
+  const removeChannelImageSet = useCallback(
+    (channelId: string, setIndex: number) => {
+      setChannels((prev) =>
+        prev.map((ch) =>
+          ch.id === channelId
+            ? {
+                ...ch,
+                imageSets: ch.imageSets.filter((_, i) => i !== setIndex),
+              }
+            : ch
+        )
+      );
+    },
+    []
+  );
+
+  const addChannelImageSet = useCallback((channelId: string) => {
+    setChannels((prev) =>
+      prev.map((ch) =>
+        ch.id === channelId
+          ? { ...ch, imageSets: [...ch.imageSets, { name: "", urls: [""] }] }
+          : ch
+      )
+    );
+  }, []);
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Section Header */}
       <div
         className={cn(
           "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4",
           rtl && "sm:flex-row-reverse"
         )}
       >
-        <div className="space-y-1">
+        <div className={cn("space-y-1", rtl && "text-right")}>
           <h2
             className={cn(
               "text-2xl font-bold tracking-tight",
-              rtl && "font-arabic text-right"
+              rtl && "font-arabic"
             )}
           >
             {t(locale, "channels.title")}
@@ -550,7 +656,7 @@ export function ChannelsSection() {
           <p
             className={cn(
               "text-muted-foreground text-sm",
-              rtl && "font-arabic text-right"
+              rtl && "font-arabic"
             )}
           >
             {t(locale, "channels.subtitle")}
@@ -569,43 +675,63 @@ export function ChannelsSection() {
       </div>
 
       {/* Channel Cards */}
-      <div className="grid gap-4 md:gap-6">
-        {channels.map((channel) => (
-          <ChannelCard
-            key={channel.id}
-            channel={channel}
-            locale={locale}
-            rtl={rtl}
-            onToggleActive={toggleChannelActive}
-            onEdit={openEditDialog}
-            onDelete={handleDelete}
-            deleteConfirmId={deleteConfirmId}
-            setDeleteConfirmId={setDeleteConfirmId}
-            onUpdateCredential={updateChannelCredential}
-            onAddCredential={addChannelCredential}
-            onRemoveCredential={removeChannelCredential}
-            onUpdateVariable={updateChannelVariable}
-            onAddVariable={addChannelVariable}
-            onRemoveVariable={removeChannelVariable}
-            onAddImageSetUrl={addChannelImageSetUrl}
-            onRemoveImageSetUrl={removeChannelImageSetUrl}
-          />
-        ))}
-      </div>
+      <AnimatePresence mode="popLayout">
+        <div className="grid gap-4 md:gap-6">
+          {channels.map((channel) => (
+            <motion.div
+              key={channel.id}
+              layout
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12, scale: 0.97 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <ChannelCard
+                channel={channel}
+                locale={locale}
+                rtl={rtl}
+                onToggleActive={toggleChannelActive}
+                onEdit={openEditDialog}
+                onDelete={handleDelete}
+                deleteConfirmId={deleteConfirmId}
+                setDeleteConfirmId={setDeleteConfirmId}
+                onUpdateCredential={updateChannelCredential}
+                onAddCredential={addChannelCredential}
+                onRemoveCredential={removeChannelCredential}
+                onUpdateVariable={updateChannelVariable}
+                onAddVariable={addChannelVariable}
+                onRemoveVariable={removeChannelVariable}
+                onUpdateImageSetName={updateChannelImageSetName}
+                onAddImageSetUrl={addChannelImageSetUrl}
+                onRemoveImageSetUrl={removeChannelImageSetUrl}
+                onAddImageSet={addChannelImageSet}
+                onRemoveImageSet={removeChannelImageSet}
+              />
+            </motion.div>
+          ))}
+        </div>
+      </AnimatePresence>
 
       {/* Add/Edit Channel Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
         <DialogContent
-          className={cn("sm:max-w-2xl max-h-[90vh] overflow-y-auto", rtl && "font-arabic")}
+          className={cn(
+            "sm:max-w-2xl max-h-[90vh] overflow-y-auto",
+            rtl && "font-arabic"
+          )}
           dir={rtl ? "rtl" : "ltr"}
         >
-          <DialogHeader className={cn(rtl && "text-right items-end")}>
-            <DialogTitle className={rtl && "font-arabic text-right"}>
+          <DialogHeader
+            className={cn(rtl && "items-start text-right")}
+          >
+            <DialogTitle className={cn(rtl && "font-arabic text-right")}>
               {editingChannel
                 ? t(locale, "channels.editChannel")
                 : t(locale, "channels.addChannel")}
             </DialogTitle>
-            <DialogDescription className={rtl && "font-arabic text-right"}>
+            <DialogDescription
+              className={cn(rtl && "font-arabic text-right")}
+            >
               {editingChannel
                 ? rtl
                   ? "تعديل إعدادات القناة"
@@ -627,10 +753,24 @@ export function ChannelsSection() {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                placeholder={
-                  rtl ? "أدخل اسم القناة" : "Enter channel name"
-                }
+                placeholder={rtl ? "أدخل اسم القناة" : "Enter channel name"}
                 className={cn(rtl && "font-arabic text-right")}
+              />
+            </div>
+
+            {/* Channel Name Arabic */}
+            <div className="space-y-2">
+              <Label className={cn(rtl && "font-arabic")}>
+                {rtl ? "الاسم بالعربية" : "Name (Arabic)"}
+              </Label>
+              <Input
+                value={formData.nameAr}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, nameAr: e.target.value }))
+                }
+                placeholder={rtl ? "أدخل الاسم بالعربية" : "Arabic name"}
+                className={cn("font-arabic text-right")}
+                dir="rtl"
               />
             </div>
 
@@ -652,13 +792,22 @@ export function ChannelsSection() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="whatsapp" className={rtl ? "font-arabic" : ""}>
+                  <SelectItem
+                    value="whatsapp"
+                    className={rtl ? "font-arabic" : ""}
+                  >
                     {t(locale, "channels.whatsapp")}
                   </SelectItem>
-                  <SelectItem value="facebook" className={rtl ? "font-arabic" : ""}>
+                  <SelectItem
+                    value="facebook"
+                    className={rtl ? "font-arabic" : ""}
+                  >
                     {t(locale, "channels.facebook")}
                   </SelectItem>
-                  <SelectItem value="instagram" className={rtl ? "font-arabic" : ""}>
+                  <SelectItem
+                    value="instagram"
+                    className={rtl ? "font-arabic" : ""}
+                  >
                     {t(locale, "channels.instagram")}
                   </SelectItem>
                 </SelectContent>
@@ -675,8 +824,18 @@ export function ChannelsSection() {
                   rtl && "flex-row-reverse"
                 )}
               >
-                <Key className="w-4 h-4 text-terracotta-600 dark:text-terracotta-400 shrink-0" />
-                <Label className={cn("text-sm font-semibold", rtl && "font-arabic")}>
+                <Key
+                  className={cn(
+                    "w-4 h-4 shrink-0",
+                    sectionAccents.credentials.iconColor
+                  )}
+                />
+                <Label
+                  className={cn(
+                    "text-sm font-semibold",
+                    rtl && "font-arabic"
+                  )}
+                >
                   {t(locale, "channels.credentials")}
                 </Label>
               </div>
@@ -691,24 +850,37 @@ export function ChannelsSection() {
                   >
                     <Input
                       value={cred.key}
-                      onChange={(e) => updateCredential(idx, "key", e.target.value)}
+                      onChange={(e) =>
+                        updateFormCredential(idx, "key", e.target.value)
+                      }
                       placeholder={t(locale, "channels.credentialKey")}
-                      className={cn("flex-1", rtl && "font-arabic text-right")}
+                      className={cn(
+                        "flex-1 font-mono text-xs",
+                        rtl && "text-right"
+                      )}
                     />
+                    <span className="text-muted-foreground text-xs font-bold">
+                      =
+                    </span>
                     <Input
                       value={cred.value}
-                      onChange={(e) => updateCredential(idx, "value", e.target.value)}
+                      onChange={(e) =>
+                        updateFormCredential(idx, "value", e.target.value)
+                      }
                       placeholder={t(locale, "channels.credentialValue")}
-                      className={cn("flex-1", rtl && "font-arabic text-right")}
+                      className={cn(
+                        "flex-1 font-mono text-xs",
+                        rtl && "text-right"
+                      )}
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="shrink-0 h-9 w-9 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeCredential(idx)}
+                      className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                      onClick={() => removeFormCredential(idx)}
                       disabled={formData.credentials.length <= 1}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 ))}
@@ -716,8 +888,8 @@ export function ChannelsSection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={addCredential}
-                className={cn("gap-1", rtl && "font-arabic")}
+                onClick={addFormCredential}
+                className={cn("gap-1.5 text-xs", rtl && "font-arabic")}
               >
                 <Plus className="w-3 h-3" />
                 {t(locale, "channels.addCredential")}
@@ -734,8 +906,18 @@ export function ChannelsSection() {
                   rtl && "flex-row-reverse"
                 )}
               >
-                <Variable className="w-4 h-4 text-sage-600 dark:text-sage-400 shrink-0" />
-                <Label className={cn("text-sm font-semibold", rtl && "font-arabic")}>
+                <Variable
+                  className={cn(
+                    "w-4 h-4 shrink-0",
+                    sectionAccents.variables.iconColor
+                  )}
+                />
+                <Label
+                  className={cn(
+                    "text-sm font-semibold",
+                    rtl && "font-arabic"
+                  )}
+                >
                   {t(locale, "channels.variables")}
                 </Label>
               </div>
@@ -750,24 +932,37 @@ export function ChannelsSection() {
                   >
                     <Input
                       value={v.name}
-                      onChange={(e) => updateVariable(idx, "name", e.target.value)}
+                      onChange={(e) =>
+                        updateFormVariable(idx, "name", e.target.value)
+                      }
                       placeholder={t(locale, "channels.variableName")}
-                      className={cn("flex-1", rtl && "font-arabic text-right")}
+                      className={cn(
+                        "flex-1 font-mono text-xs",
+                        rtl && "text-right"
+                      )}
                     />
+                    <span className="text-muted-foreground text-xs font-bold">
+                      =
+                    </span>
                     <Input
                       value={v.value}
-                      onChange={(e) => updateVariable(idx, "value", e.target.value)}
+                      onChange={(e) =>
+                        updateFormVariable(idx, "value", e.target.value)
+                      }
                       placeholder={t(locale, "channels.variableValue")}
-                      className={cn("flex-1", rtl && "font-arabic text-right")}
+                      className={cn(
+                        "flex-1 font-mono text-xs",
+                        rtl && "text-right"
+                      )}
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="shrink-0 h-9 w-9 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeVariable(idx)}
+                      className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                      onClick={() => removeFormVariable(idx)}
                       disabled={formData.variables.length <= 1}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 ))}
@@ -775,8 +970,8 @@ export function ChannelsSection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={addVariable}
-                className={cn("gap-1", rtl && "font-arabic")}
+                onClick={addFormVariable}
+                className={cn("gap-1.5 text-xs", rtl && "font-arabic")}
               >
                 <Plus className="w-3 h-3" />
                 {t(locale, "channels.addVariable")}
@@ -793,8 +988,18 @@ export function ChannelsSection() {
                   rtl && "flex-row-reverse"
                 )}
               >
-                <ImageIcon className="w-4 h-4 text-sand-600 dark:text-sand-400 shrink-0" />
-                <Label className={cn("text-sm font-semibold", rtl && "font-arabic")}>
+                <ImageIcon
+                  className={cn(
+                    "w-4 h-4 shrink-0",
+                    sectionAccents.imageSets.iconColor
+                  )}
+                />
+                <Label
+                  className={cn(
+                    "text-sm font-semibold",
+                    rtl && "font-arabic"
+                  )}
+                >
                   {t(locale, "channels.imageSets")}
                 </Label>
               </div>
@@ -802,7 +1007,10 @@ export function ChannelsSection() {
                 {formData.imageSets.map((imgSet, setIdx) => (
                   <div
                     key={setIdx}
-                    className="p-3 rounded-lg border bg-muted/30 space-y-2"
+                    className={cn(
+                      "p-3 rounded-lg border bg-muted/30 space-y-2",
+                      rtl && "text-right"
+                    )}
                   >
                     <div
                       className={cn(
@@ -813,42 +1021,54 @@ export function ChannelsSection() {
                       <Input
                         value={imgSet.name}
                         onChange={(e) =>
-                          updateImageSet(setIdx, "name", e.target.value)
+                          updateFormImageSetName(setIdx, e.target.value)
                         }
                         placeholder={t(locale, "channels.imageSetName")}
-                        className={cn("flex-1", rtl && "font-arabic text-right")}
+                        className={cn(
+                          "flex-1 font-mono text-xs",
+                          rtl && "text-right"
+                        )}
                       />
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="shrink-0 h-9 w-9 text-muted-foreground hover:text-destructive"
-                        onClick={() => removeImageSet(setIdx)}
+                        className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                        onClick={() => removeFormImageSet(setIdx)}
                         disabled={formData.imageSets.length <= 1}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                     {imgSet.urls.map((url, urlIdx) => (
                       <div
                         key={urlIdx}
                         className={cn(
-                          "flex items-center gap-2 pl-4",
-                          rtl && "flex-row-reverse pr-4 pl-0"
+                          "flex items-center gap-2",
+                          rtl ? "pr-4 pl-0 flex-row-reverse" : "pl-4"
                         )}
                       >
                         <Input
                           value={url}
                           onChange={(e) =>
-                            updateImageSetUrl(setIdx, urlIdx, e.target.value)
+                            updateFormImageSetUrl(
+                              setIdx,
+                              urlIdx,
+                              e.target.value
+                            )
                           }
                           placeholder={t(locale, "channels.imageUrl")}
-                          className={cn("flex-1", rtl && "font-arabic text-right")}
+                          className={cn(
+                            "flex-1 font-mono text-xs",
+                            rtl && "text-right"
+                          )}
                         />
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => removeImageSetUrl(setIdx, urlIdx)}
+                          className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive transition-colors"
+                          onClick={() =>
+                            removeFormImageSetUrl(setIdx, urlIdx)
+                          }
                           disabled={imgSet.urls.length <= 1}
                         >
                           <Trash2 className="w-3 h-3" />
@@ -858,8 +1078,11 @@ export function ChannelsSection() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => addImageSetUrl(setIdx)}
-                      className={cn("gap-1 ml-4", rtl && "font-arabic ml-0 mr-4")}
+                      onClick={() => addFormImageSetUrl(setIdx)}
+                      className={cn(
+                        "gap-1.5 text-xs",
+                        rtl ? "mr-4 font-arabic" : "ml-4"
+                      )}
                     >
                       <Plus className="w-3 h-3" />
                       {t(locale, "channels.addImage")}
@@ -870,8 +1093,8 @@ export function ChannelsSection() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={addImageSet}
-                className={cn("gap-1", rtl && "font-arabic")}
+                onClick={addFormImageSet}
+                className={cn("gap-1.5 text-xs", rtl && "font-arabic")}
               >
                 <Plus className="w-3 h-3" />
                 {t(locale, "channels.addImageSet")}
@@ -880,19 +1103,23 @@ export function ChannelsSection() {
           </div>
 
           <DialogFooter
-            className={cn(rtl && "flex-row-reverse sm:flex-row-reverse")}
+            className={cn(
+              "gap-2 sm:gap-0",
+              rtl && "flex-row-reverse sm:flex-row-reverse"
+            )}
           >
             <Button
               variant="outline"
-              onClick={() => setDialogOpen(false)}
-              className={rtl ? "font-arabic" : ""}
+              onClick={() => handleDialogClose(false)}
+              className={cn(rtl && "font-arabic")}
             >
               {t(locale, "cancel")}
             </Button>
             <Button
               onClick={handleSave}
+              disabled={!formData.name.trim()}
               className={cn(
-                "bg-sage-600 hover:bg-sage-700 text-white",
+                "bg-sage-600 hover:bg-sage-700 text-white disabled:opacity-50",
                 rtl && "font-arabic"
               )}
             >
@@ -916,14 +1143,35 @@ interface ChannelCardProps {
   onDelete: (id: string) => void;
   deleteConfirmId: string | null;
   setDeleteConfirmId: (id: string | null) => void;
-  onUpdateCredential: (channelId: string, index: number, field: "key" | "value", val: string) => void;
+  onUpdateCredential: (
+    channelId: string,
+    index: number,
+    field: "key" | "value",
+    val: string
+  ) => void;
   onAddCredential: (channelId: string) => void;
   onRemoveCredential: (channelId: string, index: number) => void;
-  onUpdateVariable: (channelId: string, index: number, field: "name" | "value", val: string) => void;
+  onUpdateVariable: (
+    channelId: string,
+    index: number,
+    field: "name" | "value",
+    val: string
+  ) => void;
   onAddVariable: (channelId: string) => void;
   onRemoveVariable: (channelId: string, index: number) => void;
+  onUpdateImageSetName: (
+    channelId: string,
+    setIndex: number,
+    val: string
+  ) => void;
   onAddImageSetUrl: (channelId: string, setIndex: number) => void;
-  onRemoveImageSetUrl: (channelId: string, setIndex: number, urlIndex: number) => void;
+  onRemoveImageSetUrl: (
+    channelId: string,
+    setIndex: number,
+    urlIndex: number
+  ) => void;
+  onAddImageSet: (channelId: string) => void;
+  onRemoveImageSet: (channelId: string, setIndex: number) => void;
 }
 
 function ChannelCard({
@@ -941,46 +1189,85 @@ function ChannelCard({
   onUpdateVariable,
   onAddVariable,
   onRemoveVariable,
+  onUpdateImageSetName,
   onAddImageSetUrl,
   onRemoveImageSetUrl,
+  onAddImageSet,
+  onRemoveImageSet,
 }: ChannelCardProps) {
   const config = channelTypeConfig[channel.type];
   const Icon = config.icon;
   const isConfirmingDelete = deleteConfirmId === channel.id;
 
+  // Track which credentials are revealed (unmasked)
+  const [revealedCreds, setRevealedCreds] = useState<Set<number>>(new Set());
+  const toggleReveal = (idx: number) => {
+    setRevealedCreds((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) {
+        next.delete(idx);
+      } else {
+        next.add(idx);
+      }
+      return next;
+    });
+  };
+
+  // Track open image set sub-sections
+  const [openImageSets, setOpenImageSets] = useState<Set<number>>(new Set([0]));
+  const toggleImageSet = (idx: number) => {
+    setOpenImageSets((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) {
+        next.delete(idx);
+      } else {
+        next.add(idx);
+      }
+      return next;
+    });
+  };
+
+  const maskValue = (val: string, revealed: boolean) => {
+    if (revealed) return val;
+    if (val.length <= 4) return "••••";
+    return val.slice(0, 4) + "••••";
+  };
+
   return (
     <Card
       className={cn(
-        "overflow-hidden transition-shadow duration-200 hover:shadow-md",
-        !channel.active && "opacity-75"
+        "overflow-hidden transition-all duration-200 hover:shadow-md border-l-4",
+        config.accentBorder,
+        !channel.active && "opacity-70",
+        rtl && "border-l-0 border-r-4"
       )}
     >
       {/* Card Header */}
-      <CardHeader className="pb-0">
+      <CardHeader className="pb-3">
         <div
           className={cn(
-            "flex items-start justify-between gap-4",
+            "flex items-center justify-between gap-4",
             rtl && "flex-row-reverse"
           )}
         >
-          <div className={cn("flex items-center gap-3", rtl && "flex-row-reverse")}>
-            <div
-              className={cn(
-                "p-2.5 rounded-xl shrink-0",
-                config.iconBg
-              )}
-            >
+          <div
+            className={cn(
+              "flex items-center gap-3 min-w-0",
+              rtl && "flex-row-reverse"
+            )}
+          >
+            <div className={cn("p-2.5 rounded-xl shrink-0", config.iconBg)}>
               <Icon className={cn("w-5 h-5", config.textColor)} />
             </div>
             <div className={cn("min-w-0", rtl && "text-right")}>
               <CardTitle
-                className={cn("text-base", rtl && "font-arabic")}
+                className={cn("text-base leading-tight", rtl && "font-arabic")}
               >
                 {rtl ? channel.nameAr : channel.name}
               </CardTitle>
               <div
                 className={cn(
-                  "flex items-center gap-2 mt-1",
+                  "flex items-center gap-2 mt-1.5 flex-wrap",
                   rtl && "flex-row-reverse justify-end"
                 )}
               >
@@ -1023,40 +1310,37 @@ function ChannelCard({
               rtl && "flex-row-reverse"
             )}
           >
-            <div
+            <Label
+              htmlFor={`switch-${channel.id}`}
               className={cn(
-                "flex items-center gap-2",
-                rtl && "flex-row-reverse"
+                "text-xs text-muted-foreground cursor-pointer hidden sm:inline",
+                rtl && "font-arabic"
               )}
             >
-              <Label
-                htmlFor={`switch-${channel.id}`}
-                className={cn(
-                  "text-xs text-muted-foreground cursor-pointer",
-                  rtl && "font-arabic"
-                )}
-              >
-                {t(locale, "channels.toggleActive")}
-              </Label>
-              <Switch
-                id={`switch-${channel.id}`}
-                checked={channel.active}
-                onCheckedChange={() => onToggleActive(channel.id)}
-              />
-            </div>
+              {t(locale, "channels.toggleActive")}
+            </Label>
+            <Switch
+              id={`switch-${channel.id}`}
+              checked={channel.active}
+              onCheckedChange={() => onToggleActive(channel.id)}
+            />
           </div>
         </div>
       </CardHeader>
 
       <CardContent>
-        {/* Expandable Sections */}
-        <Accordion type="multiple" className="w-full mt-2">
-          {/* Credentials */}
-          <AccordionItem value="credentials">
+        {/* Accordion Sections */}
+        <Accordion
+          type="multiple"
+          className="w-full"
+          defaultValue={[]}
+        >
+          {/* ── Credentials ── */}
+          <AccordionItem value={`${channel.id}-credentials`}>
             <AccordionTrigger
               className={cn(
-                "text-sm font-medium hover:no-underline",
-                rtl && "font-arabic text-right flex-row-reverse"
+                "text-sm font-medium hover:no-underline py-3",
+                rtl && "font-arabic"
               )}
             >
               <div
@@ -1065,61 +1349,105 @@ function ChannelCard({
                   rtl && "flex-row-reverse"
                 )}
               >
-                <Key className="w-4 h-4 text-terracotta-600 dark:text-terracotta-400" />
-                {t(locale, "channels.credentials")}
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                <Key
+                  className={cn(
+                    "w-4 h-4",
+                    sectionAccents.credentials.iconColor
+                  )}
+                />
+                <span>{t(locale, "channels.credentials")}</span>
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "text-[10px] px-1.5 py-0",
+                    sectionAccents.credentials.badgeBg,
+                    sectionAccents.credentials.badgeText,
+                    sectionAccents.credentials.badgeBorder,
+                    "border"
+                  )}
+                >
                   {channel.credentials.length}
                 </Badge>
               </div>
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2">
-                {channel.credentials.map((cred, idx) => (
-                  <div
-                    key={idx}
-                    className={cn(
-                      "flex items-center gap-2",
-                      rtl && "flex-row-reverse"
-                    )}
-                  >
-                    <Input
-                      value={cred.key}
-                      onChange={(e) =>
-                        onUpdateCredential(channel.id, idx, "key", e.target.value)
-                      }
+                {channel.credentials.map((cred, idx) => {
+                  const isRevealed = revealedCreds.has(idx);
+                  return (
+                    <div
+                      key={idx}
                       className={cn(
-                        "flex-1 font-mono text-xs h-8",
-                        rtl && "text-right"
+                        "flex items-center gap-2 group",
+                        rtl && "flex-row-reverse"
                       )}
-                      readOnly
-                    />
-                    <span className="text-muted-foreground text-xs">=</span>
-                    <Input
-                      value={cred.value}
-                      onChange={(e) =>
-                        onUpdateCredential(channel.id, idx, "value", e.target.value)
-                      }
-                      className={cn(
-                        "flex-1 font-mono text-xs h-8",
-                        rtl && "text-right"
-                      )}
-                      readOnly
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => onRemoveCredential(channel.id, idx)}
                     >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ))}
+                      <Input
+                        value={cred.key}
+                        onChange={(e) =>
+                          onUpdateCredential(
+                            channel.id,
+                            idx,
+                            "key",
+                            e.target.value
+                          )
+                        }
+                        className={cn(
+                          "flex-1 font-mono text-xs h-8 bg-terracotta-50/30 dark:bg-terracotta-900/10 border-terracotta-200/50 dark:border-terracotta-800/30 focus:border-terracotta-400",
+                          rtl && "text-right"
+                        )}
+                      />
+                      <span className="text-muted-foreground text-xs font-bold">
+                        =
+                      </span>
+                      <Input
+                        value={maskValue(cred.value, isRevealed)}
+                        onChange={(e) =>
+                          onUpdateCredential(
+                            channel.id,
+                            idx,
+                            "value",
+                            e.target.value
+                          )
+                        }
+                        className={cn(
+                          "flex-1 font-mono text-xs h-8 bg-terracotta-50/30 dark:bg-terracotta-900/10 border-terracotta-200/50 dark:border-terracotta-800/30 focus:border-terracotta-400",
+                          rtl && "text-right"
+                        )}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 h-7 w-7 text-muted-foreground hover:text-terracotta-600 transition-colors"
+                        onClick={() => toggleReveal(idx)}
+                        title={isRevealed ? "Hide" : "Reveal"}
+                      >
+                        {isRevealed ? (
+                          <EyeOff className="w-3.5 h-3.5" />
+                        ) : (
+                          <Eye className="w-3.5 h-3.5" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive transition-colors"
+                        onClick={() => onRemoveCredential(channel.id, idx)}
+                        disabled={channel.credentials.length <= 1}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onAddCredential(channel.id)}
-                  className={cn("gap-1 text-xs h-7", rtl && "font-arabic")}
+                  className={cn(
+                    "gap-1.5 text-xs h-7 border-dashed border-terracotta-300 dark:border-terracotta-700 text-terracotta-600 dark:text-terracotta-400 hover:bg-terracotta-50 dark:hover:bg-terracotta-900/20",
+                    rtl && "font-arabic"
+                  )}
                 >
                   <Plus className="w-3 h-3" />
                   {t(locale, "channels.addCredential")}
@@ -1128,12 +1456,12 @@ function ChannelCard({
             </AccordionContent>
           </AccordionItem>
 
-          {/* Variables */}
-          <AccordionItem value="variables">
+          {/* ── Variables ── */}
+          <AccordionItem value={`${channel.id}-variables`}>
             <AccordionTrigger
               className={cn(
-                "text-sm font-medium hover:no-underline",
-                rtl && "font-arabic text-right flex-row-reverse"
+                "text-sm font-medium hover:no-underline py-3",
+                rtl && "font-arabic"
               )}
             >
               <div
@@ -1142,9 +1470,23 @@ function ChannelCard({
                   rtl && "flex-row-reverse"
                 )}
               >
-                <Variable className="w-4 h-4 text-sage-600 dark:text-sage-400" />
-                {t(locale, "channels.variables")}
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                <Variable
+                  className={cn(
+                    "w-4 h-4",
+                    sectionAccents.variables.iconColor
+                  )}
+                />
+                <span>{t(locale, "channels.variables")}</span>
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "text-[10px] px-1.5 py-0",
+                    sectionAccents.variables.badgeBg,
+                    sectionAccents.variables.badgeText,
+                    sectionAccents.variables.badgeBorder,
+                    "border"
+                  )}
+                >
                   {channel.variables.length}
                 </Badge>
               </div>
@@ -1162,31 +1504,42 @@ function ChannelCard({
                     <Input
                       value={v.name}
                       onChange={(e) =>
-                        onUpdateVariable(channel.id, idx, "name", e.target.value)
+                        onUpdateVariable(
+                          channel.id,
+                          idx,
+                          "name",
+                          e.target.value
+                        )
                       }
                       className={cn(
-                        "flex-1 font-mono text-xs h-8",
+                        "flex-1 font-mono text-xs h-8 bg-sage-50/30 dark:bg-sage-900/10 border-sage-200/50 dark:border-sage-800/30 focus:border-sage-400",
                         rtl && "text-right"
                       )}
-                      readOnly
                     />
-                    <span className="text-muted-foreground text-xs">=</span>
+                    <span className="text-muted-foreground text-xs font-bold">
+                      =
+                    </span>
                     <Input
                       value={v.value}
                       onChange={(e) =>
-                        onUpdateVariable(channel.id, idx, "value", e.target.value)
+                        onUpdateVariable(
+                          channel.id,
+                          idx,
+                          "value",
+                          e.target.value
+                        )
                       }
                       className={cn(
-                        "flex-1 font-mono text-xs h-8",
+                        "flex-1 font-mono text-xs h-8 bg-sage-50/30 dark:bg-sage-900/10 border-sage-200/50 dark:border-sage-800/30 focus:border-sage-400",
                         rtl && "text-right"
                       )}
-                      readOnly
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
+                      className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive transition-colors"
                       onClick={() => onRemoveVariable(channel.id, idx)}
+                      disabled={channel.variables.length <= 1}
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
@@ -1196,7 +1549,10 @@ function ChannelCard({
                   variant="outline"
                   size="sm"
                   onClick={() => onAddVariable(channel.id)}
-                  className={cn("gap-1 text-xs h-7", rtl && "font-arabic")}
+                  className={cn(
+                    "gap-1.5 text-xs h-7 border-dashed border-sage-300 dark:border-sage-700 text-sage-600 dark:text-sage-400 hover:bg-sage-50 dark:hover:bg-sage-900/20",
+                    rtl && "font-arabic"
+                  )}
                 >
                   <Plus className="w-3 h-3" />
                   {t(locale, "channels.addVariable")}
@@ -1205,12 +1561,12 @@ function ChannelCard({
             </AccordionContent>
           </AccordionItem>
 
-          {/* Image Sets */}
-          <AccordionItem value="imageSets">
+          {/* ── Image Sets ── */}
+          <AccordionItem value={`${channel.id}-imagesets`}>
             <AccordionTrigger
               className={cn(
-                "text-sm font-medium hover:no-underline",
-                rtl && "font-arabic text-right flex-row-reverse"
+                "text-sm font-medium hover:no-underline py-3",
+                rtl && "font-arabic"
               )}
             >
               <div
@@ -1219,113 +1575,199 @@ function ChannelCard({
                   rtl && "flex-row-reverse"
                 )}
               >
-                <ImageIcon className="w-4 h-4 text-sand-600 dark:text-sand-400" />
-                {t(locale, "channels.imageSets")}
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                <ImageIcon
+                  className={cn(
+                    "w-4 h-4",
+                    sectionAccents.imageSets.iconColor
+                  )}
+                />
+                <span>{t(locale, "channels.imageSets")}</span>
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "text-[10px] px-1.5 py-0",
+                    sectionAccents.imageSets.badgeBg,
+                    sectionAccents.imageSets.badgeText,
+                    sectionAccents.imageSets.badgeBorder,
+                    "border"
+                  )}
+                >
                   {channel.imageSets.length}
                 </Badge>
               </div>
             </AccordionTrigger>
             <AccordionContent>
-              <div className="space-y-3">
-                {channel.imageSets.map((imgSet, setIdx) => (
-                  <Collapsible key={setIdx}>
+              <div className="space-y-2">
+                {channel.imageSets.map((imgSet, setIdx) => {
+                  const isOpen = openImageSets.has(setIdx);
+                  return (
                     <div
+                      key={setIdx}
                       className={cn(
-                        "flex items-center gap-2",
-                        rtl && "flex-row-reverse"
+                        "rounded-lg border bg-amber-50/20 dark:bg-amber-900/5 border-amber-200/40 dark:border-amber-800/20 overflow-hidden"
                       )}
                     >
-                      <CollapsibleTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                      {/* Image Set Header - Collapsible */}
+                      <Collapsible
+                        open={isOpen}
+                        onOpenChange={() => toggleImageSet(setIdx)}
+                      >
+                        <div
                           className={cn(
-                            "gap-1 p-0 h-auto font-medium text-sm hover:bg-transparent",
-                            rtl && "font-arabic"
+                            "flex items-center gap-2 px-3 py-2",
+                            rtl && "flex-row-reverse"
                           )}
                         >
-                          <ChevronDown className="w-3 h-3 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
-                          {imgSet.name || t(locale, "channels.imageSetName")}
-                        </Button>
-                      </CollapsibleTrigger>
-                      <Badge
-                        variant="secondary"
-                        className="text-[10px] px-1.5 py-0"
-                      >
-                        {imgSet.urls.length} {rtl ? "صور" : "images"}
-                      </Badge>
-                    </div>
-                    <CollapsibleContent>
-                      <div className="mt-2 space-y-1.5 pl-4">
-                        {imgSet.urls.map((url, urlIdx) => (
-                          <div
-                            key={urlIdx}
-                            className={cn(
-                              "flex items-center gap-2",
-                              rtl && "flex-row-reverse"
-                            )}
-                          >
-                            <div
-                              className={cn(
-                                "w-8 h-8 rounded-md bg-muted/50 flex items-center justify-center shrink-0",
-                                config.iconBg
-                              )}
-                            >
-                              <ImageIcon
-                                className={cn("w-4 h-4", config.textColor)}
-                              />
-                            </div>
-                            <Input
-                              value={url}
-                              readOnly
-                              className={cn(
-                                "flex-1 font-mono text-xs h-8",
-                                rtl && "text-right"
-                              )}
-                            />
+                          <CollapsibleTrigger asChild>
                             <Button
                               variant="ghost"
-                              size="icon"
-                              className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive"
-                              onClick={() =>
-                                onRemoveImageSetUrl(channel.id, setIdx, urlIdx)
-                              }
-                              disabled={imgSet.urls.length <= 1}
+                              size="sm"
+                              className={cn(
+                                "h-6 px-1.5 text-xs gap-1",
+                                rtl && "font-arabic"
+                              )}
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <motion.div
+                                animate={{ rotate: isOpen ? 90 : 0 }}
+                                transition={{ duration: 0.15 }}
+                              >
+                                <Plus className="w-3 h-3" />
+                              </motion.div>
+                            </Button>
+                          </CollapsibleTrigger>
+                          <Input
+                            value={imgSet.name}
+                            onChange={(e) =>
+                              onUpdateImageSetName(
+                                channel.id,
+                                setIdx,
+                                e.target.value
+                              )
+                            }
+                            className={cn(
+                              "flex-1 font-mono text-xs h-7 bg-transparent border-0 focus-visible:ring-0 focus-visible:border-0 px-0 shadow-none",
+                              rtl && "text-right"
+                            )}
+                          />
+                          <Badge
+                            variant="secondary"
+                            className="text-[10px] px-1.5 py-0 shrink-0"
+                          >
+                            {imgSet.urls.length}{" "}
+                            {rtl ? "صور" : "imgs"}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="shrink-0 h-6 w-6 text-muted-foreground hover:text-destructive transition-colors"
+                            onClick={() =>
+                              onRemoveImageSet(channel.id, setIdx)
+                            }
+                            disabled={channel.imageSets.length <= 1}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        <CollapsibleContent>
+                          <div className="px-3 pb-2 space-y-1.5">
+                            {imgSet.urls.map((url, urlIdx) => (
+                              <div
+                                key={urlIdx}
+                                className={cn(
+                                  "flex items-center gap-1.5",
+                                  rtl && "flex-row-reverse"
+                                )}
+                              >
+                                <Input
+                                  value={url}
+                                  onChange={(e) => {
+                                    // Update the URL inline
+                                    setChannels((prev) =>
+                                      prev.map((ch) => {
+                                        if (ch.id !== channel.id) return ch;
+                                        const sets = [...ch.imageSets];
+                                        const urls = [...sets[setIdx].urls];
+                                        urls[urlIdx] = e.target.value;
+                                        sets[setIdx] = {
+                                          ...sets[setIdx],
+                                          urls,
+                                        };
+                                        return { ...ch, imageSets: sets };
+                                      })
+                                    );
+                                  }}
+                                  className={cn(
+                                    "flex-1 font-mono text-[11px] h-7 bg-amber-50/40 dark:bg-amber-900/10 border-amber-200/30 dark:border-amber-800/20 focus:border-amber-400",
+                                    rtl && "text-right"
+                                  )}
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="shrink-0 h-6 w-6 text-muted-foreground hover:text-destructive transition-colors"
+                                  onClick={() =>
+                                    onRemoveImageSetUrl(
+                                      channel.id,
+                                      setIdx,
+                                      urlIdx
+                                    )
+                                  }
+                                  disabled={imgSet.urls.length <= 1}
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </Button>
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                onAddImageSetUrl(channel.id, setIdx)
+                              }
+                              className={cn(
+                                "gap-1 text-[11px] h-6 border-dashed border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20",
+                                rtl && "font-arabic"
+                              )}
+                            >
+                              <Plus className="w-2.5 h-2.5" />
+                              {t(locale, "channels.addImage")}
                             </Button>
                           </div>
-                        ))}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onAddImageSetUrl(channel.id, setIdx)}
-                          className={cn("gap-1 text-xs h-7", rtl && "font-arabic")}
-                        >
-                          <Plus className="w-3 h-3" />
-                          {t(locale, "channels.addImage")}
-                        </Button>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ))}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </div>
+                  );
+                })}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onAddImageSet(channel.id)}
+                  className={cn(
+                    "gap-1.5 text-xs h-7 border-dashed border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20",
+                    rtl && "font-arabic"
+                  )}
+                >
+                  <Plus className="w-3 h-3" />
+                  {t(locale, "channels.addImageSet")}
+                </Button>
               </div>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+      </CardContent>
 
-        <Separator className="my-3" />
-
-        {/* Card Actions */}
+      {/* Card Footer with Edit / Delete */}
+      <CardFooter className="pt-0 pb-4 px-6">
         <div
           className={cn(
-            "flex items-center gap-2",
-            rtl ? "justify-start" : "justify-end"
+            "flex items-center gap-2 w-full",
+            rtl ? "justify-start flex-row-reverse" : "justify-end"
           )}
         >
           {isConfirmingDelete ? (
-            <div
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
               className={cn(
                 "flex items-center gap-2",
                 rtl && "flex-row-reverse"
@@ -1333,7 +1775,7 @@ function ChannelCard({
             >
               <span
                 className={cn(
-                  "text-xs text-destructive font-medium",
+                  "text-xs text-destructive",
                   rtl && "font-arabic"
                 )}
               >
@@ -1345,7 +1787,7 @@ function ChannelCard({
                 onClick={() => onDelete(channel.id)}
                 className={cn("h-7 text-xs", rtl && "font-arabic")}
               >
-                {t(locale, "delete")}
+                {t(locale, "confirm")}
               </Button>
               <Button
                 variant="outline"
@@ -1355,32 +1797,37 @@ function ChannelCard({
               >
                 {t(locale, "cancel")}
               </Button>
-            </div>
+            </motion.div>
           ) : (
             <>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => onEdit(channel)}
-                className={cn("gap-1 h-7 text-xs", rtl && "font-arabic")}
-              >
-                {t(locale, "edit")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDeleteConfirmId(channel.id)}
                 className={cn(
-                  "gap-1 h-7 text-xs text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/50 hover:bg-destructive/5",
+                  "gap-1.5 h-8 text-xs",
                   rtl && "font-arabic"
                 )}
               >
-                {t(locale, "channels.deleteChannel")}
+                <Pencil className="w-3.5 h-3.5" />
+                {t(locale, "edit")}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDeleteConfirmId(channel.id)}
+                className={cn(
+                  "gap-1.5 h-8 text-xs text-muted-foreground hover:text-destructive",
+                  rtl && "font-arabic"
+                )}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                {t(locale, "delete")}
               </Button>
             </>
           )}
         </div>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }

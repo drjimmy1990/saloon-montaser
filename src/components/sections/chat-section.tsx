@@ -22,7 +22,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -342,25 +341,44 @@ export function ChatSection() {
     return <Icon className={cn("w-3.5 h-3.5", config.color)} />;
   };
 
-  const getSenderAlignment = (sender: MessageSender) => {
-    if (sender === "agent") return "justify-center";
-    if (sender === "user") return rtl ? "justify-start" : "justify-end";
-    return rtl ? "justify-end" : "justify-start";
+  /**
+   * Message alignment using margin-auto approach:
+   * - User: ms-auto → aligns to the END of the row (right in LTR, left in RTL)
+   * - Bot: me-auto → aligns to the START of the row (left in LTR, right in RTL)
+   * - Agent: mx-auto → centered
+   *
+   * NO flex-row-reverse used for alignment.
+   */
+  const getMessageAlignment = (sender: MessageSender) => {
+    switch (sender) {
+      case "user":
+        return "ms-auto";
+      case "bot":
+        return "me-auto";
+      case "agent":
+        return "mx-auto";
+    }
   };
 
-  const getSenderBubbleStyle = (sender: MessageSender) => {
-    const config = senderConfig[sender];
-    const Icon = config.icon;
-    return { config, Icon };
+  /** Sender label alignment mirrors the bubble alignment */
+  const getLabelAlignment = (sender: MessageSender) => {
+    switch (sender) {
+      case "user":
+        return "ms-auto w-fit";
+      case "bot":
+        return "me-auto w-fit";
+      case "agent":
+        return "mx-auto w-fit";
+    }
   };
 
   // ─── Conversation List Panel ──────────────────────────────────────────────
 
   const conversationListPanel = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" dir={rtl ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className={cn("p-4 border-b", rtl && "text-right")}>
-        <div className={cn("flex items-center justify-between mb-3", rtl && "flex-row-reverse")}>
+      <div className="p-4 border-b">
+        <div className="flex items-center justify-between mb-3">
           <h3 className={cn("font-semibold text-sm", rtl && "font-arabic")}>
             {t(locale, "chat.conversations")}
           </h3>
@@ -368,7 +386,7 @@ export function ChatSection() {
             variant="outline"
             size="sm"
             onClick={handleNewConversation}
-            className={cn("gap-1.5 text-xs h-8", rtl && "font-arabic flex-row-reverse")}
+            className={cn("gap-1.5 text-xs h-8", rtl && "font-arabic")}
           >
             <Plus className="w-3.5 h-3.5" />
             {t(locale, "chat.newConversation")}
@@ -386,8 +404,8 @@ export function ChatSection() {
             </div>
           ) : (
             conversations.map((conv) => {
-              const channelConfig_ = channelConfig[conv.channel];
-              const ChannelIcon = channelConfig_.icon;
+              const chConfig = channelConfig[conv.channel];
+              const ChannelIcon = chConfig.icon;
               const isActive = conv.id === activeConvId;
               return (
                 <button
@@ -398,16 +416,15 @@ export function ChatSection() {
                     isActive && "bg-muted",
                     rtl && "text-right"
                   )}
-                  dir={rtl ? "rtl" : "ltr"}
                 >
-                  <div className={cn("flex items-start gap-3", rtl && "flex-row-reverse")}>
+                  <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className={cn("p-2 rounded-full shrink-0", channelConfig_.bgColor)}>
-                      <ChannelIcon className={cn("w-4 h-4", channelConfig_.color)} />
+                    <div className={cn("p-2 rounded-full shrink-0", chConfig.bgColor)}>
+                      <ChannelIcon className={cn("w-4 h-4", chConfig.color)} />
                     </div>
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className={cn("flex items-center justify-between gap-2", rtl && "flex-row-reverse")}>
+                      <div className="flex items-center justify-between gap-2">
                         <span className={cn("text-sm font-medium truncate", rtl && "font-arabic")}>
                           {rtl ? conv.clientNameAr : conv.clientName}
                         </span>
@@ -432,10 +449,10 @@ export function ChatSection() {
   // ─── Chat Area Panel ─────────────────────────────────────────────────────
 
   const chatAreaPanel = activeConversation ? (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" dir={rtl ? "rtl" : "ltr"}>
       {/* Chat Header */}
-      <div className={cn("p-4 border-b shrink-0", rtl && "text-right")}>
-        <div className={cn("flex items-center gap-3", rtl && "flex-row-reverse")}>
+      <div className="p-4 border-b shrink-0">
+        <div className="flex items-center gap-3">
           {/* Back button (mobile only) */}
           <Button
             variant="ghost"
@@ -450,14 +467,19 @@ export function ChatSection() {
           <div className={cn("p-2 rounded-full", channelConfig[activeConversation.channel].bgColor)}>
             {renderChannelIcon(activeConversation.channel)}
           </div>
-          <div className={cn("min-w-0 flex-1", rtl && "text-right")}>
+          <div className="min-w-0 flex-1">
             <h3 className={cn("font-semibold text-sm", rtl && "font-arabic")}>
               {rtl ? activeConversation.clientNameAr : activeConversation.clientName}
             </h3>
             <p className={cn("text-xs text-muted-foreground", rtl && "font-arabic")}>
-              {t(locale, `channels.${activeConversation.channel === "whatsapp" ? "whatsapp" : activeConversation.channel === "facebook" ? "facebook" : "instagram"}`)}
+              {rtl
+                ? channelConfig[activeConversation.channel].labelAr
+                : channelConfig[activeConversation.channel].label}
             </p>
           </div>
+          <Badge variant="outline" className={cn("shrink-0 text-[10px]", rtl && "font-arabic")}>
+            {activeConversation.messages.length} {rtl ? "رسالة" : "msgs"}
+          </Badge>
         </div>
       </div>
 
@@ -465,67 +487,37 @@ export function ChatSection() {
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {activeConversation.messages.map((msg) => {
-            const { config, Icon } = getSenderBubbleStyle(msg.sender);
+            const config = senderConfig[msg.sender];
+            const Icon = config.icon;
             const isAgent = msg.sender === "agent";
-            const isUser = msg.sender === "user";
 
             return (
-              <div
-                key={msg.id}
-                className={cn("flex", getSenderAlignment(msg.sender))}
-              >
+              <div key={msg.id} className="flex flex-col">
+                {/* Sender label — aligned with bubble */}
+                <div className={cn("flex items-center gap-1.5 mb-1", getLabelAlignment(msg.sender))}>
+                  <Icon className={cn("w-3 h-3", config.labelColor)} />
+                  <span className={cn("text-[10px] font-medium", config.labelColor, rtl && "font-arabic")}>
+                    {rtl ? config.labelAr : config.label}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground tabular-nums" dir="ltr">
+                    {msg.time}
+                  </span>
+                </div>
+
+                {/* Message bubble — aligned via margin-auto */}
                 <div
                   className={cn(
-                    "max-w-[80%]",
-                    isAgent && "max-w-[90%]"
+                    "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                    isAgent && "max-w-[90%]",
+                    config.bubbleBg,
+                    config.bubbleText,
+                    getMessageAlignment(msg.sender)
                   )}
+                  dir={rtl ? "rtl" : "ltr"}
                 >
-                  {/* Sender label */}
-                  <div
-                    className={cn(
-                      "flex items-center gap-1.5 mb-1",
-                      isAgent && "justify-center",
-                      isUser && (rtl ? "justify-start" : "justify-end"),
-                      !isAgent && !isUser && (rtl ? "justify-end" : "justify-start"),
-                      rtl && !isAgent && "flex-row-reverse"
-                    )}
-                  >
-                    <Icon className={cn("w-3 h-3", config.labelColor)} />
-                    <span
-                      className={cn(
-                        "text-[10px] font-medium",
-                        config.labelColor,
-                        rtl && "font-arabic"
-                      )}
-                    >
-                      {rtl ? config.labelAr : config.label}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground tabular-nums" dir="ltr">
-                      {msg.time}
-                    </span>
-                  </div>
-
-                  {/* Message bubble */}
-                  <div
-                    className={cn(
-                      "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
-                      config.bubbleBg,
-                      config.bubbleText,
-                      isAgent
-                        ? "rounded-2xl"
-                        : isUser
-                          ? cn(
-                              rtl ? "rounded-br-sm" : "rounded-br-sm"
-                            )
-                          : cn(
-                              rtl ? "rounded-bl-sm" : "rounded-bl-sm"
-                            )
-                    )}
-                  >
-                    <p className={rtl && msg.sender !== "agent" ? "font-arabic" : ""} dir={rtl ? "rtl" : "ltr"}>
-                      {rtl ? msg.textAr : msg.text}
-                    </p>
-                  </div>
+                  <p className={rtl ? "font-arabic" : ""}>
+                    {rtl ? msg.textAr : msg.text}
+                  </p>
                 </div>
               </div>
             );
@@ -536,17 +528,12 @@ export function ChatSection() {
 
       {/* Message Input */}
       <div className="p-4 border-t shrink-0">
-        <div
-          className={cn("flex items-center gap-2", rtl && "flex-row-reverse")}
-        >
+        <div className="flex items-center gap-2">
           <Input
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             placeholder={t(locale, "chat.typeMessage")}
-            className={cn(
-              "flex-1",
-              rtl && "font-arabic text-right"
-            )}
+            className={cn("flex-1", rtl && "font-arabic")}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -570,7 +557,7 @@ export function ChatSection() {
   ) : (
     /* Empty State */
     <div className="flex items-center justify-center h-full">
-      <div className={cn("text-center text-muted-foreground", rtl && "font-arabic")}>
+      <div className={cn("text-center text-muted-foreground", rtl && "font-arabic")} dir={rtl ? "rtl" : "ltr"}>
         <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
         <p className="text-sm">{t(locale, "chat.selectConversation")}</p>
       </div>
@@ -580,23 +567,13 @@ export function ChatSection() {
   // ─── Main Render ──────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={rtl ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="space-y-1">
-        <h2
-          className={cn(
-            "text-2xl font-bold tracking-tight",
-            rtl && "font-arabic text-right"
-          )}
-        >
+        <h2 className={cn("text-2xl font-bold tracking-tight", rtl && "font-arabic")}>
           {t(locale, "chat.title")}
         </h2>
-        <p
-          className={cn(
-            "text-muted-foreground text-sm",
-            rtl && "font-arabic text-right"
-          )}
-        >
+        <p className={cn("text-muted-foreground text-sm", rtl && "font-arabic")}>
           {t(locale, "chat.subtitle")}
         </p>
       </div>
@@ -605,18 +582,18 @@ export function ChatSection() {
       <Card className="py-0 overflow-hidden" style={{ height: "calc(100vh - 220px)", minHeight: "400px" }}>
         <CardContent className="p-0 h-full">
           <div className="flex h-full">
-            {/* Conversation List - Hidden on mobile when chat is shown */}
+            {/* Conversation List — Hidden on mobile when chat is shown */}
             <div
               className={cn(
-                "w-full md:w-80 lg:w-96 border-r shrink-0 h-full",
-                rtl && "border-r-0 border-l",
+                "w-full md:w-80 lg:w-96 shrink-0 h-full",
+                rtl ? "border-l border-r-0" : "border-r",
                 mobileShowChat && "hidden md:block"
               )}
             >
               {conversationListPanel}
             </div>
 
-            {/* Chat Area - Hidden on mobile when list is shown */}
+            {/* Chat Area — Hidden on mobile when list is shown */}
             <div
               className={cn(
                 "flex-1 min-w-0 h-full",

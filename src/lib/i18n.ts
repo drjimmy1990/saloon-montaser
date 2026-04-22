@@ -36,6 +36,7 @@ export const translations = {
     notes: "Notes",
     reason: "Reason",
     type: "Type",
+    service: "Service",
 
     // Navigation
     nav: {
@@ -56,6 +57,7 @@ export const translations = {
       totalMessages: "Total Messages",
       totalBookings: "Total Bookings",
       conversionRate: "Conversion Rate",
+      service: "Service",
       recentBookings: "Recent Bookings",
       channelPerformance: "Channel Performance",
       weeklyTrend: "Weekly Trend",
@@ -210,6 +212,7 @@ export const translations = {
     notes: "ملاحظات",
     reason: "السبب",
     type: "النوع",
+    service: "الخدمة",
 
     // Navigation
     nav: {
@@ -230,6 +233,7 @@ export const translations = {
       totalMessages: "إجمالي الرسائل",
       totalBookings: "إجمالي الحجوزات",
       conversionRate: "نسبة التحويل",
+      service: "الخدمة",
       recentBookings: "أحدث الحجوزات",
       channelPerformance: "أداء القنوات",
       weeklyTrend: "الاتجاه الأسبوعي",
