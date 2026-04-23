@@ -78,94 +78,16 @@ interface ImageSet {
   urls: string[];
 }
 
-interface Channel {
+export interface Channel {
   id: string;
   name: string;
-  nameAr: string;
   type: ChannelType;
-  active: boolean;
+  isActive: boolean;
   credentials: Credential[];
   variables: Variable[];
   imageSets: ImageSet[];
+  webhookUrl?: string;
 }
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const initialChannels: Channel[] = [
-  {
-    id: "ch-1",
-    name: "WhatsApp Business",
-    nameAr: "واتساب بزنس",
-    type: "whatsapp",
-    active: true,
-    credentials: [
-      { key: "API_KEY", value: "wh_sk_8f3k2m9x..." },
-      { key: "PHONE_ID", value: "+966551234567" },
-      { key: "WEBHOOK_TOKEN", value: "wbh_tk_4d7n..." },
-    ],
-    variables: [
-      { name: "response_delay", value: "3" },
-      { name: "greeting_message", value: "مرحباً بك! كيف يمكنني مساعدتك؟" },
-      { name: "language", value: "ar" },
-    ],
-    imageSets: [
-      {
-        name: "services_catalog",
-        urls: [
-          "https://example.com/img/cleaning.jpg",
-          "https://example.com/img/plumbing.jpg",
-        ],
-      },
-      {
-        name: "promotions",
-        urls: ["https://example.com/img/ramadan_offer.jpg"],
-      },
-    ],
-  },
-  {
-    id: "ch-2",
-    name: "Facebook Messenger",
-    nameAr: "ماسنجر فيسبوك",
-    type: "facebook",
-    active: true,
-    credentials: [
-      { key: "PAGE_TOKEN", value: "EAABsbCS1iHgB..." },
-      { key: "APP_SECRET", value: "a1b2c3d4e5f6..." },
-    ],
-    variables: [
-      { name: "response_delay", value: "2" },
-      { name: "quick_replies", value: "true" },
-    ],
-    imageSets: [
-      {
-        name: "portfolio",
-        urls: [
-          "https://example.com/img/project1.jpg",
-          "https://example.com/img/project2.jpg",
-          "https://example.com/img/project3.jpg",
-        ],
-      },
-    ],
-  },
-  {
-    id: "ch-3",
-    name: "Instagram Direct",
-    nameAr: "انستجرام دايركت",
-    type: "instagram",
-    active: false,
-    credentials: [{ key: "ACCESS_TOKEN", value: "IGQVJYZAh..." }],
-    variables: [
-      { name: "response_delay", value: "5" },
-      { name: "auto_reply", value: "false" },
-    ],
-    imageSets: [
-      {
-        name: "stories",
-        urls: ["https://example.com/img/story1.jpg"],
-      },
-    ],
-  },
-];
 
 // ─── Channel Type Config ──────────────────────────────────────────────────────
 
@@ -245,24 +167,24 @@ const sectionAccents = {
 function createEmptyChannelForm(): Omit<Channel, "id"> {
   return {
     name: "",
-    nameAr: "",
     type: "whatsapp",
-    active: true,
+    isActive: true,
     credentials: [{ key: "", value: "" }],
     variables: [{ name: "", value: "" }],
     imageSets: [{ name: "", urls: [""] }],
+    webhookUrl: "",
   };
 }
 
 function deepCloneChannel(ch: Channel): Omit<Channel, "id"> {
   return {
     name: ch.name,
-    nameAr: ch.nameAr,
     type: ch.type,
-    active: ch.active,
+    isActive: ch.isActive,
     credentials: ch.credentials.map((c) => ({ ...c })),
     variables: ch.variables.map((v) => ({ ...v })),
     imageSets: ch.imageSets.map((s) => ({ ...s, urls: [...s.urls] })),
+    webhookUrl: ch.webhookUrl || "",
   };
 }
 
@@ -272,13 +194,31 @@ export function ChannelsSection() {
   const { locale } = useAppStore();
   const rtl = isRTL(locale);
 
-  const [channels, setChannels] = useState<Channel[]>(initialChannels);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
   const [formData, setFormData] = useState<Omit<Channel, "id">>(
     createEmptyChannelForm()
   );
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const fetchChannels = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/channels");
+      const data = await res.json();
+      setChannels(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch channels", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchChannels();
+  }, []);
 
   // ─── Dialog Handlers ─────────────────────────────────────────────────────
 
@@ -304,7 +244,7 @@ export function ChannelsSection() {
     []
   );
 
-  const handleSave = useCallback(() => {
+  const handleSave = async () => {
     if (!formData.name.trim()) return;
 
     const cleanedCredentials = formData.credentials.filter(
@@ -317,50 +257,70 @@ export function ChannelsSection() {
       .map((s) => ({ ...s, urls: s.urls.filter((u) => u.trim()) }))
       .filter((s) => s.name.trim());
 
-    if (editingChannel) {
-      setChannels((prev) =>
-        prev.map((ch) =>
-          ch.id === editingChannel.id
-            ? {
-                ...ch,
-                name: formData.name,
-                nameAr: formData.nameAr,
-                type: formData.type,
-                active: formData.active,
-                credentials: cleanedCredentials,
-                variables: cleanedVariables,
-                imageSets: cleanedImageSets,
-              }
-            : ch
-        )
-      );
-    } else {
-      const newChannel: Channel = {
-        id: `ch-${Date.now()}`,
-        name: formData.name,
-        nameAr: formData.nameAr,
-        type: formData.type,
-        active: formData.active,
-        credentials: cleanedCredentials,
-        variables: cleanedVariables,
-        imageSets: cleanedImageSets,
-      };
-      setChannels((prev) => [...prev, newChannel]);
+    const payload = {
+      name: formData.name,
+      type: formData.type,
+      isActive: formData.isActive,
+      credentials: cleanedCredentials,
+      variables: cleanedVariables,
+      imageSets: cleanedImageSets,
+      webhookUrl: formData.webhookUrl,
+    };
+
+    try {
+      if (editingChannel) {
+        await fetch(`/api/channels/${editingChannel.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await fetch("/api/channels", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+      fetchChannels();
+    } catch (error) {
+      console.error("Failed to save channel", error);
     }
+
     setDialogOpen(false);
     setEditingChannel(null);
-  }, [formData, editingChannel]);
+  };
 
-  const handleDelete = useCallback((id: string) => {
-    setChannels((prev) => prev.filter((ch) => ch.id !== id));
+  const handleDelete = async (id: string) => {
+    try {
+      await fetch(`/api/channels/${id}`, { method: "DELETE" });
+      fetchChannels();
+    } catch (error) {
+      console.error("Failed to delete channel", error);
+    }
     setDeleteConfirmId(null);
-  }, []);
+  };
 
-  const toggleChannelActive = useCallback((id: string) => {
+  const toggleChannelActive = async (id: string) => {
+    const channel = channels.find((ch) => ch.id === id);
+    if (!channel) return;
+
+    // Optimistic UI update
     setChannels((prev) =>
-      prev.map((ch) => (ch.id === id ? { ...ch, active: !ch.active } : ch))
+      prev.map((ch) => (ch.id === id ? { ...ch, isActive: !ch.isActive } : ch))
     );
-  }, []);
+
+    try {
+      await fetch(`/api/channels/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !channel.isActive }),
+      });
+    } catch (error) {
+      console.error("Failed to toggle channel status", error);
+      // Revert on error
+      fetchChannels();
+    }
+  };
 
   // ─── Form Data Helpers ───────────────────────────────────────────────────
 
@@ -573,6 +533,22 @@ export function ChannelsSection() {
     []
   );
 
+  const updateChannelImageSetUrl = useCallback(
+    (channelId: string, setIndex: number, urlIndex: number, val: string) => {
+      setChannels((prev) =>
+        prev.map((ch) => {
+          if (ch.id !== channelId) return ch;
+          const sets = [...ch.imageSets];
+          const urls = [...sets[setIndex].urls];
+          urls[urlIndex] = val;
+          sets[setIndex] = { ...sets[setIndex], urls };
+          return { ...ch, imageSets: sets };
+        })
+      );
+    },
+    []
+  );
+
   const addChannelImageSetUrl = useCallback(
     (channelId: string, setIndex: number) => {
       setChannels((prev) =>
@@ -636,12 +612,12 @@ export function ChannelsSection() {
   // ─── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={rtl ? "rtl" : "ltr"}>
       {/* Section Header */}
       <div
         className={cn(
           "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4",
-          rtl && "sm:flex-row-reverse"
+          ""
         )}
       >
         <div className={cn("space-y-1", rtl && "text-right")}>
@@ -702,6 +678,7 @@ export function ChannelsSection() {
                 onAddVariable={addChannelVariable}
                 onRemoveVariable={removeChannelVariable}
                 onUpdateImageSetName={updateChannelImageSetName}
+                onUpdateImageSetUrl={updateChannelImageSetUrl}
                 onAddImageSetUrl={addChannelImageSetUrl}
                 onRemoveImageSetUrl={removeChannelImageSetUrl}
                 onAddImageSet={addChannelImageSet}
@@ -758,22 +735,6 @@ export function ChannelsSection() {
               />
             </div>
 
-            {/* Channel Name Arabic */}
-            <div className="space-y-2">
-              <Label className={cn(rtl && "font-arabic")}>
-                {rtl ? "الاسم بالعربية" : "Name (Arabic)"}
-              </Label>
-              <Input
-                value={formData.nameAr}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, nameAr: e.target.value }))
-                }
-                placeholder={rtl ? "أدخل الاسم بالعربية" : "Arabic name"}
-                className={cn("font-arabic text-right")}
-                dir="rtl"
-              />
-            </div>
-
             {/* Channel Type */}
             <div className="space-y-2">
               <Label className={cn(rtl && "font-arabic")}>
@@ -814,6 +775,22 @@ export function ChannelsSection() {
               </Select>
             </div>
 
+            {/* Webhook URL */}
+            <div className="space-y-2">
+              <Label className={cn(rtl && "font-arabic")}>
+                {rtl ? "رابط Webhook (n8n)" : "Webhook URL (n8n)"}
+              </Label>
+              <Input
+                value={formData.webhookUrl || ""}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, webhookUrl: e.target.value }))
+                }
+                placeholder={rtl ? "أدخل رابط Webhook" : "Enter Webhook URL"}
+                className={cn("font-mono text-sm", rtl && "text-right")}
+                dir="ltr"
+              />
+            </div>
+
             <Separator />
 
             {/* Credentials Section */}
@@ -821,7 +798,7 @@ export function ChannelsSection() {
               <div
                 className={cn(
                   "flex items-center gap-2",
-                  rtl && "flex-row-reverse"
+                  ""
                 )}
               >
                 <Key
@@ -845,7 +822,7 @@ export function ChannelsSection() {
                     key={idx}
                     className={cn(
                       "flex items-center gap-2",
-                      rtl && "flex-row-reverse"
+                      ""
                     )}
                   >
                     <Input
@@ -903,7 +880,7 @@ export function ChannelsSection() {
               <div
                 className={cn(
                   "flex items-center gap-2",
-                  rtl && "flex-row-reverse"
+                  ""
                 )}
               >
                 <Variable
@@ -927,7 +904,7 @@ export function ChannelsSection() {
                     key={idx}
                     className={cn(
                       "flex items-center gap-2",
-                      rtl && "flex-row-reverse"
+                      ""
                     )}
                   >
                     <Input
@@ -985,7 +962,7 @@ export function ChannelsSection() {
               <div
                 className={cn(
                   "flex items-center gap-2",
-                  rtl && "flex-row-reverse"
+                  ""
                 )}
               >
                 <ImageIcon
@@ -1015,7 +992,7 @@ export function ChannelsSection() {
                     <div
                       className={cn(
                         "flex items-center gap-2",
-                        rtl && "flex-row-reverse"
+                        ""
                       )}
                     >
                       <Input
@@ -1044,7 +1021,7 @@ export function ChannelsSection() {
                         key={urlIdx}
                         className={cn(
                           "flex items-center gap-2",
-                          rtl ? "pr-4 pl-0 flex-row-reverse" : "pl-4"
+                          rtl ? "pr-4 pl-0" : "pl-4"
                         )}
                       >
                         <Input
@@ -1105,7 +1082,7 @@ export function ChannelsSection() {
           <DialogFooter
             className={cn(
               "gap-2 sm:gap-0",
-              rtl && "flex-row-reverse sm:flex-row-reverse"
+              ""
             )}
           >
             <Button
@@ -1164,6 +1141,12 @@ interface ChannelCardProps {
     setIndex: number,
     val: string
   ) => void;
+  onUpdateImageSetUrl: (
+    channelId: string,
+    setIndex: number,
+    urlIndex: number,
+    val: string
+  ) => void;
   onAddImageSetUrl: (channelId: string, setIndex: number) => void;
   onRemoveImageSetUrl: (
     channelId: string,
@@ -1190,6 +1173,7 @@ function ChannelCard({
   onAddVariable,
   onRemoveVariable,
   onUpdateImageSetName,
+  onUpdateImageSetUrl,
   onAddImageSetUrl,
   onRemoveImageSetUrl,
   onAddImageSet,
@@ -1238,7 +1222,7 @@ function ChannelCard({
       className={cn(
         "overflow-hidden transition-all duration-200 hover:shadow-md border-l-4",
         config.accentBorder,
-        !channel.active && "opacity-70",
+        !channel.isActive && "opacity-70",
         rtl && "border-l-0 border-r-4"
       )}
     >
@@ -1247,13 +1231,13 @@ function ChannelCard({
         <div
           className={cn(
             "flex items-center justify-between gap-4",
-            rtl && "flex-row-reverse"
+            ""
           )}
         >
           <div
             className={cn(
               "flex items-center gap-3 min-w-0",
-              rtl && "flex-row-reverse"
+              ""
             )}
           >
             <div className={cn("p-2.5 rounded-xl shrink-0", config.iconBg)}>
@@ -1263,12 +1247,12 @@ function ChannelCard({
               <CardTitle
                 className={cn("text-base leading-tight", rtl && "font-arabic")}
               >
-                {rtl ? channel.nameAr : channel.name}
+                {channel.name}
               </CardTitle>
               <div
                 className={cn(
                   "flex items-center gap-2 mt-1.5 flex-wrap",
-                  rtl && "flex-row-reverse justify-end"
+                  rtl && "justify-end"
                 )}
               >
                 <Badge
@@ -1286,16 +1270,16 @@ function ChannelCard({
                   variant="outline"
                   className={cn(
                     "text-[11px] font-medium border gap-1.5",
-                    channel.active
+                    channel.isActive
                       ? "bg-sage-50 dark:bg-sage-900/20 text-sage-700 dark:text-sage-400 border-sage-200 dark:border-sage-800/40"
                       : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/40"
                   )}
                 >
                   <div className={cn(
                     "w-1.5 h-1.5 rounded-full",
-                    channel.active ? "bg-sage-500" : "bg-red-500"
+                    channel.isActive ? "bg-sage-500" : "bg-red-500"
                   )} />
-                  {channel.active
+                  {channel.isActive
                     ? t(locale, "active")
                     : t(locale, "inactive")}
                 </Badge>
@@ -1307,11 +1291,11 @@ function ChannelCard({
             <button
               type="button"
               role="switch"
-              aria-checked={channel.active}
+              aria-checked={channel.isActive}
               onClick={() => onToggleActive(channel.id)}
               className={cn(
                 "relative inline-flex h-7 w-[3.5rem] shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                channel.active
+                channel.isActive
                   ? "bg-sage-500 dark:bg-sage-600"
                   : "bg-gray-300 dark:bg-gray-600"
               )}
@@ -1319,18 +1303,18 @@ function ChannelCard({
               <span
                 className={cn(
                   "pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
-                  channel.active
+                  channel.isActive
                     ? (rtl ? "-translate-x-6" : "translate-x-6")
                     : "translate-x-0"
                 )}
               />
               <span className={cn(
                 "absolute text-[8px] font-bold uppercase tracking-wide text-white",
-                channel.active
+                channel.isActive
                   ? (rtl ? "right-2" : "left-2")
                   : (rtl ? "left-2" : "right-2")
               )}>
-                {channel.active
+                {channel.isActive
                   ? (rtl ? "يعمل" : "ON")
                   : (rtl ? "مقفل" : "OFF")}
               </span>
@@ -1357,7 +1341,7 @@ function ChannelCard({
               <div
                 className={cn(
                   "flex items-center gap-2",
-                  rtl && "flex-row-reverse"
+                  ""
                 )}
               >
                 <Key
@@ -1390,7 +1374,7 @@ function ChannelCard({
                       key={idx}
                       className={cn(
                         "flex items-center gap-2 group",
-                        rtl && "flex-row-reverse"
+                        ""
                       )}
                     >
                       <Input
@@ -1478,7 +1462,7 @@ function ChannelCard({
               <div
                 className={cn(
                   "flex items-center gap-2",
-                  rtl && "flex-row-reverse"
+                  ""
                 )}
               >
                 <Variable
@@ -1509,7 +1493,7 @@ function ChannelCard({
                     key={idx}
                     className={cn(
                       "flex items-center gap-2",
-                      rtl && "flex-row-reverse"
+                      ""
                     )}
                   >
                     <Input
@@ -1583,7 +1567,7 @@ function ChannelCard({
               <div
                 className={cn(
                   "flex items-center gap-2",
-                  rtl && "flex-row-reverse"
+                  ""
                 )}
               >
                 <ImageIcon
@@ -1626,7 +1610,7 @@ function ChannelCard({
                         <div
                           className={cn(
                             "flex items-center gap-2 px-3 py-2",
-                            rtl && "flex-row-reverse"
+                            ""
                           )}
                         >
                           <CollapsibleTrigger asChild>
@@ -1686,26 +1670,13 @@ function ChannelCard({
                                 key={urlIdx}
                                 className={cn(
                                   "flex items-center gap-1.5",
-                                  rtl && "flex-row-reverse"
+                                  ""
                                 )}
                               >
                                 <Input
                                   value={url}
                                   onChange={(e) => {
-                                    // Update the URL inline
-                                    setChannels((prev) =>
-                                      prev.map((ch) => {
-                                        if (ch.id !== channel.id) return ch;
-                                        const sets = [...ch.imageSets];
-                                        const urls = [...sets[setIdx].urls];
-                                        urls[urlIdx] = e.target.value;
-                                        sets[setIdx] = {
-                                          ...sets[setIdx],
-                                          urls,
-                                        };
-                                        return { ...ch, imageSets: sets };
-                                      })
-                                    );
+                                    onUpdateImageSetUrl(channel.id, setIdx, urlIdx, e.target.value);
                                   }}
                                   className={cn(
                                     "flex-1 font-mono text-[11px] h-7 bg-amber-50/40 dark:bg-amber-900/10 border-amber-200/30 dark:border-amber-800/20 focus:border-amber-400",
@@ -1772,7 +1743,7 @@ function ChannelCard({
         <div
           className={cn(
             "flex items-center gap-2 w-full",
-            rtl ? "justify-start flex-row-reverse" : "justify-end"
+            rtl ? "justify-start" : "justify-end"
           )}
         >
           {isConfirmingDelete ? (
@@ -1781,7 +1752,7 @@ function ChannelCard({
               animate={{ opacity: 1, scale: 1 }}
               className={cn(
                 "flex items-center gap-2",
-                rtl && "flex-row-reverse"
+                ""
               )}
             >
               <span

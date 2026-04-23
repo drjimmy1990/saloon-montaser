@@ -60,158 +60,27 @@ import { Separator } from "@/components/ui/separator";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 type ChannelSource = "whatsapp" | "facebook" | "instagram";
 
-interface Booking {
-  id: number;
-  clientName: string;
-  clientNameAr: string;
-  clientPhone: string;
-  clientPhoneAr: string;
-  clientAddress: string;
-  clientAddressAr: string;
+export interface Booking {
+  id: string;
+  client_id: string;
+  client?: {
+    id: string;
+    name: string;
+    phone: string;
+    address?: string;
+    avatar_url?: string;
+  };
   serviceSummary: string;
-  serviceSummaryAr: string;
-  channel: ChannelSource;
-  date: string;
+  channelType: ChannelSource;
+  bookingDate: string;
   status: BookingStatus;
-  notes: string;
-  notesAr: string;
+  createdAt?: string;
 }
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const mockBookings: Booking[] = [
-  {
-    id: 1001,
-    clientName: "Ahmed Al-Rashid",
-    clientNameAr: "أحمد الراشد",
-    clientPhone: "+966 55 123 4567",
-    clientPhoneAr: "+966 55 123 4567",
-    clientAddress: "23 King Fahd Rd, Riyadh",
-    clientAddressAr: "23 طريق الملك فهد، الرياض",
-    serviceSummary: "Home Deep Cleaning - 3BR Villa",
-    serviceSummaryAr: "تنظيف عميق للمنزل - فيلا 3 غرف",
-    channel: "whatsapp",
-    date: "2025-03-04",
-    status: "confirmed",
-    notes: "Customer requested eco-friendly products",
-    notesAr: "العميل طلب منتجات صديقة للبيئة",
-  },
-  {
-    id: 1002,
-    clientName: "Sara Mansour",
-    clientNameAr: "سارة منصور",
-    clientPhone: "+966 50 987 6543",
-    clientPhoneAr: "+966 50 987 6543",
-    clientAddress: "15 Palm Towers, Jeddah",
-    clientAddressAr: "15 أبراج النخيل، جدة",
-    serviceSummary: "AC Maintenance - Annual Contract",
-    serviceSummaryAr: "صيانة مكيفات - عقد سنوي",
-    channel: "facebook",
-    date: "2025-03-04",
-    status: "pending",
-    notes: "Needs scheduling confirmation",
-    notesAr: "تحتاج تأكيد الموعد",
-  },
-  {
-    id: 1003,
-    clientName: "Khalid Bin Nasser",
-    clientNameAr: "خالد بن ناصر",
-    clientPhone: "+966 54 456 7890",
-    clientPhoneAr: "+966 54 456 7890",
-    clientAddress: "8 Al Olaya District, Riyadh",
-    clientAddressAr: "8 حي العليا، الرياض",
-    serviceSummary: "Plumbing Repair - Kitchen Sink",
-    serviceSummaryAr: "إصلاح سباكة - حوض المطبخ",
-    channel: "instagram",
-    date: "2025-03-03",
-    status: "completed",
-    notes: "Job completed successfully, paid on site",
-    notesAr: "تم إنجاز العمل بنجاح، دفع في الموقع",
-  },
-  {
-    id: 1004,
-    clientName: "Fatima Hassan",
-    clientNameAr: "فاطمة حسن",
-    clientPhone: "+966 56 321 0987",
-    clientPhoneAr: "+966 56 321 0987",
-    clientAddress: "42 Marina Walk, Jeddah",
-    clientAddressAr: "42 مارينا ووك، جدة",
-    serviceSummary: "Interior Painting - Living Room",
-    serviceSummaryAr: "دهانات داخلية - غرفة المعيشة",
-    channel: "whatsapp",
-    date: "2025-03-03",
-    status: "cancelled",
-    notes: "Customer cancelled due to travel",
-    notesAr: "العميلة ألغت بسبب السفر",
-  },
-  {
-    id: 1005,
-    clientName: "Omar Al-Farsi",
-    clientNameAr: "عمر الفارسي",
-    clientPhone: "+966 59 654 3210",
-    clientPhoneAr: "+966 59 654 3210",
-    clientAddress: "7 Corniche Road, Dammam",
-    clientAddressAr: "7 طريق الكورنيش، الدمام",
-    serviceSummary: "Electrical Wiring Inspection",
-    serviceSummaryAr: "فحص التوصيلات الكهربائية",
-    channel: "facebook",
-    date: "2025-03-02",
-    status: "confirmed",
-    notes: "Priority booking, senior technician assigned",
-    notesAr: "حجز أولوية، تم تعيين فني أول",
-  },
-  {
-    id: 1006,
-    clientName: "Layla Al-Maktoum",
-    clientNameAr: "ليلى المكتوم",
-    clientPhone: "+966 53 111 2222",
-    clientPhoneAr: "+966 53 111 2222",
-    clientAddress: "19 Al Nakheel, Riyadh",
-    clientAddressAr: "19 النخيل، الرياض",
-    serviceSummary: "Pest Control - Full Property",
-    serviceSummaryAr: "مكافحة حشرات - العقار بالكامل",
-    channel: "instagram",
-    date: "2025-03-02",
-    status: "pending",
-    notes: "Follow up required on quote",
-    notesAr: "مطلوب متابعة على عرض السعر",
-  },
-  {
-    id: 1007,
-    clientName: "Youssef Karim",
-    clientNameAr: "يوسف كريم",
-    clientPhone: "+966 58 333 4444",
-    clientPhoneAr: "+966 58 333 4444",
-    clientAddress: "31 Al Salam District, Jeddah",
-    clientAddressAr: "31 حي السلام، جدة",
-    serviceSummary: "Moving & Packing Service",
-    serviceSummaryAr: "خدمة نقل وتغليف",
-    channel: "whatsapp",
-    date: "2025-03-01",
-    status: "completed",
-    notes: "All items delivered safely",
-    notesAr: "تم تسليم جميع الأغراض بأمان",
-  },
-  {
-    id: 1008,
-    clientName: "Nora Al-Said",
-    clientNameAr: "نورة السعيد",
-    clientPhone: "+966 52 555 6666",
-    clientPhoneAr: "+966 52 555 6666",
-    clientAddress: "5 Rose Garden, Riyadh",
-    clientAddressAr: "5 حديقة الورود، الرياض",
-    serviceSummary: "Garden Landscaping Design",
-    serviceSummaryAr: "تصميم تنسيق الحدائق",
-    channel: "instagram",
-    date: "2025-03-01",
-    status: "pending",
-    notes: "Waiting for design approval",
-    notesAr: "بانتظار الموافقة على التصميم",
-  },
-];
 
 // ─── Config Maps ──────────────────────────────────────────────────────────────
 
@@ -357,6 +226,8 @@ export function BookingsSection() {
   const { locale } = useAppStore();
   const rtl = isRTL(locale);
 
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [channelFilter, setChannelFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -364,21 +235,37 @@ export function BookingsSection() {
   const [updateStatusDialogOpen, setUpdateStatusDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [newStatus, setNewStatus] = useState<BookingStatus>("pending");
-  const [bookings, setBookings] = useState<Booking[]>(mockBookings);
+
+  // ─── Fetch Data ───────────────────────────────────────────────────────────
+  const fetchBookings = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/bookings");
+      const data = await res.json();
+      setBookings(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch bookings", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchBookings();
+  }, []);
 
   // ─── Filtering ────────────────────────────────────────────────────────────
 
   const filteredBookings = useMemo(() => {
     return bookings.filter((b) => {
-      const nameMatch = rtl
-        ? b.clientNameAr.toLowerCase().includes(searchQuery.toLowerCase())
-        : b.clientName.toLowerCase().includes(searchQuery.toLowerCase());
+      const name = b.client?.name || "";
+      const nameMatch = name.toLowerCase().includes(searchQuery.toLowerCase());
       const channelMatch =
-        channelFilter === "all" || b.channel === channelFilter;
+        channelFilter === "all" || b.channelType === channelFilter;
       const statusMatch = statusFilter === "all" || b.status === statusFilter;
       return nameMatch && channelMatch && statusMatch;
     });
-  }, [bookings, searchQuery, channelFilter, statusFilter, rtl]);
+  }, [bookings, searchQuery, channelFilter, statusFilter]);
 
   // ─── Stats ────────────────────────────────────────────────────────────────
 
@@ -404,13 +291,23 @@ export function BookingsSection() {
     setUpdateStatusDialogOpen(true);
   };
 
-  const confirmStatusUpdate = () => {
+  const confirmStatusUpdate = async () => {
     if (!selectedBooking) return;
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === selectedBooking.id ? { ...b, status: newStatus } : b
-      )
-    );
+
+    try {
+      const res = await fetch(`/api/bookings/${selectedBooking.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      
+      if (res.ok) {
+        fetchBookings();
+      }
+    } catch (err) {
+      console.error("Failed to update status", err);
+    }
+    
     setUpdateStatusDialogOpen(false);
     setSelectedBooking(null);
   };
@@ -418,7 +315,7 @@ export function BookingsSection() {
   // ─── Render Helpers ───────────────────────────────────────────────────────
 
   const renderStatusBadge = (status: BookingStatus) => {
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig.pending;
     const Icon = config.icon;
     return (
       <Badge
@@ -437,7 +334,7 @@ export function BookingsSection() {
   };
 
   const renderChannelBadge = (channel: ChannelSource) => {
-    const config = channelConfig[channel];
+    const config = channelConfig[channel] || channelConfig.whatsapp;
     const Icon = config.icon;
     return (
       <Badge
@@ -455,7 +352,7 @@ export function BookingsSection() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={rtl ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="space-y-1">
         <h2
@@ -480,7 +377,7 @@ export function BookingsSection() {
       <div
         className={cn(
           "flex flex-col sm:flex-row gap-3",
-          rtl && "sm:flex-row-reverse"
+          ""
         )}
       >
         <div className="relative flex-1 min-w-0">
@@ -561,7 +458,7 @@ export function BookingsSection() {
               )}
             >
               <CardContent className="p-4">
-                <div className={cn("flex items-center gap-3", rtl && "flex-row-reverse")}>
+                <div className={cn("flex items-center gap-3", "")}>
                   <div
                     className={cn(
                       "p-2 rounded-xl shrink-0",
@@ -581,7 +478,9 @@ export function BookingsSection() {
                         ? t(locale, "dashboard.totalBookings")
                         : t(locale, stat.key)}
                     </p>
-                    <p className="text-xl font-bold tabular-nums">{value}</p>
+                    <p className="text-xl font-bold tabular-nums">
+                      {isLoading ? "..." : value}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -649,7 +548,19 @@ export function BookingsSection() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBookings.length === 0 ? (
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className={cn(
+                        "h-24 text-center text-muted-foreground",
+                        rtl && "font-arabic"
+                      )}
+                    >
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredBookings.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={7}
@@ -670,7 +581,7 @@ export function BookingsSection() {
                           rtl && "text-right font-arabic"
                         )}
                       >
-                        {rtl ? booking.clientNameAr : booking.clientName}
+                        {booking.client?.name || 'Unknown'}
                       </TableCell>
                       <TableCell
                         className={cn(
@@ -678,7 +589,7 @@ export function BookingsSection() {
                           rtl && "text-right"
                         )}
                       >
-                        {rtl ? booking.clientPhoneAr : booking.clientPhone}
+                        {booking.client?.phone || 'N/A'}
                       </TableCell>
                       <TableCell
                         className={cn(
@@ -686,12 +597,10 @@ export function BookingsSection() {
                           rtl && "text-right font-arabic"
                         )}
                       >
-                        {rtl
-                          ? booking.serviceSummaryAr
-                          : booking.serviceSummary}
+                        {booking.serviceSummary}
                       </TableCell>
                       <TableCell className={rtl ? "text-right" : ""}>
-                        {renderChannelBadge(booking.channel)}
+                        {renderChannelBadge(booking.channelType)}
                       </TableCell>
                       <TableCell
                         className={cn(
@@ -699,7 +608,7 @@ export function BookingsSection() {
                           rtl && "text-right"
                         )}
                       >
-                        {booking.date}
+                        {booking.bookingDate ? new Date(booking.bookingDate).toISOString().split('T')[0] : ""}
                       </TableCell>
                       <TableCell className={rtl ? "text-right" : ""}>
                         {renderStatusBadge(booking.status)}
@@ -752,24 +661,24 @@ export function BookingsSection() {
           dir={rtl ? "rtl" : "ltr"}
         >
           <DialogHeader className={cn(rtl && "text-right items-end")}>
-            <DialogTitle className={rtl && "font-arabic text-right"}>
+            <DialogTitle className={cn(rtl && "font-arabic text-right")}>
               {t(locale, "bookings.viewDetails")}
             </DialogTitle>
-            <DialogDescription className={rtl && "font-arabic text-right"}>
+            <DialogDescription className={cn(rtl && "font-arabic text-right")}>
               {rtl ? "تفاصيل الحجز" : "Booking details"}
             </DialogDescription>
           </DialogHeader>
           {selectedBooking && (
-            <div className="space-y-4">
+            <div className="space-y-4 mt-4">
               {/* Booking ID */}
               <div
                 className={cn(
                   "flex items-center gap-2 text-sm text-muted-foreground",
-                  rtl && "flex-row-reverse"
+                  ""
                 )}
               >
                 <Hash className="w-4 h-4 shrink-0" />
-                <span className="font-mono">#{selectedBooking.id}</span>
+                <span className="font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap">#{selectedBooking.id}</span>
               </div>
 
               <Separator />
@@ -779,7 +688,7 @@ export function BookingsSection() {
                 <div
                   className={cn(
                     "flex items-start gap-3",
-                    rtl && "flex-row-reverse"
+                    ""
                   )}
                 >
                   <div className="p-2 rounded-lg bg-sage-50 dark:bg-sage-900/20 shrink-0">
@@ -787,14 +696,10 @@ export function BookingsSection() {
                   </div>
                   <div className={cn("min-w-0", rtl && "text-right")}>
                     <p className="font-semibold">
-                      {rtl
-                        ? selectedBooking.clientNameAr
-                        : selectedBooking.clientName}
+                      {selectedBooking.client?.name || 'Unknown'}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {rtl
-                        ? selectedBooking.serviceSummaryAr
-                        : selectedBooking.serviceSummary}
+                      {selectedBooking.serviceSummary}
                     </p>
                   </div>
                 </div>
@@ -802,26 +707,24 @@ export function BookingsSection() {
                 <div
                   className={cn(
                     "flex items-center gap-3",
-                    rtl && "flex-row-reverse"
+                    ""
                   )}
                 >
                   <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
                   <span className="text-sm tabular-nums">
-                    {selectedBooking.clientPhone}
+                    {selectedBooking.client?.phone || 'N/A'}
                   </span>
                 </div>
 
                 <div
                   className={cn(
                     "flex items-start gap-3",
-                    rtl && "flex-row-reverse"
+                    ""
                   )}
                 >
                   <MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                   <span className="text-sm">
-                    {rtl
-                      ? selectedBooking.clientAddressAr
-                      : selectedBooking.clientAddress}
+                    {selectedBooking.client?.address || 'No address provided'}
                   </span>
                 </div>
               </div>
@@ -840,7 +743,7 @@ export function BookingsSection() {
                     {t(locale, "bookings.bookingDate")}
                   </p>
                   <p className="text-sm font-medium tabular-nums">
-                    {selectedBooking.date}
+                    {new Date(selectedBooking.bookingDate || selectedBooking.createdAt || Date.now()).toLocaleDateString()}
                   </p>
                 </div>
                 <div className={cn(rtl && "text-right")}>
@@ -853,7 +756,7 @@ export function BookingsSection() {
                     {t(locale, "bookings.channelSource")}
                   </p>
                   <div className={cn(rtl && "flex justify-end")}>
-                    {renderChannelBadge(selectedBooking.channel)}
+                    {renderChannelBadge(selectedBooking.channelType)}
                   </div>
                 </div>
                 <div className={cn(rtl && "text-right")}>
@@ -870,30 +773,10 @@ export function BookingsSection() {
                   </div>
                 </div>
               </div>
-
-              {/* Notes */}
-              {selectedBooking.notes && (
-                <>
-                  <Separator />
-                  <div className={cn(rtl && "text-right")}>
-                    <p
-                      className={cn(
-                        "text-xs text-muted-foreground mb-1",
-                        rtl && "font-arabic"
-                      )}
-                    >
-                      {t(locale, "notes")}
-                    </p>
-                    <p className="text-sm">
-                      {rtl ? selectedBooking.notesAr : selectedBooking.notes}
-                    </p>
-                  </div>
-                </>
-              )}
             </div>
           )}
           <DialogFooter
-            className={cn(rtl && "flex-row-reverse sm:flex-row-reverse")}
+            className={cn("")}
           >
             <Button
               variant="outline"
@@ -916,10 +799,10 @@ export function BookingsSection() {
           dir={rtl ? "rtl" : "ltr"}
         >
           <DialogHeader className={cn(rtl && "text-right items-end")}>
-            <DialogTitle className={rtl && "font-arabic text-right"}>
+            <DialogTitle className={cn(rtl && "font-arabic text-right")}>
               {t(locale, "bookings.updateStatus")}
             </DialogTitle>
-            <DialogDescription className={rtl && "font-arabic text-right"}>
+            <DialogDescription className={cn(rtl && "font-arabic text-right")}>
               {selectedBooking
                 ? rtl
                   ? `تحديث حالة الحجز #${selectedBooking.id}`
@@ -933,7 +816,7 @@ export function BookingsSection() {
               <div
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-lg bg-muted/50",
-                  rtl && "flex-row-reverse"
+                  ""
                 )}
               >
                 <span
@@ -987,7 +870,7 @@ export function BookingsSection() {
               <div
                 className={cn(
                   "flex items-center gap-3",
-                  rtl && "flex-row-reverse"
+                  ""
                 )}
               >
                 <span
@@ -1003,7 +886,7 @@ export function BookingsSection() {
             </div>
           )}
           <DialogFooter
-            className={cn(rtl && "flex-row-reverse sm:flex-row-reverse")}
+            className={cn("")}
           >
             <Button
               variant="outline"

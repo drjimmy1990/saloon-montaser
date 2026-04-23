@@ -47,6 +47,7 @@ export const translations = {
       clients: "Clients",
       chat: "Live Chat",
       blacklist: "Blacklist",
+      settings: "Settings",
     },
 
     // Dashboard
@@ -236,6 +237,7 @@ export const translations = {
       clients: "العملاء",
       chat: "المحادثات",
       blacklist: "القائمة السوداء",
+      settings: "الإعدادات",
     },
 
     // Dashboard

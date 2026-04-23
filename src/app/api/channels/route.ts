@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getServiceRoleClient } from '@/lib/supabase';
 
 // GET /api/channels - List all channels
 export async function GET() {
   try {
-    const channels = await db.channel.findMany({ orderBy: { createdAt: 'desc' } });
-    return NextResponse.json(channels);
+    const supabase = getServiceRoleClient();
+    const { data: channels, error } = await supabase
+      .from('Channel')
+      .select('*')
+      .order('createdAt', { ascending: false });
+
+    if (error) throw error;
+    return NextResponse.json(channels || []);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to fetch channels' }, { status: 500 });
   }
 }
@@ -15,18 +22,25 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const channel = await db.channel.create({
-      data: {
+    const supabase = getServiceRoleClient();
+    const { data: channel, error } = await supabase
+      .from('Channel')
+      .insert({
         name: body.name,
         type: body.type,
         isActive: body.isActive ?? false,
-        credentials: JSON.stringify(body.credentials ?? []),
-        variables: JSON.stringify(body.variables ?? {}),
-        imageSets: JSON.stringify(body.imageSets ?? []),
-      },
-    });
+        credentials: body.credentials ?? [],
+        variables: body.variables ?? {},
+        imageSets: body.imageSets ?? [],
+        webhookUrl: body.webhookUrl ?? '',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
     return NextResponse.json(channel, { status: 201 });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to create channel' }, { status: 500 });
   }
 }

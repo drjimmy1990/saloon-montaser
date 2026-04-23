@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getServiceRoleClient } from '@/lib/supabase';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const client = await db.client.findUnique({ where: { id } });
-    if (!client) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json(client);
+    const supabase = getServiceRoleClient();
+    const { data: client, error } = await supabase.from('Client').select('*, Message(*)').eq('id', id).single();
+    if (error || !client) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    
+    // Map relations
+    const mapped = {
+      ...client,
+      messages: client.Message || []
+    };
+
+    return NextResponse.json(mapped);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to fetch client' }, { status: 500 });
   }
 }
@@ -16,17 +25,29 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
     const body = await request.json();
-    const client = await db.client.update({
-      where: { id },
-      data: {
-        ...(body.name !== undefined && { name: body.name }),
-        ...(body.phone !== undefined && { phone: body.phone }),
-        ...(body.address !== undefined && { address: body.address }),
-        ...(body.notes !== undefined && { notes: body.notes }),
-      },
-    });
+    const supabase = getServiceRoleClient();
+
+    const updateData: any = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.phone !== undefined) updateData.phone = body.phone;
+    if (body.address !== undefined) updateData.address = body.address;
+    if (body.notes !== undefined) updateData.notes = body.notes;
+    if (body.platform_user_id !== undefined) updateData.platform_user_id = body.platform_user_id;
+    if (body.platform !== undefined) updateData.platform = body.platform;
+    if (body.status !== undefined) updateData.status = body.status;
+    if (body.ai_enabled !== undefined) updateData.ai_enabled = body.ai_enabled;
+
+    const { data: client, error } = await supabase
+      .from('Client')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
     return NextResponse.json(client);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to update client' }, { status: 500 });
   }
 }
@@ -34,9 +55,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    await db.client.delete({ where: { id } });
+    const supabase = getServiceRoleClient();
+    const { error } = await supabase.from('Client').delete().eq('id', id);
+    if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to delete client' }, { status: 500 });
   }
 }

@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getServiceRoleClient } from '@/lib/supabase';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const booking = await db.booking.findUnique({ where: { id } });
-    if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const supabase = getServiceRoleClient();
+    const { data: booking, error } = await supabase.from('Booking').select('*, client:Client(*)').eq('id', id).single();
+    
+    if (error || !booking) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(booking);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to fetch booking' }, { status: 500 });
   }
 }
@@ -16,19 +19,25 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
     const body = await request.json();
-    const booking = await db.booking.update({
-      where: { id },
-      data: {
-        ...(body.clientName !== undefined && { clientName: body.clientName }),
-        ...(body.clientPhone !== undefined && { clientPhone: body.clientPhone }),
-        ...(body.clientAddress !== undefined && { clientAddress: body.clientAddress }),
-        ...(body.serviceSummary !== undefined && { serviceSummary: body.serviceSummary }),
-        ...(body.channelType !== undefined && { channelType: body.channelType }),
-        ...(body.status !== undefined && { status: body.status }),
-      },
-    });
+    const supabase = getServiceRoleClient();
+    
+    const updateData: any = {};
+    if (body.client_id !== undefined) updateData.client_id = body.client_id;
+    if (body.serviceSummary !== undefined) updateData.serviceSummary = body.serviceSummary;
+    if (body.channelType !== undefined) updateData.channelType = body.channelType;
+    if (body.status !== undefined) updateData.status = body.status;
+
+    const { data: booking, error } = await supabase
+      .from('Booking')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
     return NextResponse.json(booking);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to update booking' }, { status: 500 });
   }
 }
@@ -36,9 +45,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    await db.booking.delete({ where: { id } });
+    const supabase = getServiceRoleClient();
+    const { error } = await supabase.from('Booking').delete().eq('id', id);
+    if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to delete booking' }, { status: 500 });
   }
 }

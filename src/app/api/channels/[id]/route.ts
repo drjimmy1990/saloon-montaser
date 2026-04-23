@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getServiceRoleClient } from '@/lib/supabase';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const channel = await db.channel.findUnique({ where: { id } });
-    if (!channel) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const supabase = getServiceRoleClient();
+    const { data: channel, error } = await supabase.from('Channel').select('*').eq('id', id).single();
+    if (error || !channel) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(channel);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to fetch channel' }, { status: 500 });
   }
 }
@@ -16,19 +18,28 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
     const body = await request.json();
-    const channel = await db.channel.update({
-      where: { id },
-      data: {
-        ...(body.name !== undefined && { name: body.name }),
-        ...(body.type !== undefined && { type: body.type }),
-        ...(body.isActive !== undefined && { isActive: body.isActive }),
-        ...(body.credentials !== undefined && { credentials: JSON.stringify(body.credentials) }),
-        ...(body.variables !== undefined && { variables: JSON.stringify(body.variables) }),
-        ...(body.imageSets !== undefined && { imageSets: JSON.stringify(body.imageSets) }),
-      },
-    });
+    const supabase = getServiceRoleClient();
+
+    const updateData: any = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.type !== undefined) updateData.type = body.type;
+    if (body.isActive !== undefined) updateData.isActive = body.isActive;
+    if (body.credentials !== undefined) updateData.credentials = body.credentials;
+    if (body.variables !== undefined) updateData.variables = body.variables;
+    if (body.imageSets !== undefined) updateData.imageSets = body.imageSets;
+    if (body.webhookUrl !== undefined) updateData.webhookUrl = body.webhookUrl;
+
+    const { data: channel, error } = await supabase
+      .from('Channel')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
     return NextResponse.json(channel);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to update channel' }, { status: 500 });
   }
 }
@@ -36,9 +47,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    await db.channel.delete({ where: { id } });
+    const supabase = getServiceRoleClient();
+    const { error } = await supabase.from('Channel').delete().eq('id', id);
+    if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to delete channel' }, { status: 500 });
   }
 }

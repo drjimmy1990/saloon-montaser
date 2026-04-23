@@ -91,11 +91,7 @@ const kpiData = [
   },
 ];
 
-const channelPerformanceData = [
-  { channel: "WhatsApp", channelAr: "واتساب", messages: 1420 },
-  { channel: "Facebook", channelAr: "فيسبوك", messages: 856 },
-  { channel: "Instagram", channelAr: "انستجرام", messages: 571 },
-];
+// ─── Analytics Data from API or Fallbacks ────────────────────────────────────
 
 /** Per-bar fill colors mapped by channel name */
 const channelColors: Record<string, string> = {
@@ -103,74 +99,6 @@ const channelColors: Record<string, string> = {
   Facebook: COLORS.sand,
   Instagram: COLORS.terracotta,
 };
-
-const weeklyTrendData = [
-  { day: "Mon", dayAr: "الإثنين", messages: 320, bookings: 22 },
-  { day: "Tue", dayAr: "الثلاثاء", messages: 450, bookings: 31 },
-  { day: "Wed", dayAr: "الأربعاء", messages: 380, bookings: 27 },
-  { day: "Thu", dayAr: "الخميس", messages: 520, bookings: 38 },
-  { day: "Fri", dayAr: "الجمعة", messages: 410, bookings: 29 },
-  { day: "Sat", dayAr: "السبت", messages: 390, bookings: 24 },
-  { day: "Sun", dayAr: "الأحد", messages: 377, bookings: 13 },
-];
-
-const recentBookings = [
-  {
-    id: 1,
-    clientName: "Ahmed Al-Rashid",
-    clientNameAr: "أحمد الراشد",
-    service: "Home Cleaning",
-    serviceAr: "تنظيف المنزل",
-    channel: "WhatsApp",
-    channelAr: "واتساب",
-    date: "2025-01-15",
-    status: "confirmed" as const,
-  },
-  {
-    id: 2,
-    clientName: "Sara Mansour",
-    clientNameAr: "سارة منصور",
-    service: "AC Maintenance",
-    serviceAr: "صيانة المكيفات",
-    channel: "Facebook",
-    channelAr: "فيسبوك",
-    date: "2025-01-15",
-    status: "pending" as const,
-  },
-  {
-    id: 3,
-    clientName: "Khalid Bin Nasser",
-    clientNameAr: "خالد بن ناصر",
-    service: "Plumbing",
-    serviceAr: "سباكة",
-    channel: "Instagram",
-    channelAr: "انستجرام",
-    date: "2025-01-14",
-    status: "completed" as const,
-  },
-  {
-    id: 4,
-    clientName: "Fatima Hassan",
-    clientNameAr: "فاطمة حسن",
-    service: "Painting",
-    serviceAr: "دهانات",
-    channel: "WhatsApp",
-    channelAr: "واتساب",
-    date: "2025-01-14",
-    status: "cancelled" as const,
-  },
-  {
-    id: 5,
-    clientName: "Omar Al-Farsi",
-    clientNameAr: "عمر الفارسي",
-    service: "Electrical Work",
-    serviceAr: "أعمال كهربائية",
-    channel: "Facebook",
-    channelAr: "فيسبوك",
-    date: "2025-01-13",
-    status: "confirmed" as const,
-  },
-];
 
 // ─── Chart Configs ───────────────────────────────────────────────────────────
 // Colors are direct hex values so recharts can render them without CSS resolution
@@ -252,6 +180,74 @@ const statusConfig: Record<
 export function DashboardSection() {
   const { locale } = useAppStore();
   const rtl = isRTL(locale);
+  const [stats, setStats] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch('/api/dashboard')
+      .then(res => res.json())
+      .then(data => {
+        setStats(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch dashboard stats', err);
+        setLoading(false);
+      });
+  }, []);
+
+  const channelPerformanceData = stats?.channelPerformanceData || [
+    { channel: "WhatsApp", channelAr: "واتساب", messages: 0 },
+    { channel: "Facebook", channelAr: "فيسبوك", messages: 0 },
+    { channel: "Instagram", channelAr: "انستجرام", messages: 0 },
+  ];
+
+  const weeklyTrendData = stats?.weeklyTrendData || [
+    { day: "Mon", dayAr: "الإثنين", messages: 0, bookings: 0 },
+    { day: "Tue", dayAr: "الثلاثاء", messages: 0, bookings: 0 },
+    { day: "Wed", dayAr: "الأربعاء", messages: 0, bookings: 0 },
+    { day: "Thu", dayAr: "الخميس", messages: 0, bookings: 0 },
+    { day: "Fri", dayAr: "الجمعة", messages: 0, bookings: 0 },
+    { day: "Sat", dayAr: "السبت", messages: 0, bookings: 0 },
+    { day: "Sun", dayAr: "الأحد", messages: 0, bookings: 0 },
+  ];
+
+  const recentBookings = stats?.recentBookings || [];
+
+  const dynamicKpiData = [
+    {
+      key: "activeChannels",
+      value: stats ? `${stats.activeChannels}/${stats.totalChannels}` : "...",
+      change: "Active",
+      trend: "up" as const,
+      icon: Radio,
+      colorClass: "sage" as const,
+    },
+    {
+      key: "totalMessages",
+      value: stats ? stats.totalMessages.toLocaleString() : "...",
+      change: "Total",
+      trend: "up" as const,
+      icon: MessageSquare,
+      colorClass: "sand" as const,
+    },
+    {
+      key: "totalBookings",
+      value: stats ? stats.totalBookings.toLocaleString() : "...",
+      change: "All Time",
+      trend: "up" as const,
+      icon: CalendarCheck,
+      colorClass: "terracotta" as const,
+    },
+    {
+      key: "conversionRate",
+      value: stats ? `${stats.conversionRate}%` : "...",
+      change: "Avg",
+      trend: "up" as const,
+      icon: TrendingUp,
+      colorClass: "primary" as const,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -277,7 +273,7 @@ export function DashboardSection() {
 
       {/* ── KPI Cards ───────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpiData.map((kpi) => {
+        {dynamicKpiData.map((kpi) => {
           const Icon = kpi.icon;
           const colors = kpiColorMap[kpi.colorClass];
           return (
@@ -293,7 +289,7 @@ export function DashboardSection() {
                 <div
                   className={cn(
                     "flex items-center gap-3",
-                    rtl && "flex-row-reverse"
+                    ""
                   )}
                 >
                   {/* Icon circle */}
@@ -324,7 +320,7 @@ export function DashboardSection() {
                     <div
                       className={cn(
                         "flex items-baseline flex-wrap gap-2 mt-1",
-                        rtl && "flex-row-reverse"
+                        ""
                       )}
                     >
                       <span className="text-2xl font-bold tabular-nums">

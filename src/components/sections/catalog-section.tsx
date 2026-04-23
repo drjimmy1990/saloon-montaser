@@ -15,7 +15,9 @@ import {
   DollarSign,
   Tag,
   Settings2,
+  Loader2,
 } from "lucide-react";
+import { uploadImage, deleteImage } from "@/lib/storage";
 import {
   Card,
   CardContent,
@@ -56,37 +58,33 @@ import {
 
 interface CategoryItem {
   id: string;
-  labelEn: string;
-  labelAr: string;
+  label: string;
   color: string; // "sage" | "sand" | "terracotta" | "pink" | "amber" | "emerald"
 }
 
 interface Product {
-  id: number;
-  nameEn: string;
-  nameAr: string;
-  descriptionEn: string;
-  descriptionAr: string;
+  id: string;
+  name: string;
+  description: string;
   price: number;
-  imageUrl: string;
+  images: string[];
   category: string; // category id or "" for uncategorized
-  available: boolean;
+  isAvailable: boolean;
+  notes: string;
 }
 
 interface ProductFormData {
-  nameEn: string;
-  nameAr: string;
-  descriptionEn: string;
-  descriptionAr: string;
+  name: string;
+  description: string;
   price: string;
-  imageUrl: string;
+  images: string[];
   category: string;
-  available: boolean;
+  isAvailable: boolean;
+  notes: string;
 }
 
 interface CategoryFormData {
-  labelEn: string;
-  labelAr: string;
+  label: string;
   color: string;
 }
 
@@ -183,97 +181,28 @@ const neutralStyles = {
 // ─── Initial Data ─────────────────────────────────────────────────────────────
 
 const initialCategories: CategoryItem[] = [
-  { id: "skincare", labelEn: "Skincare", labelAr: "العناية بالبشرة", color: "sage" },
-  { id: "hair", labelEn: "Hair", labelAr: "الشعر", color: "amber" },
-  { id: "nails", labelEn: "Nails", labelAr: "الأظافر", color: "pink" },
-  { id: "makeup", labelEn: "Makeup", labelAr: "المكياج", color: "terracotta" },
+  { id: "skincare", label: "العناية بالبشرة", color: "sage" },
+  { id: "hair", label: "الشعر", color: "amber" },
+  { id: "nails", label: "الأظافر", color: "pink" },
+  { id: "makeup", label: "المكياج", color: "terracotta" },
 ];
 
-const initialProducts: Product[] = [
-  {
-    id: 1,
-    nameEn: "Facial Treatment",
-    nameAr: "علاج الوجه",
-    descriptionEn: "Deep cleansing facial with exfoliation, extraction, and hydrating mask for radiant skin.",
-    descriptionAr: "تنظيف عميق للوجه مع تقشير وإزالة الشوائب وقناع مرطب لبشرة مشرقة.",
-    price: 250,
-    imageUrl: "",
-    category: "skincare",
-    available: true,
-  },
-  {
-    id: 2,
-    nameEn: "Hair Coloring",
-    nameAr: "صبغة الشعر",
-    descriptionEn: "Professional hair coloring service with premium products and expert color matching.",
-    descriptionAr: "خدمة صبغة شعر احترافية بمنتجات ممتازة ومطابقة لونية دقيقة.",
-    price: 350,
-    imageUrl: "",
-    category: "hair",
-    available: true,
-  },
-  {
-    id: 3,
-    nameEn: "Manicure",
-    nameAr: "مناكير",
-    descriptionEn: "Classic manicure with nail shaping, cuticle care, hand massage, and polish application.",
-    descriptionAr: "مناكير كلاسيكي مع تشكيل الأظافر وعلاج البشرة وتدليك اليدين وطلاء الأظافر.",
-    price: 120,
-    imageUrl: "",
-    category: "nails",
-    available: true,
-  },
-  {
-    id: 4,
-    nameEn: "Pedicure",
-    nameAr: "بديكير",
-    descriptionEn: "Relaxing pedicure with foot soak, exfoliation, nail care, and moisturizing treatment.",
-    descriptionAr: "بديكير مريح مع نقع القدمين وتقشير وعناية بالأظافر وعلاج مرطب.",
-    price: 150,
-    imageUrl: "",
-    category: "nails",
-    available: false,
-  },
-  {
-    id: 5,
-    nameEn: "Bridal Makeup",
-    nameAr: "مكياج العروس",
-    descriptionEn: "Full bridal makeup package with trial session, premium products, and long-lasting finish.",
-    descriptionAr: "باقة مكياج العروس الكاملة مع جلسة تجريبية ومنتجات ممتازة وثبات طويل.",
-    price: 800,
-    imageUrl: "",
-    category: "makeup",
-    available: true,
-  },
-  {
-    id: 6,
-    nameEn: "Keratin Treatment",
-    nameAr: "علاج الكيراتين",
-    descriptionEn: "Smoothing keratin treatment that eliminates frizz and adds shine for up to 3 months.",
-    descriptionAr: "علاج فرد بالكيراتين يزيل التجعد ويضيف لمعان لمدة تصل إلى 3 أشهر.",
-    price: 600,
-    imageUrl: "",
-    category: "hair",
-    available: true,
-  },
-];
+// Removed initialProducts mock data
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const emptyProductFormData: ProductFormData = {
-  nameEn: "",
-  nameAr: "",
-  descriptionEn: "",
-  descriptionAr: "",
+  name: "",
+  description: "",
   price: "",
-  imageUrl: "",
+  images: [],
   category: "",
-  available: true,
+  isAvailable: true,
+  notes: "",
 };
 
 const emptyCategoryFormData: CategoryFormData = {
-  labelEn: "",
-  labelAr: "",
+  label: "",
   color: "sage",
 };
 
@@ -300,7 +229,8 @@ export function CatalogSection() {
   const rtl = isRTL(locale);
 
   const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
 
@@ -310,6 +240,7 @@ export function CatalogSection() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<ProductFormData>(emptyProductFormData);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Category management dialog states
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
@@ -317,6 +248,23 @@ export function CatalogSection() {
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
   const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
   const [deletingCategory, setDeletingCategory] = useState<CategoryItem | null>(null);
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/products");
+      const data = await res.json();
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch products", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchProducts();
+  }, []);
 
   // ─── Derived Data ─────────────────────────────────────────────────────────
 
@@ -327,7 +275,7 @@ export function CatalogSection() {
   const getCategoryLabel = (catId: string): string => {
     const cat = categories.find((c) => c.id === catId);
     if (!cat) return t(locale, "catalog.uncategorized");
-    return rtl ? cat.labelAr : cat.labelEn;
+    return cat.label;
   };
 
   const getCategoryById = (catId: string): CategoryItem | undefined => {
@@ -339,8 +287,8 @@ export function CatalogSection() {
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const nameMatch = rtl
-        ? p.nameAr.toLowerCase().includes(searchQuery.toLowerCase())
-        : p.nameEn.toLowerCase().includes(searchQuery.toLowerCase());
+        ? p.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        : p.name?.toLowerCase().includes(searchQuery.toLowerCase());
 
       let categoryMatch = true;
       if (activeCategory === "uncategorized") {
@@ -367,14 +315,13 @@ export function CatalogSection() {
   const handleOpenEdit = (product: Product) => {
     setEditingProduct(product);
     setFormData({
-      nameEn: product.nameEn,
-      nameAr: product.nameAr,
-      descriptionEn: product.descriptionEn,
-      descriptionAr: product.descriptionAr,
-      price: String(product.price),
-      imageUrl: product.imageUrl,
-      category: product.category,
-      available: product.available,
+      name: product.name || "",
+      description: product.description || "",
+      price: product.price ? String(product.price) : "",
+      images: product.images || [],
+      category: product.category || "",
+      isAvailable: product.isAvailable,
+      notes: product.notes || "",
     });
     setProductDialogOpen(true);
   };
@@ -384,40 +331,41 @@ export function CatalogSection() {
     setDeleteDialogOpen(true);
   };
 
-  const handleSaveProduct = () => {
+  const handleSaveProduct = async () => {
     const price = parseFloat(formData.price) || 0;
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      price,
+      images: formData.images,
+      category: formData.category,
+      isAvailable: formData.isAvailable,
+      notes: formData.notes,
+    };
 
-    if (editingProduct) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editingProduct.id
-            ? {
-                ...p,
-                nameEn: formData.nameEn,
-                nameAr: formData.nameAr,
-                descriptionEn: formData.descriptionEn,
-                descriptionAr: formData.descriptionAr,
-                price,
-                imageUrl: formData.imageUrl,
-                category: formData.category,
-                available: formData.available,
-              }
-            : p
-        )
-      );
-    } else {
-      const newProduct: Product = {
-        id: Math.max(0, ...products.map((p) => p.id)) + 1,
-        nameEn: formData.nameEn,
-        nameAr: formData.nameAr,
-        descriptionEn: formData.descriptionEn,
-        descriptionAr: formData.descriptionAr,
-        price,
-        imageUrl: formData.imageUrl,
-        category: formData.category,
-        available: formData.available,
-      };
-      setProducts((prev) => [...prev, newProduct]);
+    try {
+      if (editingProduct) {
+        // Find images that were in the original product but are no longer in the form data
+        const removedImages = (editingProduct.images || []).filter(img => !formData.images.includes(img));
+        if (removedImages.length > 0) {
+          Promise.all(removedImages.map(img => deleteImage(img))).catch(console.error);
+        }
+
+        await fetch(`/api/products/${editingProduct.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+      fetchProducts();
+    } catch (err) {
+      console.error("Failed to save product", err);
     }
 
     setProductDialogOpen(false);
@@ -425,11 +373,39 @@ export function CatalogSection() {
     setFormData(emptyProductFormData);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deletingProduct) return;
-    setProducts((prev) => prev.filter((p) => p.id !== deletingProduct.id));
+    try {
+      // Delete associated images from storage
+      if (deletingProduct.images && deletingProduct.images.length > 0) {
+        Promise.all(deletingProduct.images.map(img => deleteImage(img))).catch(console.error);
+      }
+
+      await fetch(`/api/products/${deletingProduct.id}`, { method: "DELETE" });
+      fetchProducts();
+    } catch (err) {
+      console.error("Failed to delete product", err);
+    }
     setDeleteDialogOpen(false);
     setDeletingProduct(null);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    try {
+      setIsUploading(true);
+      const url = await uploadImage(file, 'saloon_uploads', 'products');
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, url]
+      }));
+    } catch (err) {
+      console.error("Failed to upload image", err);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // ─── Category Handlers ────────────────────────────────────────────────────
@@ -442,8 +418,7 @@ export function CatalogSection() {
   const handleOpenEditCategory = (cat: CategoryItem) => {
     setEditingCategory(cat);
     setCategoryFormData({
-      labelEn: cat.labelEn,
-      labelAr: cat.labelAr,
+      label: cat.label,
       color: cat.color,
     });
   };
@@ -454,18 +429,17 @@ export function CatalogSection() {
       setCategories((prev) =>
         prev.map((c) =>
           c.id === editingCategory.id
-            ? { ...c, labelEn: categoryFormData.labelEn, labelAr: categoryFormData.labelAr, color: categoryFormData.color }
+            ? { ...c, label: categoryFormData.label, color: categoryFormData.color }
             : c
         )
       );
       setEditingCategory(null);
     } else {
       // Add new category
-      const slug = slugify(categoryFormData.labelEn) || `cat-${Date.now()}`;
+      const slug = slugify(categoryFormData.label) || `cat-${Date.now()}`;
       const newCategory: CategoryItem = {
         id: slug,
-        labelEn: categoryFormData.labelEn,
-        labelAr: categoryFormData.labelAr,
+        label: categoryFormData.label,
         color: categoryFormData.color,
       };
       setCategories((prev) => [...prev, newCategory]);
@@ -503,7 +477,7 @@ export function CatalogSection() {
     categories.forEach((cat) => {
       pills.push({
         key: cat.id,
-        label: rtl ? cat.labelAr : cat.labelEn,
+        label: cat.label,
         cat,
       });
     });
@@ -621,7 +595,7 @@ export function CatalogSection() {
                 key={product.id}
                 className={cn(
                   "py-0 overflow-hidden group hover:shadow-md transition-shadow duration-200",
-                  !product.available && "opacity-75"
+                  !product.isAvailable && "opacity-75"
                 )}
               >
                 {/* Image Placeholder */}
@@ -633,10 +607,10 @@ export function CatalogSection() {
                       : getCategoryStyles(cat, "iconBg")
                   )}
                 >
-                  {product.imageUrl ? (
+                  {product.images && product.images.length > 0 ? (
                     <img
-                      src={product.imageUrl}
-                      alt={rtl ? product.nameAr : product.nameEn}
+                      src={product.images[0]}
+                      alt={product.name}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -652,7 +626,7 @@ export function CatalogSection() {
 
                   {/* Availability Badge */}
                   <div className={cn("absolute top-2", rtl ? "right-2" : "left-2")}>
-                    {product.available ? (
+                    {product.isAvailable ? (
                       <Badge
                         variant="outline"
                         className={cn(
@@ -705,7 +679,7 @@ export function CatalogSection() {
                   {/* Name & Price */}
                   <div>
                     <h3 className={cn("font-semibold text-sm leading-tight line-clamp-1", rtl && "font-arabic")}>
-                      {rtl ? product.nameAr : product.nameEn}
+                      {product.name}
                     </h3>
                     <div className="flex items-center gap-1 mt-1">
                       <DollarSign className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -720,7 +694,7 @@ export function CatalogSection() {
 
                   {/* Description Snippet */}
                   <p className={cn("text-xs text-muted-foreground line-clamp-2 leading-relaxed", rtl && "font-arabic")}>
-                    {rtl ? product.descriptionAr : product.descriptionEn}
+                    {product.description}
                   </p>
 
                   {/* Actions */}
@@ -760,13 +734,13 @@ export function CatalogSection() {
           className={cn("sm:max-w-lg", rtl && "font-arabic")}
           dir={rtl ? "rtl" : "ltr"}
         >
-          <DialogHeader className={rtl && "items-end"}>
-            <DialogTitle className={rtl && "text-right"}>
+          <DialogHeader className={cn(rtl && "text-right")}>
+            <DialogTitle className={cn(rtl && "text-right")}>
               {editingProduct
                 ? t(locale, "catalog.editProduct")
                 : t(locale, "catalog.addProduct")}
             </DialogTitle>
-            <DialogDescription className={rtl && "text-right"}>
+            <DialogDescription className={cn(rtl && "text-right")}>
               {editingProduct
                 ? rtl
                   ? "قم بتعديل تفاصيل المنتج"
@@ -778,74 +752,38 @@ export function CatalogSection() {
           </DialogHeader>
 
           <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1 custom-scrollbar">
-            {/* English Name */}
+            {/* Arabic Name (Primary) */}
             <div className="space-y-2">
-              <Label className={rtl && "text-right block"} htmlFor="nameEn">
+              <Label className="text-right block font-arabic" htmlFor="name">
                 {t(locale, "catalog.productName")}
               </Label>
               <Input
-                id="nameEn"
-                value={formData.nameEn}
+                id="name"
+                value={formData.name}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, nameEn: e.target.value }))
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                placeholder={rtl ? "اسم المنتج بالإنجليزية" : "Product name in English"}
-                dir="ltr"
-              />
-            </div>
-
-            {/* Arabic Name */}
-            <div className="space-y-2">
-              <Label className="text-right block font-arabic" htmlFor="nameAr">
-                {t(locale, "catalog.productNameAr")}
-              </Label>
-              <Input
-                id="nameAr"
-                value={formData.nameAr}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, nameAr: e.target.value }))
-                }
-                placeholder="اسم المنتج بالعربية"
+                placeholder="اسم المنتج أو الخدمة"
                 className="text-right font-arabic"
                 dir="rtl"
               />
             </div>
 
-            {/* English Description */}
+            {/* Arabic Description (Primary) */}
             <div className="space-y-2">
-              <Label className={rtl && "text-right block"} htmlFor="descEn">
+              <Label className="text-right block font-arabic" htmlFor="description">
                 {t(locale, "catalog.productDescription")}
               </Label>
               <Textarea
-                id="descEn"
-                value={formData.descriptionEn}
+                id="description"
+                value={formData.description}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    descriptionEn: e.target.value,
+                    description: e.target.value,
                   }))
                 }
-                placeholder={rtl ? "الوصف بالإنجليزية" : "Description in English"}
-                rows={3}
-                dir="ltr"
-              />
-            </div>
-
-            {/* Arabic Description */}
-            <div className="space-y-2">
-              <Label className="text-right block font-arabic" htmlFor="descAr">
-                {t(locale, "catalog.productDescriptionAr")}
-              </Label>
-              <Textarea
-                id="descAr"
-                value={formData.descriptionAr}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    descriptionAr: e.target.value,
-                  }))
-                }
-                placeholder="الوصف بالعربية"
+                placeholder="تفاصيل المنتج أو الخدمة"
                 rows={3}
                 className="text-right font-arabic"
                 dir="rtl"
@@ -856,7 +794,7 @@ export function CatalogSection() {
             <div className="grid grid-cols-2 gap-3">
               {/* Price */}
               <div className="space-y-2">
-                <Label className={rtl && "text-right block"} htmlFor="price">
+                <Label className={cn(rtl && "text-right")} htmlFor="price">
                   {t(locale, "catalog.productPrice")}
                 </Label>
                 <Input
@@ -876,7 +814,7 @@ export function CatalogSection() {
 
               {/* Category */}
               <div className="space-y-2">
-                <Label className={rtl && "text-right block"}>
+                <Label className={cn(rtl && "text-right")}>
                   {t(locale, "catalog.productCategory")}
                 </Label>
                 <Select
@@ -898,7 +836,7 @@ export function CatalogSection() {
                         value={cat.id}
                         className={rtl ? "font-arabic" : ""}
                       >
-                        {rtl ? cat.labelAr : cat.labelEn}
+                        {cat.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -906,22 +844,85 @@ export function CatalogSection() {
               </div>
             </div>
 
-            {/* Image URL */}
-            <div className="space-y-2">
-              <Label className={rtl && "text-right block"} htmlFor="imageUrl">
-                {t(locale, "catalog.productImage")}
+            {/* Image Upload */}
+            <div className="space-y-3">
+              <Label className={cn("block", rtl && "text-right font-arabic")}>
+                {rtl ? "صور المنتج" : "Product Images"}
               </Label>
-              <Input
-                id="imageUrl"
-                value={formData.imageUrl}
+              
+              {/* Image Preview Grid */}
+              {formData.images.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.images.map((img, idx) => (
+                    <div key={idx} className="relative w-16 h-16 rounded-md overflow-hidden border">
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const imgToRemove = formData.images[idx];
+                          // If it's a newly uploaded image (not in the original product), delete it immediately to prevent orphans
+                          if (!editingProduct?.images?.includes(imgToRemove)) {
+                            deleteImage(imgToRemove).catch(console.error);
+                          }
+                          setFormData(prev => ({
+                            ...prev,
+                            images: prev.images.filter((_, i) => i !== idx)
+                          }))
+                        }}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                      >
+                        <XCircle className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Upload Button */}
+              <div className="relative">
+                <input
+                  type="file"
+                  id="image-upload"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                  disabled={isUploading}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className={cn("w-full gap-2", rtl && "font-arabic")}
+                  onClick={() => document.getElementById('image-upload')?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  {rtl ? "إضافة صورة" : "Add Image"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-2">
+              <Label className={cn("block", rtl && "text-right font-arabic")} htmlFor="notes">
+                {rtl ? "ملاحظات إضافية" : "Additional Notes"}
+              </Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    imageUrl: e.target.value,
+                    notes: e.target.value,
                   }))
                 }
-                placeholder={rtl ? "رابط الصورة (اختياري)" : "Image URL (optional)"}
-                dir="ltr"
+                placeholder={rtl ? "ملاحظات للاستخدام الداخلي (لن تظهر للعميل)" : "Internal notes (hidden from customers)"}
+                rows={2}
+                className={cn(rtl && "text-right font-arabic")}
+                dir={rtl ? "rtl" : "ltr"}
               />
             </div>
 
@@ -930,23 +931,23 @@ export function CatalogSection() {
               <Label className={cn("cursor-pointer", rtl && "font-arabic")} htmlFor="availability">
                 {t(locale, "catalog.availability")}
               </Label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3" dir="ltr">
                 <span
                   className={cn(
-                    "text-xs",
-                    formData.available
+                    "text-xs font-medium",
+                    formData.isAvailable
                       ? "text-sage-600 dark:text-sage-400"
                       : "text-red-500 dark:text-red-400",
                     rtl && "font-arabic"
                   )}
                 >
-                  {formData.available ? t(locale, "available") : t(locale, "unavailable")}
+                  {formData.isAvailable ? t(locale, "available") : t(locale, "unavailable")}
                 </span>
                 <Switch
                   id="availability"
-                  checked={formData.available}
+                  checked={formData.isAvailable}
                   onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, available: checked }))
+                    setFormData((prev) => ({ ...prev, isAvailable: checked }))
                   }
                 />
               </div>
@@ -963,7 +964,7 @@ export function CatalogSection() {
             </Button>
             <Button
               onClick={handleSaveProduct}
-              disabled={!formData.nameEn.trim() && !formData.nameAr.trim()}
+              disabled={!formData.name.trim()}
               className={rtl ? "font-arabic" : ""}
             >
               {t(locale, "save")}
@@ -975,7 +976,7 @@ export function CatalogSection() {
       {/* Delete Product Confirmation AlertDialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
-          <AlertDialogHeader className={rtl && "items-end"}>
+          <AlertDialogHeader className={cn(rtl && "text-right")}>
             <AlertDialogTitle className={cn(rtl && "font-arabic text-right")}>
               {t(locale, "catalog.deleteProduct")}
             </AlertDialogTitle>
@@ -983,7 +984,7 @@ export function CatalogSection() {
               {t(locale, "catalog.deleteConfirm")}
               {deletingProduct && (
                 <span className="font-semibold block mt-1">
-                  &quot;{rtl ? deletingProduct.nameAr : deletingProduct.nameEn}&quot;
+                  &quot;{deletingProduct.name}&quot;
                 </span>
               )}
             </AlertDialogDescription>
@@ -1008,11 +1009,11 @@ export function CatalogSection() {
           className={cn("sm:max-w-lg", rtl && "font-arabic")}
           dir={rtl ? "rtl" : "ltr"}
         >
-          <DialogHeader className={rtl && "items-end"}>
-            <DialogTitle className={rtl && "text-right"}>
+          <DialogHeader className={cn(rtl && "text-right")}>
+            <DialogTitle className={cn(rtl && "text-right")}>
               {t(locale, "catalog.manageCategories")}
             </DialogTitle>
-            <DialogDescription className={rtl && "text-right"}>
+            <DialogDescription className={cn(rtl && "text-right")}>
               {rtl
                 ? "أضف أو عدّل أو احذف فئات المنتجات"
                 : "Add, edit, or remove product categories"}
@@ -1027,37 +1028,20 @@ export function CatalogSection() {
               </h4>
 
               <div className="grid grid-cols-2 gap-3">
-                {/* English Name */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs" htmlFor="catNameEn">
+                {/* Category Name */}
+                <div className="space-y-1.5 col-span-2">
+                  <Label className={cn("text-xs font-arabic", rtl && "text-right block")} htmlFor="catName">
                     {t(locale, "catalog.categoryName")}
                   </Label>
                   <Input
-                    id="catNameEn"
-                    value={categoryFormData.labelEn}
+                    id="catName"
+                    value={categoryFormData.label}
                     onChange={(e) =>
-                      setCategoryFormData((prev) => ({ ...prev, labelEn: e.target.value }))
+                      setCategoryFormData((prev) => ({ ...prev, label: e.target.value }))
                     }
-                    placeholder={rtl ? "اسم الفئة بالإنجليزية" : "Category name in English"}
-                    dir="ltr"
-                    className="text-sm"
-                  />
-                </div>
-
-                {/* Arabic Name */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-arabic text-right block" htmlFor="catNameAr">
-                    {t(locale, "catalog.categoryNameAr")}
-                  </Label>
-                  <Input
-                    id="catNameAr"
-                    value={categoryFormData.labelAr}
-                    onChange={(e) =>
-                      setCategoryFormData((prev) => ({ ...prev, labelAr: e.target.value }))
-                    }
-                    placeholder="اسم الفئة بالعربية"
-                    dir="rtl"
-                    className="text-sm text-right font-arabic"
+                    placeholder={rtl ? "اسم الفئة" : "Category name"}
+                    dir={rtl ? "rtl" : "ltr"}
+                    className={cn("text-sm", rtl && "text-right font-arabic")}
                   />
                 </div>
               </div>
@@ -1093,7 +1077,7 @@ export function CatalogSection() {
                 <Button
                   size="sm"
                   onClick={handleSaveCategory}
-                  disabled={!categoryFormData.labelEn.trim() && !categoryFormData.labelAr.trim()}
+                  disabled={!categoryFormData.label.trim()}
                   className={cn("gap-1.5 text-xs", rtl && "font-arabic")}
                 >
                   <Plus className="w-3 h-3" />
@@ -1145,10 +1129,7 @@ export function CatalogSection() {
                       {/* Category label */}
                       <div className="flex-1 min-w-0">
                         <span className={cn("text-sm font-medium", catColor ? catColor.text : neutralStyles.text)}>
-                          {rtl ? cat.labelAr : cat.labelEn}
-                        </span>
-                        <span className={cn("text-xs text-muted-foreground ms-2", rtl && "font-arabic")}>
-                          {rtl ? cat.labelEn : cat.labelAr}
+                          {cat.label}
                         </span>
                       </div>
 
@@ -1202,7 +1183,7 @@ export function CatalogSection() {
       {/* Delete Category Confirmation AlertDialog */}
       <AlertDialog open={deleteCategoryDialogOpen} onOpenChange={setDeleteCategoryDialogOpen}>
         <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
-          <AlertDialogHeader className={rtl && "items-end"}>
+          <AlertDialogHeader className={cn(rtl && "text-right")}>
             <AlertDialogTitle className={cn(rtl && "font-arabic text-right")}>
               {t(locale, "catalog.deleteCategory")}
             </AlertDialogTitle>
@@ -1210,7 +1191,7 @@ export function CatalogSection() {
               {t(locale, "catalog.deleteCategoryConfirm")}
               {deletingCategory && (
                 <span className="font-semibold block mt-1">
-                  &quot;{rtl ? deletingCategory.labelAr : deletingCategory.labelEn}&quot;
+                  &quot;{deletingCategory.label}&quot;
                 </span>
               )}
             </AlertDialogDescription>

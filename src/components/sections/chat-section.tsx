@@ -15,7 +15,9 @@ import {
   Instagram,
   Facebook,
   ShieldBan,
-  Ban,
+  Menu,
+  X,
+  Trash2,
 } from "lucide-react";
 import {
   Card,
@@ -43,163 +45,37 @@ type MessageSender = "user" | "bot" | "agent";
 type ChannelType = "whatsapp" | "facebook" | "instagram";
 
 interface ChatMessage {
-  id: number;
-  sender: MessageSender;
-  text: string;
-  textAr: string;
-  time: string;
+  id: string;
+  client_id: string;
+  sender_type: MessageSender;
+  content_type: string;
+  text_content: string;
+  attachment_url: string;
+  platform_timestamp: string;
+  createdAt: string;
 }
 
-interface Conversation {
-  id: number;
-  clientName: string;
-  clientNameAr: string;
-  channel: ChannelType;
-  lastMessage: string;
-  lastMessageAr: string;
-  lastTime: string;
+interface Client {
+  id: string;
+  channel_id: string;
+  platform: ChannelType;
+  platform_user_id: string;
+  phone?: string;
+  name?: string | null;
+  avatar_url: string;
+  last_interaction_at: string;
+  last_message_preview: string;
+  unread_count: number;
+  status: string;
+  ai_enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
   messages: ChatMessage[];
-  blocked: boolean;
 }
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const mockConversations: Conversation[] = [
-  {
-    id: 1,
-    clientName: "Ahmed Al-Rashid",
-    clientNameAr: "أحمد الراشد",
-    channel: "whatsapp",
-    lastMessage: "I need to reschedule my cleaning appointment",
-    lastMessageAr: "أحتاج لتغيير موعد التنظيف",
-    lastTime: "10:32 AM",
-    blocked: false,
-    messages: [
-      {
-        id: 1,
-        sender: "user",
-        text: "Hello, I booked a cleaning service for tomorrow",
-        textAr: "مرحباً، حجزت خدمة تنظيف لبكرة",
-        time: "10:15 AM",
-      },
-      {
-        id: 2,
-        sender: "bot",
-        text: "Welcome Ahmed! I can see your booking #1001 for Home Deep Cleaning. How can I help you?",
-        textAr: "أهلاً أحمد! أرى حجزك #1001 لتنظيف عميق للمنزل. كيف أقدر أساعدك؟",
-        time: "10:15 AM",
-      },
-      {
-        id: 3,
-        sender: "user",
-        text: "I need to reschedule my cleaning appointment",
-        textAr: "أحتاج لتغيير موعد التنظيف",
-        time: "10:32 AM",
-      },
-      {
-        id: 4,
-        sender: "bot",
-        text: "I can help with that! What date would work better for you?",
-        textAr: "أقدر أساعدك! أي تاريخ يناسبك أفضل؟",
-        time: "10:32 AM",
-      },
-      {
-        id: 5,
-        sender: "agent",
-        text: "Hi Ahmed, I'm a human agent stepping in. Let me check available slots for you.",
-        textAr: "أهلاً أحمد، أنا موظف بشري متدخل. خلني أشيك الأوقات المتاحة لك.",
-        time: "10:35 AM",
-      },
-    ],
-  },
-  {
-    id: 2,
-    clientName: "Sara Mansour",
-    clientNameAr: "سارة منصور",
-    channel: "facebook",
-    lastMessage: "What's included in the AC maintenance package?",
-    lastMessageAr: "وش يشمل باقة صيانة المكيفات؟",
-    lastTime: "9:45 AM",
-    blocked: false,
-    messages: [
-      {
-        id: 1,
-        sender: "user",
-        text: "Hi, I saw your AC maintenance offer",
-        textAr: "أهلاً، شفت عرض صيانة المكيفات",
-        time: "9:30 AM",
-      },
-      {
-        id: 2,
-        sender: "bot",
-        text: "Hello Sara! Great choice. Our AC maintenance package includes filter cleaning, gas check, and full inspection. Would you like to book?",
-        textAr: "أهلاً سارة! اختيار ممتاز. باقة صيانة المكيفات تشمل تنظيف الفلاتر، فحص الغاز، وفحص شامل. تبي تحجزي؟",
-        time: "9:30 AM",
-      },
-      {
-        id: 3,
-        sender: "user",
-        text: "What's included in the AC maintenance package?",
-        textAr: "وش يشمل باقة صيانة المكيفات؟",
-        time: "9:45 AM",
-      },
-    ],
-  },
-  {
-    id: 3,
-    clientName: "Khalid Bin Nasser",
-    clientNameAr: "خالد بن ناصر",
-    channel: "instagram",
-    lastMessage: "Can I get a quote for plumbing repair?",
-    lastMessageAr: "أقدر أحصل عرض سعر لإصلاح سباكة؟",
-    lastTime: "Yesterday",
-    blocked: false,
-    messages: [
-      {
-        id: 1,
-        sender: "user",
-        text: "I have a leaking kitchen sink",
-        textAr: "عندي تسريب في حوض المطبخ",
-        time: "3:20 PM",
-      },
-      {
-        id: 2,
-        sender: "bot",
-        text: "Sorry to hear that, Khalid! A leaking sink can cause water damage. We have experienced plumbers available. Can you describe the leak?",
-        textAr: "سمعت الخبر يا خالد! التسريب ممكن يسبب أضرار. عندنا سباكين خبراء متاحين. تقدر تصف التسريب؟",
-        time: "3:20 PM",
-      },
-      {
-        id: 3,
-        sender: "user",
-        text: "It's dripping from under the sink, I think the pipe connection is loose",
-        textAr: "يقطر من تحت الحوض، أظن وصلة المواسير فكّت",
-        time: "3:25 PM",
-      },
-      {
-        id: 4,
-        sender: "bot",
-        text: "That sounds like a connection issue. Our technician can fix that quickly. I recommend booking an urgent visit.",
-        textAr: "هذا يبدو كأنه مشكلة وصلة. فنيّنا يقدر يصلحها بسرعة. أنصح بحجز زيارة مستعجلة.",
-        time: "3:25 PM",
-      },
-      {
-        id: 5,
-        sender: "user",
-        text: "Can I get a quote for plumbing repair?",
-        textAr: "أقدر أحصل عرض سعر لإصلاح سباكة؟",
-        time: "3:30 PM",
-      },
-      {
-        id: 6,
-        sender: "bot",
-        text: "Of course! Standard plumbing repair starts at SAR 150. I'll send you a detailed quote now.",
-        textAr: "طبعاً! إصلاح السباكة يبدأ من 150 ريال. ببعث لك عرض سعر مفصل الحين.",
-        time: "3:30 PM",
-      },
-    ],
-  },
-];
+// Removed mockConversations
 
 // ─── Config Maps ──────────────────────────────────────────────────────────────
 
@@ -276,89 +152,162 @@ const senderConfig: Record<
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ChatSection() {
-  const { locale } = useAppStore();
+  const { locale, activeChatId, setActiveChatId } = useAppStore();
   const rtl = isRTL(locale);
 
-  const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
-  const [activeConvId, setActiveConvId] = useState<number | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
+  
   const [messageInput, setMessageInput] = useState("");
   const [mobileShowChat, setMobileShowChat] = useState(false);
-  const [blockDialogConvId, setBlockDialogConvId] = useState<number | null>(null);
+  const [blockDialogContactId, setBlockDialogContactId] = useState<string | null>(null);
+  const [channelFilter, setChannelFilter] = useState<ChannelType | "all">("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [deleteChatId, setDeleteChatId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const activeConversation = conversations.find((c) => c.id === activeConvId) || null;
+  const fetchClients = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/clients");
+      const data = await res.json();
+      setClients(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch conversations", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const activeClient = clients.find((c) => c.id === activeChatId) || null;
 
   // Auto-scroll to bottom when conversation changes or messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeConvId, activeConversation?.messages.length]);
+  }, [activeChatId, activeClient?.messages.length]);
+
+  const markAsRead = async (id: string) => {
+    try {
+      await fetch(`/api/clients/${id}/read`, { method: "POST" });
+      fetchClients();
+    } catch (err) {
+      console.error("Failed to mark as read", err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeChatId) {
+      const client = clients.find((c) => c.id === activeChatId);
+      if (client && client.unread_count > 0) {
+        markAsRead(activeChatId);
+      }
+    }
+  }, [activeChatId, clients]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
-  const handleSelectConversation = (id: number) => {
-    setActiveConvId(id);
+  const handleSelectClient = (id: string) => {
+    setActiveChatId(id);
     setMobileShowChat(true);
   };
 
-  const handleSendMessage = () => {
-    if (!messageInput.trim() || !activeConvId) return;
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || !activeChatId || !activeClient) return;
 
     const newMessage: ChatMessage = {
-      id: Date.now(),
-      sender: "agent",
-      text: messageInput,
-      textAr: messageInput,
-      time: new Date().toLocaleTimeString(locale === "ar" ? "ar-SA" : "en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      }),
+      id: Date.now().toString(),
+      client_id: activeChatId,
+      sender_type: "agent",
+      content_type: "text",
+      text_content: messageInput,
+      attachment_url: "",
+      platform_timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
 
-    setConversations((prev) =>
-      prev.map((conv) =>
-        conv.id === activeConvId
-          ? {
-              ...conv,
-              messages: [...conv.messages, newMessage],
-              lastMessage: messageInput,
-              lastMessageAr: messageInput,
-              lastTime: newMessage.time,
-            }
-          : conv
-      )
-    );
+    const updatedMessages = [...activeClient.messages, newMessage];
+    try {
+      await fetch(`/api/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: activeChatId,
+          sender_type: "agent",
+          content_type: "text",
+          text_content: messageInput,
+          platform_timestamp: new Date().toISOString()
+        }),
+      });
+      fetchClients();
+    } catch (err) {
+      console.error("Failed to send message", err);
+    }
+
     setMessageInput("");
   };
 
-  const handleNewConversation = () => {
-    const newConv: Conversation = {
-      id: Math.max(0, ...conversations.map((c) => c.id)) + 1,
-      clientName: "New Client",
-      clientNameAr: "عميل جديد",
-      channel: "whatsapp",
-      lastMessage: rtl ? "محادثة جديدة" : "New conversation",
-      lastMessageAr: "محادثة جديدة",
-      lastTime: "Now",
-      messages: [],
-      blocked: false,
-    };
-    setConversations((prev) => [newConv, ...prev]);
-    setActiveConvId(newConv.id);
-    setMobileShowChat(true);
+  const handleNewClient = async () => {
+    try {
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          platform: "whatsapp",
+          platform_user_id: "new_client_" + Date.now(),
+          name: rtl ? "عميل جديد" : "New Client",
+          
+          status: "active",
+        }),
+      });
+      const newConv = await res.json();
+      if (newConv && newConv.id) {
+        setClients((prev) => [newConv, ...prev]);
+        setActiveChatId(newConv.id);
+        setMobileShowChat(true);
+      }
+    } catch (err) {
+      console.error("Failed to create conversation", err);
+    }
   };
 
   const handleBackToList = () => {
     setMobileShowChat(false);
   };
 
-  const handleToggleBlock = (convId: number) => {
-    setConversations((prev) =>
-      prev.map((conv) =>
-        conv.id === convId ? { ...conv, blocked: !conv.blocked } : conv
-      )
-    );
-    setBlockDialogConvId(null);
+  const handleToggleAi = async (clientId: string) => {
+    const conv = clients.find((c) => c.id === clientId);
+    if (!conv) return;
+    
+    const newAiEnabled = !conv.ai_enabled;
+    try {
+      await fetch(`/api/clients/${clientId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ai_enabled: newAiEnabled }),
+      });
+      fetchClients();
+    } catch (err) {
+      console.error("Failed to toggle AI status", err);
+    }
+    setBlockDialogContactId(null);
+  };
+
+  const handleConfirmDeleteChat = async () => {
+    if (!deleteChatId) return;
+    try {
+      await fetch(`/api/clients/${deleteChatId}`, { method: "DELETE" });
+      if (activeChatId === deleteChatId) {
+        setActiveChatId(null);
+        setMobileShowChat(false);
+      }
+      fetchClients();
+    } catch (err) {
+      console.error("Failed to delete chat", err);
+    }
+    setDeleteChatId(null);
   };
 
   // ─── Render Helpers ───────────────────────────────────────────────────────
@@ -384,7 +333,7 @@ export function ChatSection() {
       case "bot":
         return "me-auto";
       case "agent":
-        return "mx-auto";
+        return "me-auto";
     }
   };
 
@@ -396,34 +345,36 @@ export function ChatSection() {
       case "bot":
         return "me-auto w-fit";
       case "agent":
-        return "mx-auto w-fit";
+        return "me-auto w-fit";
     }
   };
 
   // ─── Block/Unblock AlertDialog ────────────────────────────────────────────
 
-  const blockTargetConv = conversations.find((c) => c.id === blockDialogConvId) || null;
+  const blockTargetContact = clients.find((c) => c.id === blockDialogContactId) || null;
 
   const blockAlertDialog = (
     <AlertDialog
-      open={blockDialogConvId !== null}
+      open={blockDialogContactId !== null}
       onOpenChange={(open) => {
-        if (!open) setBlockDialogConvId(null);
+        if (!open) setBlockDialogContactId(null);
       }}
     >
       <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
         <AlertDialogHeader>
           <AlertDialogTitle className={cn(rtl && "font-arabic")}>
-            {blockTargetConv?.blocked
-              ? t(locale, "chat.unblockUser")
-              : t(locale, "chat.blockUser")}
+            {blockTargetContact?.ai_enabled === false
+              ? (rtl ? "تفعيل البوت" : "Enable AI Bot")
+              : (rtl ? "إيقاف البوت" : "Disable AI Bot")}
           </AlertDialogTitle>
           <AlertDialogDescription className={cn(rtl && "font-arabic")}>
-            {blockTargetConv?.blocked
+            {blockTargetContact?.ai_enabled === false
               ? rtl
-                ? "هل أنت متأكد من إلغاء حظر هذا المستخدم؟"
-                : "Are you sure you want to unblock this user? They will be able to chat again."
-              : t(locale, "chat.blockConfirm")}
+                ? "هل أنت متأكد من تفعيل البوت الذكي لهذا المستخدم؟ سيقوم البوت بالرد عليه تلقائياً."
+                : "Are you sure you want to enable the AI for this user? The bot will resume replying automatically."
+              : rtl
+                ? "هل أنت متأكد من إيقاف البوت الذكي؟ ستضطر للرد يدوياً على هذا العميل."
+                : "Are you sure you want to disable the AI? The bot will stop replying to this user."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -432,18 +383,53 @@ export function ChatSection() {
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={() => {
-              if (blockDialogConvId !== null) {
-                handleToggleBlock(blockDialogConvId);
+              if (blockDialogContactId !== null) {
+                handleToggleAi(blockDialogContactId);
               }
             }}
             className={cn(
-              !blockTargetConv?.blocked && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+              blockTargetContact?.ai_enabled !== false && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
               rtl && "font-arabic"
             )}
           >
-            {blockTargetConv?.blocked
-              ? t(locale, "chat.unblockUser")
-              : t(locale, "chat.blockUser")}
+            {blockTargetContact?.ai_enabled === false
+              ? (rtl ? "تفعيل البوت" : "Enable AI")
+              : (rtl ? "إيقاف البوت" : "Disable AI")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
+  // ─── Delete Chat AlertDialog ──────────────────────────────────────────────
+
+  const deleteChatAlertDialog = (
+    <AlertDialog
+      open={deleteChatId !== null}
+      onOpenChange={(open) => {
+        if (!open) setDeleteChatId(null);
+      }}
+    >
+      <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
+        <AlertDialogHeader>
+          <AlertDialogTitle className={cn(rtl && "font-arabic")}>
+            {rtl ? "حذف المحادثة" : "Delete Chat"}
+          </AlertDialogTitle>
+          <AlertDialogDescription className={cn(rtl && "font-arabic")}>
+            {rtl
+              ? "هل أنت متأكد من حذف هذه المحادثة بشكل نهائي؟ سيتم حذف جميع الرسائل المرتبطة بها ولا يمكن التراجع عن هذا الإجراء."
+              : "Are you sure you want to permanently delete this chat? All associated messages will be deleted and this action cannot be undone."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className={cn(rtl && "font-arabic")}>
+            {t(locale, "cancel")}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirmDeleteChat}
+            className={cn("bg-destructive text-destructive-foreground hover:bg-destructive/90", rtl && "font-arabic")}
+          >
+            {rtl ? "حذف" : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -457,34 +443,39 @@ export function ChatSection() {
       {/* Header */}
       <div className="px-3 py-3 border-b">
         <div className="flex items-center justify-between">
-          <h3 className={cn("font-semibold text-xs", rtl && "font-arabic")}>
+          <h3 className={cn("font-semibold text-sm", rtl && "font-arabic text-right")}>
             {t(locale, "chat.conversations")}
           </h3>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNewConversation}
-            className={cn("gap-1 text-[10px] h-7 px-2", rtl && "font-arabic")}
+          <select 
+            value={channelFilter}
+            onChange={(e) => setChannelFilter(e.target.value as any)}
+            className={cn("text-xs h-7 px-2 rounded-md border border-input bg-background outline-none focus:ring-1 focus:ring-ring", rtl && "font-arabic")}
           >
-            <Plus className="w-3 h-3" />
-            {t(locale, "chat.newConversation")}
-          </Button>
+            <option value="all">{rtl ? "جميع القنوات" : "All Channels"}</option>
+            <option value="whatsapp">{rtl ? "واتساب" : "WhatsApp"}</option>
+            <option value="facebook">{rtl ? "ماسنجر" : "Messenger"}</option>
+            <option value="instagram">{rtl ? "انستجرام" : "Instagram"}</option>
+          </select>
         </div>
       </div>
 
       {/* Conversation List */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1" dir={rtl ? "rtl" : "ltr"}>
         <div className="p-1.5 space-y-0.5">
-          {conversations.length === 0 ? (
+          {clients.filter(c => channelFilter === "all" || c.platform === channelFilter).length === 0 ? (
             <div className={cn("p-6 text-center text-muted-foreground", rtl && "font-arabic")}>
               <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">{t(locale, "chat.noConversations")}</p>
             </div>
           ) : (
-            conversations.map((conv) => {
-              const chConfig = channelConfig[conv.channel];
+            clients.filter(c => channelFilter === "all" || c.platform === channelFilter).map((conv) => {
+              const chConfig = channelConfig[conv.platform] || channelConfig["whatsapp"];
               const ChannelIcon = chConfig.icon;
-              const isActive = conv.id === activeConvId;
+              const isActive = conv.id === activeChatId;
+              const isBlocked = conv.status === "blocked";
+              const lastMsgText = conv.last_message_preview || (rtl ? "لا يوجد رسائل" : "No messages");
+              const lastMsgTime = conv.last_interaction_at ? new Date(conv.last_interaction_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+
               return (
                 <div
                   key={conv.id}
@@ -494,39 +485,53 @@ export function ChatSection() {
                   )}
                 >
                   <button
-                    onClick={() => handleSelectConversation(conv.id)}
+                    onClick={() => handleSelectClient(conv.id)}
                     className={cn(
                       "w-full text-start p-2 rounded-md hover:bg-muted/80 transition-colors",
                       rtl && "text-right"
                     )}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       {/* Avatar — compact */}
-                      <div className={cn("p-1.5 rounded-full shrink-0", chConfig.bgColor)}>
-                        <ChannelIcon className={cn("w-3.5 h-3.5", chConfig.color)} />
+                      <div className={cn("p-2 rounded-full shrink-0 flex items-center justify-center", chConfig.bgColor)}>
+                        <ChannelIcon className={cn("w-4 h-4", chConfig.color)} />
                       </div>
                       {/* Content — compact */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
-                          <div className="flex items-center gap-1 min-w-0">
-                            <span className={cn("text-xs font-medium truncate", rtl && "font-arabic")}>
-                              {rtl ? conv.clientNameAr : conv.clientName}
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className={cn("text-sm font-semibold truncate", rtl && "font-arabic")}>
+                              {conv.name || conv.platform_user_id || conv.phone}
                             </span>
-                            {conv.blocked && (
+                            {conv.unread_count > 0 && (
+                              <Badge variant="default" className="text-[10px] px-1.5 py-0 h-4 leading-none shrink-0 rounded-full bg-primary text-primary-foreground">
+                                {conv.unread_count}
+                              </Badge>
+                            )}
+                            {conv.ai_enabled === false && (
                               <Badge
-                                variant="destructive"
-                                className="text-[8px] px-1 py-0 h-3.5 leading-none shrink-0"
+                                variant="secondary"
+                                className="text-[8px] px-1 py-0 h-3.5 leading-none shrink-0 bg-orange-100 text-orange-700 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400"
                               >
-                                {rtl ? "محظور" : "Blocked"}
+                                {rtl ? "البوت متوقف" : "AI Paused"}
                               </Badge>
                             )}
                           </div>
-                          <span className="text-[9px] text-muted-foreground shrink-0 tabular-nums" dir="ltr">
-                            {conv.lastTime}
+                          <span className="text-[10px] text-muted-foreground shrink-0 tabular-nums font-medium" dir="ltr">
+                            {lastMsgTime}
                           </span>
                         </div>
-                        <p className={cn("text-[10px] text-muted-foreground truncate mt-0.5", rtl && "font-arabic")}>
-                          {rtl ? conv.lastMessageAr : conv.lastMessage}
+                        {conv.name && (conv.phone || conv.platform_user_id) && (
+                          <p 
+                            className="text-[11px] text-muted-foreground/80 truncate mt-0.5 tabular-nums" 
+                            dir="ltr"
+                            style={{ textAlign: rtl ? 'right' : 'left' }}
+                          >
+                            {conv.phone || conv.platform_user_id}
+                          </p>
+                        )}
+                        <p className={cn("text-xs text-muted-foreground truncate mt-1", rtl && "font-arabic")}>
+                          {lastMsgText}
                         </p>
                       </div>
                     </div>
@@ -535,21 +540,21 @@ export function ChatSection() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setBlockDialogConvId(conv.id);
+                      setBlockDialogContactId(conv.id);
                     }}
                     className={cn(
                       "absolute top-1.5 shrink-0 p-0.5 rounded-sm transition-opacity",
                       rtl ? "left-1.5" : "right-1.5",
-                      conv.blocked
-                        ? "opacity-80 text-destructive hover:opacity-100 hover:text-destructive"
-                        : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground hover:text-destructive"
+                      conv.ai_enabled === false
+                        ? "opacity-80 text-orange-500 hover:opacity-100"
+                        : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground hover:text-orange-500"
                     )}
-                    title={conv.blocked ? t(locale, "chat.unblockUser") : t(locale, "chat.blockUser")}
+                    title={conv.ai_enabled === false ? (rtl ? "تفعيل البوت" : "Enable AI") : (rtl ? "إيقاف البوت" : "Disable AI")}
                   >
-                    {conv.blocked ? (
-                      <Ban className="w-3 h-3" />
+                    {conv.ai_enabled === false ? (
+                      <Bot className="w-3 h-3 opacity-50" />
                     ) : (
-                      <ShieldBan className="w-3 h-3" />
+                      <Bot className="w-3 h-3" />
                     )}
                   </button>
                 </div>
@@ -563,7 +568,7 @@ export function ChatSection() {
 
   // ─── Chat Area Panel ─────────────────────────────────────────────────────
 
-  const chatAreaPanel = activeConversation ? (
+  const chatAreaPanel = activeClient ? (
     <div className="flex flex-col h-full" dir={rtl ? "rtl" : "ltr"}>
       {/* Chat Header — compact single line */}
       <div className="px-3 py-1.5 border-b shrink-0">
@@ -579,117 +584,158 @@ export function ChatSection() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={rtl ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
             </svg>
           </Button>
-          <div className={cn("p-1 rounded-full", channelConfig[activeConversation.channel].bgColor)}>
-            {renderChannelIcon(activeConversation.channel)}
+          <div className={cn("p-2 rounded-full", (channelConfig[activeClient.platform] || channelConfig["whatsapp"]).bgColor)}>
+            {renderChannelIcon(activeClient.platform)}
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1">
-              <h3 className={cn("font-semibold text-xs truncate", rtl && "font-arabic")}>
-                {rtl ? activeConversation.clientNameAr : activeConversation.clientName}
+          <div className="min-w-0 flex-1 flex flex-col justify-center">
+            <div className="flex items-center gap-1.5">
+              <h3 className={cn("font-bold text-sm truncate", rtl && "font-arabic")}>
+                {activeClient.name || activeClient.platform_user_id || activeClient.phone}
               </h3>
-              {activeConversation.blocked && (
-                <Badge variant="destructive" className="text-[8px] px-1 h-3.5 shrink-0 leading-none">
-                  {rtl ? "محظور" : "Blocked"}
+              {activeClient.ai_enabled === false && (
+                <Badge variant="secondary" className="text-[8px] px-1 h-3.5 shrink-0 leading-none bg-orange-100 text-orange-700 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400">
+                  {rtl ? "البوت متوقف" : "AI Paused"}
                 </Badge>
               )}
-              <span className={cn("text-[9px] text-muted-foreground", rtl && "font-arabic")}>
+            </div>
+            <div className="flex items-center gap-1 mt-0.5">
+              {(activeClient.name) && (activeClient.phone || activeClient.platform_user_id) && (
+                <>
+                  <span className="text-[11px] font-medium text-muted-foreground tabular-nums" dir="ltr">
+                    {activeClient.phone || activeClient.platform_user_id}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground/50">•</span>
+                </>
+              )}
+              <span className={cn("text-[11px] text-muted-foreground/80", rtl && "font-arabic")}>
                 {rtl
-                  ? channelConfig[activeConversation.channel].labelAr
-                  : channelConfig[activeConversation.channel].label}
+                  ? (channelConfig[activeClient.platform] || channelConfig["whatsapp"]).labelAr
+                  : (channelConfig[activeClient.platform] || channelConfig["whatsapp"]).label}
               </span>
-              <span className="text-[9px] text-muted-foreground">•</span>
-              <span className="text-[9px] text-muted-foreground tabular-nums">
-                {activeConversation.messages.length} {rtl ? "رسالة" : "msgs"}
+              <span className="text-[11px] text-muted-foreground/50">•</span>
+              <span className="text-[11px] text-muted-foreground/80 tabular-nums">
+                {activeClient.messages.length} {rtl ? "رسالة" : "msgs"}
               </span>
             </div>
           </div>
-          {/* Block/Unblock button in header — compact */}
+          {/* AI Toggle button in header — compact */}
           <Button
-            variant={activeConversation.blocked ? "outline" : "ghost"}
+            variant={activeClient.ai_enabled === false ? "outline" : "ghost"}
             size="sm"
-            onClick={() => setBlockDialogConvId(activeConversation.id)}
+            onClick={() => setBlockDialogContactId(activeClient.id)}
             className={cn(
               "gap-1 shrink-0 text-[10px] h-6 px-2",
-              activeConversation.blocked
-                ? "text-destructive border-destructive/30 hover:bg-destructive/10"
-                : "text-muted-foreground hover:text-destructive",
+              activeClient.ai_enabled === false
+                ? "text-orange-600 border-orange-600/30 hover:bg-orange-600/10"
+                : "text-muted-foreground hover:text-orange-600",
               rtl && "font-arabic"
             )}
           >
-            {activeConversation.blocked ? (
-              <Ban className="w-3 h-3" />
-            ) : (
-              <ShieldBan className="w-3 h-3" />
-            )}
-            {activeConversation.blocked
-              ? t(locale, "chat.unblockUser")
-              : t(locale, "chat.blockUser")}
+            <Bot className={cn("w-3 h-3", activeClient.ai_enabled === false && "opacity-50")} />
+            {activeClient.ai_enabled === false
+              ? (rtl ? "تفعيل البوت" : "Enable AI")
+              : (rtl ? "إيقاف البوت" : "Disable AI")}
+          </Button>
+          {/* Delete Chat Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setDeleteChatId(activeClient.id)}
+            className="h-6 w-6 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0 ml-1"
+          >
+            <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {/* Blocked Banner — compact */}
-      {activeConversation.blocked && (
-        <div className="px-3 py-1 bg-destructive/10 border-b shrink-0">
+      {/* AI Paused Banner — compact */}
+      {activeClient.ai_enabled === false && (
+        <div className="px-3 py-1 bg-orange-50 dark:bg-orange-900/10 border-b shrink-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
-              <Ban className="w-3 h-3 text-destructive shrink-0" />
-              <p className={cn("text-[10px] text-destructive font-medium", rtl && "font-arabic")}>
+              <Bot className="w-3 h-3 text-orange-600 shrink-0 opacity-50" />
+              <p className={cn("text-[10px] text-orange-700 dark:text-orange-400 font-medium", rtl && "font-arabic")}>
                 {rtl
-                  ? "هذا المستخدم محظور. ألغِ الحظر للاستمرار في المحادثة."
-                  : "This user is blocked. Unblock to continue chatting."}
+                  ? "البوت الذكي متوقف مؤقتاً لهذا المستخدم. يجب عليك الرد يدوياً."
+                  : "AI replies are paused for this user. You must reply manually."}
               </p>
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setBlockDialogConvId(activeConversation.id)}
+              onClick={() => setBlockDialogContactId(activeClient.id)}
               className={cn(
-                "gap-1 shrink-0 text-[10px] h-5 px-1.5 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive",
+                "gap-1 shrink-0 text-[10px] h-5 px-1.5 border-orange-500/40 text-orange-700 hover:bg-orange-500/10 dark:text-orange-400",
                 rtl && "font-arabic"
               )}
             >
-              {t(locale, "chat.unblockUser")}
+              {rtl ? "تفعيل البوت" : "Enable AI"}
             </Button>
           </div>
         </div>
       )}
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-3">
+      <ScrollArea className="flex-1 p-3" dir={rtl ? "rtl" : "ltr"}>
         <div className="space-y-3">
-          {activeConversation.messages.map((msg) => {
-            const config = senderConfig[msg.sender];
+          {activeClient.messages.map((msg) => {
+            const config = senderConfig[msg.sender_type] || senderConfig["user"];
             const Icon = config.icon;
-            const isAgent = msg.sender === "agent";
+            const isAgent = msg.sender_type === "agent";
 
             return (
               <div key={msg.id} className="flex flex-col">
                 {/* Sender label — inline with bubble, very compact */}
-                <div className={cn("flex items-center gap-1 mb-0.5", getLabelAlignment(msg.sender))}>
+                <div className={cn("flex items-center gap-1 mb-0.5", getLabelAlignment(msg.sender_type))}>
                   <Icon className={cn("w-2.5 h-2.5", config.labelColor)} />
                   <span className={cn("text-[9px] font-medium", config.labelColor, rtl && "font-arabic")}>
                     {rtl ? config.labelAr : config.label}
-                  </span>
-                  <span className="text-[9px] text-muted-foreground tabular-nums" dir="ltr">
-                    {msg.time}
                   </span>
                 </div>
 
                 {/* Message bubble — aligned via margin-auto */}
                 <div
                   className={cn(
-                    "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                    "flex flex-col max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap",
                     isAgent && "max-w-[90%]",
                     config.bubbleBg,
                     config.bubbleText,
-                    getMessageAlignment(msg.sender)
+                    getMessageAlignment(msg.sender_type)
                   )}
                   dir={rtl ? "rtl" : "ltr"}
                 >
-                  <p className={rtl ? "font-arabic" : ""}>
-                    {rtl ? msg.textAr : msg.text}
-                  </p>
+                  {msg.attachment_url && msg.attachment_url.trim() !== "" && (
+                    <a href={msg.attachment_url} target="_blank" rel="noopener noreferrer" className="mb-2 block max-w-full">
+                      {msg.content_type === "audio" ? (
+                        <audio controls src={msg.attachment_url} className="max-w-full" />
+                      ) : msg.content_type === "video" ? (
+                        <video controls src={msg.attachment_url} className="max-w-full max-h-64 rounded-lg" />
+                      ) : msg.content_type === "document" ? (
+                        <div className="flex items-center gap-2 p-2 bg-black/5 dark:bg-white/5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                          <span className="text-xl">📄</span>
+                          <span className="text-xs truncate font-medium underline">{msg.attachment_url.split('/').pop() || 'View Document'}</span>
+                        </div>
+                      ) : (
+                        <img 
+                          src={msg.attachment_url} 
+                          alt="Attachment" 
+                          className="max-w-full h-auto rounded-lg max-h-64 object-contain bg-black/5 dark:bg-white/5" 
+                        />
+                      )}
+                    </a>
+                  )}
+                  {msg.text_content && msg.text_content.trim() !== "" && (
+                    <p className={rtl ? "font-arabic" : ""}>
+                      {msg.text_content}
+                    </p>
+                  )}
+                  <span 
+                    className="text-[9px] opacity-70 tabular-nums mt-1" 
+                    dir="ltr"
+                    style={{ textAlign: rtl ? 'left' : 'right' }}
+                  >
+                    {new Date(msg.platform_timestamp || msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
               </div>
             );
@@ -705,12 +751,9 @@ export function ChatSection() {
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             placeholder={
-              activeConversation.blocked
-                ? t(locale, "chat.userBlocked")
-                : t(locale, "chat.typeHere")
+              t(locale, "chat.typeHere")
             }
-            className={cn("flex-1", rtl && "font-arabic")}
-            disabled={activeConversation.blocked}
+            className={cn("flex-1 text-center", rtl && "font-arabic")}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -723,7 +766,7 @@ export function ChatSection() {
             onClick={handleSendMessage}
             size="icon"
             className="shrink-0"
-            disabled={!messageInput.trim() || activeConversation.blocked}
+            disabled={!messageInput.trim()}
           >
             <Send className={cn("w-4 h-4", rtl && "rotate-180")} />
             <span className="sr-only">{t(locale, "chat.send")}</span>
@@ -747,10 +790,10 @@ export function ChatSection() {
     <div className="flex flex-col h-full" dir={rtl ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="space-y-1 shrink-0 mb-4">
-        <h2 className={cn("text-2xl font-bold tracking-tight", rtl && "font-arabic")}>
+        <h2 className={cn("text-2xl font-bold tracking-tight", rtl && "font-arabic text-right")}>
           {t(locale, "chat.title")}
         </h2>
-        <p className={cn("text-muted-foreground text-sm", rtl && "font-arabic")}>
+        <p className={cn("text-muted-foreground text-sm", rtl && "font-arabic text-right")}>
           {t(locale, "chat.subtitle")}
         </p>
       </div>
@@ -785,6 +828,7 @@ export function ChatSection() {
 
       {/* Block/Unblock AlertDialog */}
       {blockAlertDialog}
+      {deleteChatAlertDialog}
     </div>
   );
 }

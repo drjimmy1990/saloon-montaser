@@ -17,6 +17,8 @@ import {
   Sun,
   Menu,
   X,
+  Settings,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -24,8 +26,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import type { ActiveSection } from "@/lib/store";
+import { logout } from "@/app/login/actions";
 
-const navItems: { id: ActiveSection; icon: React.ElementType; labelKey: string }[] = [
+const navItems: { id: ActiveSection; icon: React.ElementType; labelKey: string; adminOnly?: boolean }[] = [
   { id: "dashboard", icon: LayoutDashboard, labelKey: "nav.dashboard" },
   { id: "channels", icon: Radio, labelKey: "nav.channels" },
   { id: "catalog", icon: ShoppingBag, labelKey: "nav.catalog" },
@@ -33,10 +36,11 @@ const navItems: { id: ActiveSection; icon: React.ElementType; labelKey: string }
   { id: "clients", icon: Users, labelKey: "nav.clients" },
   { id: "chat", icon: MessageSquare, labelKey: "nav.chat" },
   { id: "blacklist", icon: ShieldBan, labelKey: "nav.blacklist" },
+  { id: "settings", icon: Settings, labelKey: "nav.settings", adminOnly: true },
 ];
 
 export function AppSidebar() {
-  const { locale, setLocale, activeSection, setActiveSection } = useAppStore();
+  const { locale, setLocale, activeSection, setActiveSection, userRole, userPermissions } = useAppStore();
   const rtl = isRTL(locale);
   const { theme, setTheme } = useTheme();
 
@@ -76,7 +80,13 @@ export function AppSidebar() {
       {/* Navigation */}
       <ScrollArea className="flex-1 py-3">
         <nav className="px-3 space-y-1">
-          {navItems.map((item) => {
+          {navItems.filter(item => {
+            if (item.adminOnly && userRole === 'team') return false;
+            if (userRole === 'team' && item.id !== 'dashboard' && userPermissions.length > 0) {
+              return userPermissions.includes(item.id);
+            }
+            return true;
+          }).map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
             return (
@@ -127,13 +137,25 @@ export function AppSidebar() {
             {langLabel}
           </span>
         </Button>
+        {/* Logout */}
+        <Button
+          variant="ghost"
+          className={cn(
+            "w-full justify-start gap-3 h-10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
+            rtl && "font-arabic"
+          )}
+          onClick={() => logout()}
+        >
+          <LogOut className="w-4 h-4 shrink-0" />
+          {rtl ? "تسجيل الخروج" : "Logout"}
+        </Button>
       </div>
     </aside>
   );
 }
 
 export function MobileSidebar() {
-  const { locale, setLocale, activeSection, setActiveSection, sidebarOpen, setSidebarOpen } = useAppStore();
+  const { locale, setLocale, activeSection, setActiveSection, sidebarOpen, setSidebarOpen, userRole, userPermissions } = useAppStore();
   const rtl = isRTL(locale);
   const { theme, setTheme } = useTheme();
 
@@ -182,7 +204,13 @@ export function MobileSidebar() {
 
         <ScrollArea className="py-3" style={{ height: "calc(100% - 180px)" }}>
           <nav className="px-3 space-y-1">
-            {navItems.map((item) => {
+            {navItems.filter(item => {
+              if (item.adminOnly && userRole === 'team') return false;
+              if (userRole === 'team' && item.id !== 'dashboard' && userPermissions.length > 0) {
+                return userPermissions.includes(item.id);
+              }
+              return true;
+            }).map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
               return (
@@ -230,6 +258,20 @@ export function MobileSidebar() {
             <Globe className="w-4 h-4 shrink-0" />
             <span className="text-xs">
               {langLabel}
+            </span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn("w-full flex items-center gap-3 px-3 text-destructive", rtl && "font-arabic")}
+            onClick={() => {
+              setSidebarOpen(false);
+              logout();
+            }}
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            <span className="text-xs">
+              {rtl ? "تسجيل الخروج" : "Logout"}
             </span>
           </Button>
         </div>

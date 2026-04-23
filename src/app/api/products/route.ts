@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getServiceRoleClient } from '@/lib/supabase';
 
 // GET /api/products
 export async function GET() {
   try {
-    const products = await db.product.findMany({ orderBy: { createdAt: 'desc' } });
-    return NextResponse.json(products);
+    const supabase = getServiceRoleClient();
+    const { data: products, error } = await supabase
+      .from('Product')
+      .select('*')
+      .order('createdAt', { ascending: false });
+
+    if (error) throw error;
+    return NextResponse.json(products || []);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }
@@ -15,20 +22,25 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const product = await db.product.create({
-      data: {
+    const supabase = getServiceRoleClient();
+    const { data: product, error } = await supabase
+      .from('Product')
+      .insert({
         name: body.name,
-        nameAr: body.nameAr ?? '',
         description: body.description ?? '',
-        descriptionAr: body.descriptionAr ?? '',
         price: body.price ?? 0,
-        image: body.image ?? '',
+        images: body.images ?? [],
         isAvailable: body.isAvailable ?? true,
         category: body.category ?? '',
-      },
-    });
+        notes: body.notes ?? '',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
   }
 }

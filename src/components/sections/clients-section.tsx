@@ -16,6 +16,7 @@ import {
   User,
   ShieldBan,
   Ban,
+  MessageCircle,
 } from "lucide-react";
 import {
   Card,
@@ -54,165 +55,112 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Bot, BotOff } from "lucide-react";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface Client {
-  id: number;
-  name: string;
-  nameAr: string;
+export interface Client {
+  id: string;
+  name?: string | null;
   phone: string;
-  phoneAr: string;
   address: string;
-  addressAr: string;
   notes: string;
-  notesAr: string;
-  blocked: boolean;
+  platform?: string;
+  platform_user_id?: string;
+  avatar_url?: string;
+  last_interaction_at?: string;
+  last_message_preview?: string;
+  unread_count?: number;
+  status?: string;
+  ai_enabled?: boolean;
+  createdAt?: string;
 }
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const initialClients: Client[] = [
-  {
-    id: 1,
-    name: "Ahmed Al-Rashid",
-    nameAr: "أحمد الراشد",
-    phone: "+966 55 123 4567",
-    phoneAr: "+966 55 123 4567",
-    address: "23 King Fahd Rd, Riyadh",
-    addressAr: "23 طريق الملك فهد، الرياض",
-    notes: "VIP customer, prefers WhatsApp communication",
-    notesAr: "عميل مميز، يفضل التواصل عبر واتساب",
-    blocked: false,
-  },
-  {
-    id: 2,
-    name: "Sara Mansour",
-    nameAr: "سارة منصور",
-    phone: "+966 50 987 6543",
-    phoneAr: "+966 50 987 6543",
-    address: "15 Palm Towers, Jeddah",
-    addressAr: "15 أبراج النخيل، جدة",
-    notes: "Regular client, monthly cleaning service",
-    notesAr: "عميلة منتظمة، خدمة تنظيف شهرية",
-    blocked: false,
-  },
-  {
-    id: 3,
-    name: "Khalid Bin Nasser",
-    nameAr: "خالد بن ناصر",
-    phone: "+966 54 456 7890",
-    phoneAr: "+966 54 456 7890",
-    address: "8 Al Olaya District, Riyadh",
-    addressAr: "8 حي العليا، الرياض",
-    notes: "Corporate account - Al Nasser Holdings",
-    notesAr: "حساب مؤسسي - مجموعة الناصر القابضة",
-    blocked: false,
-  },
-  {
-    id: 4,
-    name: "Fatima Hassan",
-    nameAr: "فاطمة حسن",
-    phone: "+966 56 321 0987",
-    phoneAr: "+966 56 321 0987",
-    address: "42 Marina Walk, Jeddah",
-    addressAr: "42 مارينا ووك، جدة",
-    notes: "Prefers afternoon appointments",
-    notesAr: "تفضل المواعيد بعد الظهر",
-    blocked: false,
-  },
-  {
-    id: 5,
-    name: "Omar Al-Farsi",
-    nameAr: "عمر الفارسي",
-    phone: "+966 59 654 3210",
-    phoneAr: "+966 59 654 3210",
-    address: "7 Corniche Road, Dammam",
-    addressAr: "7 طريق الكورنيش، الدمام",
-    notes: "Has annual maintenance contract",
-    notesAr: "لديه عقد صيانة سنوي",
-    blocked: false,
-  },
-  {
-    id: 6,
-    name: "Layla Al-Maktoum",
-    nameAr: "ليلى المكتوم",
-    phone: "+966 53 111 2222",
-    phoneAr: "+966 53 111 2222",
-    address: "19 Al Nakheel, Riyadh",
-    addressAr: "19 النخيل، الرياض",
-    notes: "New client, referred by Sara Mansour",
-    notesAr: "عميلة جديدة، أحالتها سارة منصور",
-    blocked: false,
-  },
-];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ClientsSection() {
-  const { locale } = useAppStore();
+  const { locale, setActiveSection, setActiveChatId } = useAppStore();
   const rtl = isRTL(locale);
 
-  const [clients, setClients] = useState<Client[]>(initialClients);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
-  const [blockingClient, setBlockingClient] = useState<Client | null>(null);
+  const [aiFilter, setAiFilter] = useState<"all" | "active" | "inactive">("all");
 
   // Form state
   const [formName, setFormName] = useState("");
-  const [formNameAr, setFormNameAr] = useState("");
   const [formPhone, setFormPhone] = useState("");
   const [formAddress, setFormAddress] = useState("");
-  const [formAddressAr, setFormAddressAr] = useState("");
   const [formNotes, setFormNotes] = useState("");
-  const [formNotesAr, setFormNotesAr] = useState("");
+
+  // ─── Fetch Data ───────────────────────────────────────────────────────────
+  const fetchClients = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch("/api/clients");
+      const data = await res.json();
+      setClients(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch clients", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchClients();
+  }, []);
 
   // ─── Filtering ────────────────────────────────────────────────────────────
 
   const filteredClients = useMemo(() => {
-    if (!searchQuery.trim()) return clients;
-    return clients.filter((c) => {
-      const name = rtl ? c.nameAr : c.name;
-      const phone = c.phone;
-      return (
-        name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        phone.includes(searchQuery)
-      );
-    });
-  }, [clients, searchQuery, rtl]);
+    let result = clients;
+    
+    if (searchQuery.trim()) {
+      result = result.filter((c) => {
+        const name = c.name || "";
+        const phone = c.phone || "";
+        return (
+          name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          phone.includes(searchQuery)
+        );
+      });
+    }
+
+    if (aiFilter === "active") {
+      result = result.filter((c) => c.ai_enabled !== false);
+    } else if (aiFilter === "inactive") {
+      result = result.filter((c) => c.ai_enabled === false);
+    }
+
+    return result;
+  }, [clients, searchQuery, aiFilter]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
   const resetForm = () => {
     setFormName("");
-    setFormNameAr("");
     setFormPhone("");
     setFormAddress("");
-    setFormAddressAr("");
     setFormNotes("");
-    setFormNotesAr("");
-  };
-
-  const openAddDialog = () => {
-    resetForm();
-    setIsEditing(false);
-    setSelectedClient(null);
-    setEditDialogOpen(true);
   };
 
   const openEditDialog = (client: Client) => {
-    setIsEditing(true);
     setSelectedClient(client);
-    setFormName(client.name);
-    setFormNameAr(client.nameAr);
-    setFormPhone(client.phone);
-    setFormAddress(client.address);
-    setFormAddressAr(client.addressAr);
-    setFormNotes(client.notes);
-    setFormNotesAr(client.notesAr);
+    setFormName(client.name || "");
+    setFormPhone(client.phone || "");
+    setFormAddress(client.address || "");
+    setFormNotes(client.notes || "");
     setEditDialogOpen(true);
   };
 
@@ -221,72 +169,61 @@ export function ClientsSection() {
     setDeleteDialogOpen(true);
   };
 
-  const handleSave = () => {
-    if (!formName.trim() && !formNameAr.trim()) return;
+  const handleOpenChat = (client: Client) => {
+    setActiveChatId(client.id);
+    setActiveSection("chat");
+  };
 
-    if (isEditing && selectedClient) {
-      setClients((prev) =>
-        prev.map((c) =>
-          c.id === selectedClient.id
-            ? {
-                ...c,
-                name: formName || c.name,
-                nameAr: formNameAr || c.nameAr,
-                phone: formPhone || c.phone,
-                address: formAddress || c.address,
-                addressAr: formAddressAr || c.addressAr,
-                notes: formNotes,
-                notesAr: formNotesAr,
-              }
-            : c
-        )
-      );
-    } else {
-      const newClient: Client = {
-        id: Math.max(0, ...clients.map((c) => c.id)) + 1,
-        name: formName || "New Client",
-        nameAr: formNameAr || "عميل جديد",
-        phone: formPhone || "+966 00 000 0000",
-        phoneAr: formPhone || "+966 00 000 0000",
-        address: formAddress || "",
-        addressAr: formAddressAr || "",
+  const handleSave = async () => {
+    if (!formName.trim()) return;
+
+    try {
+      const payload = {
+        name: formName,
+        phone: formPhone,
+        address: formAddress,
         notes: formNotes,
-        notesAr: formNotesAr,
-        blocked: false,
       };
-      setClients((prev) => [...prev, newClient]);
+
+      if (selectedClient) {
+        const res = await fetch(`/api/clients/${selectedClient.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          fetchClients();
+        }
+      }
+    } catch (err) {
+      console.error("Failed to save client", err);
     }
+
     setEditDialogOpen(false);
     resetForm();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedClient) return;
-    setClients((prev) => prev.filter((c) => c.id !== selectedClient.id));
+
+    try {
+      const res = await fetch(`/api/clients/${selectedClient.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        fetchClients();
+      }
+    } catch (err) {
+      console.error("Failed to delete client", err);
+    }
     setDeleteDialogOpen(false);
     setSelectedClient(null);
-  };
-
-  const handleToggleBlock = () => {
-    if (!blockingClient) return;
-    setClients((prev) =>
-      prev.map((c) =>
-        c.id === blockingClient.id ? { ...c, blocked: !c.blocked } : c
-      )
-    );
-    setBlockDialogOpen(false);
-    setBlockingClient(null);
-  };
-
-  const openBlockDialog = (client: Client) => {
-    setBlockingClient(client);
-    setBlockDialogOpen(true);
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={rtl ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="space-y-1">
         <h2
@@ -311,7 +248,7 @@ export function ClientsSection() {
       <div
         className={cn(
           "flex flex-col sm:flex-row gap-3",
-          rtl && "sm:flex-row-reverse"
+          ""
         )}
       >
         <div className="relative flex-1 min-w-0">
@@ -331,22 +268,32 @@ export function ClientsSection() {
             )}
           />
         </div>
-        <Button
-          onClick={openAddDialog}
-          className={cn(
-            "gap-2 shrink-0",
-            rtl && "font-arabic flex-row-reverse"
-          )}
+        
+        <Select
+          value={aiFilter}
+          onValueChange={(val: any) => setAiFilter(val)}
         >
-          <Plus className="w-4 h-4" />
-          {t(locale, "clients.addClient")}
-        </Button>
+          <SelectTrigger className={cn("w-[160px] shrink-0", rtl && "font-arabic")}>
+            <SelectValue placeholder={rtl ? "تصفية البوت" : "Filter Bot"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className={cn(rtl && "font-arabic")}>
+              {rtl ? "الكل" : "All"}
+            </SelectItem>
+            <SelectItem value="active" className={cn(rtl && "font-arabic")}>
+              {rtl ? "البوت يعمل" : "Bot Active"}
+            </SelectItem>
+            <SelectItem value="inactive" className={cn(rtl && "font-arabic")}>
+              {rtl ? "البوت متوقف" : "Bot Paused"}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Stats Card */}
       <Card className="border-sage-200 dark:border-sage-800/40 bg-sage-50 dark:bg-sage-900/20 py-0">
         <CardContent className="p-4">
-          <div className={cn("flex items-center gap-3", rtl && "flex-row-reverse")}>
+          <div className={cn("flex items-center gap-3", "")}>
             <div className="p-2.5 rounded-xl bg-sage-100 dark:bg-sage-800/30 shrink-0">
               <Users className="w-5 h-5 text-sage-600 dark:text-sage-400" />
             </div>
@@ -359,7 +306,9 @@ export function ClientsSection() {
               >
                 {t(locale, "clients.totalClients")}
               </p>
-              <p className="text-2xl font-bold tabular-nums">{clients.length}</p>
+              <p className="text-2xl font-bold tabular-nums">
+                {isLoading ? "..." : clients.length}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -379,6 +328,9 @@ export function ClientsSection() {
                     {t(locale, "clients.clientPhone")}
                   </TableHead>
                   <TableHead className={cn(rtl && "text-right font-arabic")}>
+                    {rtl ? "حالة البوت" : "Bot Status"}
+                  </TableHead>
+                  <TableHead className={cn(rtl && "text-right font-arabic")}>
                     {t(locale, "clients.clientAddress")}
                   </TableHead>
                   <TableHead className={cn(rtl && "text-right font-arabic")}>
@@ -390,10 +342,22 @@ export function ClientsSection() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredClients.length === 0 ? (
+                {isLoading ? (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
+                      className={cn(
+                        "h-24 text-center text-muted-foreground",
+                        rtl && "font-arabic"
+                      )}
+                    >
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredClients.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
                       className={cn(
                         "h-24 text-center text-muted-foreground",
                         rtl && "font-arabic"
@@ -411,16 +375,23 @@ export function ClientsSection() {
                           rtl && "text-right font-arabic"
                         )}
                       >
-                        <div className={cn("flex items-center gap-2", rtl && "flex-row-reverse")}>
+                        <div className={cn("flex items-center gap-2", "")}>
                           <div className="p-1.5 rounded-lg bg-primary/10 shrink-0">
                             <User className="w-3.5 h-3.5 text-primary" />
                           </div>
-                          <div className="flex items-center gap-1.5">
-                            {rtl ? client.nameAr : client.name}
-                            {client.blocked && (
-                              <Badge variant="destructive" className="text-[8px] px-1 h-3.5 leading-none shrink-0">
-                                {rtl ? "محظور" : "Blocked"}
-                              </Badge>
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5">
+                              {client.name}
+                              {(client.unread_count ?? 0) > 0 && (
+                                <Badge variant="default" className="text-[10px] px-1.5 py-0 h-4 leading-none shrink-0 rounded-full bg-primary text-primary-foreground">
+                                  {client.unread_count}
+                                </Badge>
+                              )}
+                            </div>
+                            {client.last_message_preview && (
+                              <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                                {client.last_message_preview}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -433,13 +404,18 @@ export function ClientsSection() {
                       >
                         {client.phone}
                       </TableCell>
-                      <TableCell
-                        className={cn(
-                          "max-w-[180px] truncate text-muted-foreground",
-                          rtl && "text-right font-arabic"
+                      <TableCell>
+                        {client.ai_enabled === false ? (
+                          <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800/40 gap-1 pr-2">
+                            <BotOff className="w-3 h-3" />
+                            {rtl ? "متوقف" : "Paused"}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 gap-1 pr-2">
+                            <Bot className="w-3 h-3" />
+                            {rtl ? "يعمل" : "Active"}
+                          </Badge>
                         )}
-                      >
-                        {rtl ? client.addressAr : client.address}
                       </TableCell>
                       <TableCell
                         className={cn(
@@ -447,10 +423,27 @@ export function ClientsSection() {
                           rtl && "text-right font-arabic"
                         )}
                       >
-                        {rtl ? client.notesAr : client.notes}
+                        {client.address}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "max-w-[180px] truncate text-muted-foreground",
+                          rtl && "text-right font-arabic"
+                        )}
+                      >
+                        {client.notes}
                       </TableCell>
                       <TableCell>
-                        <div className={cn("flex items-center gap-1", rtl && "flex-row-reverse")}>
+                        <div className={cn("flex items-center gap-1", "")}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                            onClick={() => handleOpenChat(client)}
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            <span className="sr-only">Chat</span>
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -459,28 +452,6 @@ export function ClientsSection() {
                           >
                             <Pencil className="h-4 w-4 text-muted-foreground" />
                             <span className="sr-only">{t(locale, "edit")}</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={cn(
-                              "h-8 w-8",
-                              client.blocked
-                                ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
-                                : "text-muted-foreground hover:text-destructive"
-                            )}
-                            onClick={() => openBlockDialog(client)}
-                          >
-                            {client.blocked ? (
-                              <ShieldBan className="h-4 w-4" />
-                            ) : (
-                              <Ban className="h-4 w-4" />
-                            )}
-                            <span className="sr-only">
-                              {client.blocked
-                                ? (rtl ? "إلغاء الحظر" : "Unblock")
-                                : (rtl ? "حظر" : "Block")}
-                            </span>
                           </Button>
                           <Button
                             variant="ghost"
@@ -509,22 +480,11 @@ export function ClientsSection() {
           dir={rtl ? "rtl" : "ltr"}
         >
           <DialogHeader className={cn(rtl && "text-right items-end")}>
-            <DialogTitle className={rtl && "font-arabic text-right"}>
-              {isEditing
-                ? t(locale, "clients.editClient")
-                : t(locale, "clients.addClient")}
+            <DialogTitle className={cn(rtl && "font-arabic text-right")}>
+              {t(locale, "clients.editClient")}
             </DialogTitle>
-            <DialogDescription className={rtl && "font-arabic text-right"}>
-              {isEditing
-                ? rtl
-                  ? "تعديل بيانات العميل"
-                  : "Edit client information"
-                : rtl
-                  ? "إضافة عميل جديد إلى الدليل"
-                  : "Add a new client to the directory"}
-            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 mt-4">
             {/* Name */}
             <div className="space-y-2">
               <Label className={cn(rtl && "font-arabic text-right block")}>
@@ -533,15 +493,8 @@ export function ClientsSection() {
               <Input
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
-                placeholder={rtl ? "اسم العميل بالإنجليزية" : "Client name in English"}
+                placeholder={rtl ? "اسم العميل" : "Client Name"}
                 className={rtl ? "font-arabic text-right" : ""}
-              />
-              <Input
-                value={formNameAr}
-                onChange={(e) => setFormNameAr(e.target.value)}
-                placeholder="اسم العميل بالعربية"
-                className="font-arabic text-right"
-                dir="rtl"
               />
             </div>
 
@@ -575,15 +528,8 @@ export function ClientsSection() {
               <Input
                 value={formAddress}
                 onChange={(e) => setFormAddress(e.target.value)}
-                placeholder={rtl ? "العنوان بالإنجليزية" : "Address in English"}
+                placeholder={rtl ? "العنوان" : "Address"}
                 className={rtl ? "font-arabic text-right" : ""}
-              />
-              <Input
-                value={formAddressAr}
-                onChange={(e) => setFormAddressAr(e.target.value)}
-                placeholder="العنوان بالعربية"
-                className="font-arabic text-right"
-                dir="rtl"
               />
             </div>
 
@@ -595,22 +541,14 @@ export function ClientsSection() {
               <Textarea
                 value={formNotes}
                 onChange={(e) => setFormNotes(e.target.value)}
-                placeholder={rtl ? "ملاحظات بالإنجليزية" : "Notes in English"}
+                placeholder={rtl ? "ملاحظات إضافية" : "Additional notes"}
                 rows={3}
                 className={rtl ? "font-arabic text-right" : ""}
-              />
-              <Textarea
-                value={formNotesAr}
-                onChange={(e) => setFormNotesAr(e.target.value)}
-                placeholder="ملاحظات بالعربية"
-                rows={3}
-                className="font-arabic text-right"
-                dir="rtl"
               />
             </div>
           </div>
           <DialogFooter
-            className={cn(rtl && "flex-row-reverse sm:flex-row-reverse")}
+            className={cn("mt-6", "")}
           >
             <Button
               variant="outline"
@@ -630,10 +568,10 @@ export function ClientsSection() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
           <AlertDialogHeader className={cn(rtl && "text-right items-end")}>
-            <AlertDialogTitle className={rtl && "font-arabic text-right"}>
+            <AlertDialogTitle className={cn(rtl && "font-arabic text-right")}>
               {t(locale, "clients.deleteClient")}
             </AlertDialogTitle>
-            <AlertDialogDescription className={rtl && "font-arabic text-right"}>
+            <AlertDialogDescription className={cn(rtl && "font-arabic text-right")}>
               {t(locale, "clients.deleteConfirm")}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -641,7 +579,7 @@ export function ClientsSection() {
             <div
               className={cn(
                 "flex items-center gap-3 p-3 rounded-lg bg-muted/50",
-                rtl && "flex-row-reverse"
+                ""
               )}
             >
               <div className="p-2 rounded-lg bg-red-50 dark:bg-red-900/20 shrink-0">
@@ -649,7 +587,7 @@ export function ClientsSection() {
               </div>
               <div className={cn("min-w-0", rtl && "text-right")}>
                 <p className={cn("font-medium", rtl && "font-arabic")}>
-                  {rtl ? selectedClient.nameAr : selectedClient.name}
+                  {selectedClient.name}
                 </p>
                 <p className="text-sm text-muted-foreground tabular-nums">
                   {selectedClient.phone}
@@ -657,7 +595,7 @@ export function ClientsSection() {
               </div>
             </div>
           )}
-          <AlertDialogFooter className={cn(rtl && "flex-row-reverse sm:flex-row-reverse")}>
+          <AlertDialogFooter className={cn("")}>
             <AlertDialogCancel className={rtl ? "font-arabic" : ""}>
               {t(locale, "cancel")}
             </AlertDialogCancel>
@@ -666,73 +604,6 @@ export function ClientsSection() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {t(locale, "delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Block/Unblock Confirmation Dialog */}
-      <AlertDialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
-        <AlertDialogContent dir={rtl ? "rtl" : "ltr"}>
-          <AlertDialogHeader className={cn(rtl && "text-right items-end")}>
-            <AlertDialogTitle className={cn(rtl && "font-arabic text-right")}>
-              {blockingClient?.blocked
-                ? (rtl ? "إلغاء حظر العميل" : "Unblock Client")
-                : (rtl ? "حظر العميل" : "Block Client")}
-            </AlertDialogTitle>
-            <AlertDialogDescription className={cn(rtl && "font-arabic text-right")}>
-              {blockingClient?.blocked
-                ? (rtl
-                    ? "هل أنت متأكد من إلغاء حظر هذا العميل؟ سيتمكن من التواصل مرة أخرى."
-                    : "Are you sure you want to unblock this client? They will be able to communicate again.")
-                : (rtl
-                    ? "هل أنت متأكد من حظر هذا العميل؟ لن يتمكن من التواصل مع البوت."
-                    : "Are you sure you want to block this client? They won't be able to communicate with the bot.")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          {blockingClient && (
-            <div
-              className={cn(
-                "flex items-center gap-3 p-3 rounded-lg bg-muted/50",
-                rtl && "flex-row-reverse"
-              )}
-            >
-              <div className={cn(
-                "p-2 rounded-lg shrink-0",
-                blockingClient.blocked
-                  ? "bg-emerald-50 dark:bg-emerald-900/20"
-                  : "bg-destructive/10"
-              )}>
-                {blockingClient.blocked ? (
-                  <ShieldBan className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                ) : (
-                  <Ban className="w-4 h-4 text-destructive" />
-                )}
-              </div>
-              <div className={cn("min-w-0", rtl && "text-right")}>
-                <p className={cn("font-medium", rtl && "font-arabic")}>
-                  {rtl ? blockingClient.nameAr : blockingClient.name}
-                </p>
-                <p className="text-sm text-muted-foreground tabular-nums">
-                  {blockingClient.phone}
-                </p>
-              </div>
-            </div>
-          )}
-          <AlertDialogFooter className={cn(rtl && "flex-row-reverse sm:flex-row-reverse")}>
-            <AlertDialogCancel className={rtl ? "font-arabic" : ""}>
-              {t(locale, "cancel")}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleToggleBlock}
-              className={cn(
-                !blockingClient?.blocked && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-                blockingClient?.blocked && "bg-emerald-600 hover:bg-emerald-700 text-white"
-              )}
-            >
-              {blockingClient?.blocked
-                ? (rtl ? "إلغاء الحظر" : "Unblock")
-                : (rtl ? "حظر" : "Block")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,12 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getServiceRoleClient } from '@/lib/supabase';
 
 // GET /api/clients
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const clients = await db.client.findMany({ orderBy: { createdAt: 'desc' } });
-    return NextResponse.json(clients);
+    const supabase = getServiceRoleClient();
+    const { searchParams } = new URL(request.url);
+    const ai_enabled = searchParams.get('ai_enabled');
+
+    let query = supabase.from('Client').select('*, Message(*)').order('last_interaction_at', { ascending: false });
+    
+    if (ai_enabled !== null) {
+      query = query.eq('ai_enabled', ai_enabled === 'true');
+    }
+
+    const { data: clients, error } = await query;
+
+    if (error) throw error;
+
+    // Map Message relation to messages array for frontend compatibility
+    const mapped = (clients || []).map((client: any) => ({
+      ...client,
+      messages: client.Message || []
+    }));
+
+    return NextResponse.json(mapped);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 });
   }
 }
@@ -15,16 +35,24 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const client = await db.client.create({
-      data: {
+    const supabase = getServiceRoleClient();
+    const { data: client, error } = await supabase
+      .from('Client')
+      .insert({
         name: body.name,
         phone: body.phone,
         address: body.address ?? '',
         notes: body.notes ?? '',
-      },
-    });
+        platform_user_id: body.platform_user_id ?? body.phone,
+        platform: body.platform ?? 'whatsapp',
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
     return NextResponse.json(client, { status: 201 });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to create client' }, { status: 500 });
   }
 }

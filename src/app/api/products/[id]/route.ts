@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getServiceRoleClient } from '@/lib/supabase';
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const product = await db.product.findUnique({ where: { id } });
-    if (!product) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const supabase = getServiceRoleClient();
+    const { data: product, error } = await supabase.from('Product').select('*').eq('id', id).single();
+    if (error || !product) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(product);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
   }
 }
@@ -16,21 +18,28 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
     const body = await request.json();
-    const product = await db.product.update({
-      where: { id },
-      data: {
-        ...(body.name !== undefined && { name: body.name }),
-        ...(body.nameAr !== undefined && { nameAr: body.nameAr }),
-        ...(body.description !== undefined && { description: body.description }),
-        ...(body.descriptionAr !== undefined && { descriptionAr: body.descriptionAr }),
-        ...(body.price !== undefined && { price: body.price }),
-        ...(body.image !== undefined && { image: body.image }),
-        ...(body.isAvailable !== undefined && { isAvailable: body.isAvailable }),
-        ...(body.category !== undefined && { category: body.category }),
-      },
-    });
+    const supabase = getServiceRoleClient();
+
+    const updateData: any = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.description !== undefined) updateData.description = body.description;
+    if (body.price !== undefined) updateData.price = body.price;
+    if (body.images !== undefined) updateData.images = body.images;
+    if (body.isAvailable !== undefined) updateData.isAvailable = body.isAvailable;
+    if (body.category !== undefined) updateData.category = body.category;
+    if (body.notes !== undefined) updateData.notes = body.notes;
+
+    const { data: product, error } = await supabase
+      .from('Product')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
     return NextResponse.json(product);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
   }
 }
@@ -38,9 +47,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    await db.product.delete({ where: { id } });
+    const supabase = getServiceRoleClient();
+    const { error } = await supabase.from('Product').delete().eq('id', id);
+    if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
   }
 }
