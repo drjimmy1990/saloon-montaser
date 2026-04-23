@@ -6,8 +6,6 @@ export type ActiveSection = "dashboard" | "channels" | "catalog" | "bookings" | 
 interface AppState {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  activeSection: ActiveSection;
-  setActiveSection: (section: ActiveSection) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   activeChatId: string | null;
@@ -23,8 +21,6 @@ interface AppState {
 export const useAppStore = create<AppState>((set) => ({
   locale: "ar",
   setLocale: (locale) => set({ locale }),
-  activeSection: "dashboard",
-  setActiveSection: (activeSection) => set({ activeSection }),
   sidebarOpen: false,
   setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
   activeChatId: null,

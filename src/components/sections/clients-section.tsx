@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
+import { useRouter } from "next/navigation";
 import { t, isRTL } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
@@ -17,6 +18,7 @@ import {
   ShieldBan,
   Ban,
   MessageCircle,
+  CalendarCheck,
 } from "lucide-react";
 import {
   Card,
@@ -86,7 +88,8 @@ export interface Client {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ClientsSection() {
-  const { locale, setActiveSection, setActiveChatId } = useAppStore();
+  const { locale, setActiveChatId } = useAppStore();
+  const router = useRouter();
   const rtl = isRTL(locale);
 
   const [clients, setClients] = useState<Client[]>([]);
@@ -171,7 +174,7 @@ export function ClientsSection() {
 
   const handleOpenChat = (client: Client) => {
     setActiveChatId(client.id);
-    setActiveSection("chat");
+    router.push("/chat");
   };
 
   const handleSave = async () => {
@@ -452,6 +455,15 @@ export function ClientsSection() {
                           >
                             <Pencil className="h-4 w-4 text-muted-foreground" />
                             <span className="sr-only">{t(locale, "edit")}</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className={cn("w-full sm:w-auto", rtl && "font-arabic")}
+                            onClick={() => router.push("/bookings")}
+                          >
+                            <CalendarCheck className="w-4 h-4 mr-2" />
+                            {rtl ? "حجز جديد" : "New Booking"}
                           </Button>
                           <Button
                             variant="ghost"

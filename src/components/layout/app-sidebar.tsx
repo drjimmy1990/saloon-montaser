@@ -25,24 +25,26 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
-import type { ActiveSection } from "@/lib/store";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { logout } from "@/app/login/actions";
 
-const navItems: { id: ActiveSection; icon: React.ElementType; labelKey: string; adminOnly?: boolean }[] = [
-  { id: "dashboard", icon: LayoutDashboard, labelKey: "nav.dashboard" },
-  { id: "channels", icon: Radio, labelKey: "nav.channels" },
-  { id: "catalog", icon: ShoppingBag, labelKey: "nav.catalog" },
-  { id: "bookings", icon: CalendarCheck, labelKey: "nav.bookings" },
-  { id: "clients", icon: Users, labelKey: "nav.clients" },
-  { id: "chat", icon: MessageSquare, labelKey: "nav.chat" },
-  { id: "blacklist", icon: ShieldBan, labelKey: "nav.blacklist" },
-  { id: "settings", icon: Settings, labelKey: "nav.settings", adminOnly: true },
+const navItems: { id: string; path: string; icon: React.ElementType; labelKey: string; adminOnly?: boolean }[] = [
+  { id: "dashboard", path: "/", icon: LayoutDashboard, labelKey: "nav.dashboard" },
+  { id: "channels", path: "/channels", icon: Radio, labelKey: "nav.channels" },
+  { id: "catalog", path: "/catalog", icon: ShoppingBag, labelKey: "nav.catalog" },
+  { id: "bookings", path: "/bookings", icon: CalendarCheck, labelKey: "nav.bookings" },
+  { id: "clients", path: "/clients", icon: Users, labelKey: "nav.clients" },
+  { id: "chat", path: "/chat", icon: MessageSquare, labelKey: "nav.chat" },
+  { id: "blacklist", path: "/blacklist", icon: ShieldBan, labelKey: "nav.blacklist" },
+  { id: "settings", path: "/settings", icon: Settings, labelKey: "nav.settings", adminOnly: true },
 ];
 
 export function AppSidebar() {
-  const { locale, setLocale, activeSection, setActiveSection, userRole, userPermissions } = useAppStore();
+  const { locale, setLocale, userRole, userPermissions } = useAppStore();
   const rtl = isRTL(locale);
   const { theme, setTheme } = useTheme();
+  const pathname = usePathname();
 
   const themeLabel =
     theme === "dark"
@@ -88,11 +90,11 @@ export function AppSidebar() {
             return true;
           }).map((item) => {
             const Icon = item.icon;
-            const isActive = activeSection === item.id;
+            const isActive = pathname === item.path || (item.path !== "/" && pathname.startsWith(item.path));
             return (
-              <button
+              <Link
                 key={item.id}
-                onClick={() => setActiveSection(item.id)}
+                href={item.path}
                 className={cn(
                   "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                   isActive
@@ -104,7 +106,7 @@ export function AppSidebar() {
                 <span className={cn("truncate", rtl && "font-arabic")}>
                   {t(locale, item.labelKey)}
                 </span>
-              </button>
+              </Link>
             );
           })}
         </nav>
@@ -155,9 +157,10 @@ export function AppSidebar() {
 }
 
 export function MobileSidebar() {
-  const { locale, setLocale, activeSection, setActiveSection, sidebarOpen, setSidebarOpen, userRole, userPermissions } = useAppStore();
+  const { locale, setLocale, sidebarOpen, setSidebarOpen, userRole, userPermissions } = useAppStore();
   const rtl = isRTL(locale);
   const { theme, setTheme } = useTheme();
+  const pathname = usePathname();
 
   if (!sidebarOpen) return null;
 
@@ -212,14 +215,12 @@ export function MobileSidebar() {
               return true;
             }).map((item) => {
               const Icon = item.icon;
-              const isActive = activeSection === item.id;
+              const isActive = pathname === item.path || (item.path !== "/" && pathname.startsWith(item.path));
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => {
-                    setActiveSection(item.id);
-                    setSidebarOpen(false);
-                  }}
+                  href={item.path}
+                  onClick={() => setSidebarOpen(false)}
                   className={cn(
                     "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                     isActive
@@ -231,7 +232,7 @@ export function MobileSidebar() {
                   <span className={cn("truncate", rtl && "font-arabic")}>
                     {t(locale, item.labelKey)}
                   </span>
-                </button>
+                </Link>
               );
             })}
           </nav>
@@ -281,10 +282,8 @@ export function MobileSidebar() {
 }
 
 export function MobileHeader() {
-  const { locale, setSidebarOpen, activeSection } = useAppStore();
+  const { locale, setSidebarOpen } = useAppStore();
   const rtl = isRTL(locale);
-  const activeItem = navItems.find((item) => item.id === activeSection);
-  const Icon = activeItem?.icon || LayoutDashboard;
 
   return (
     <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card md:hidden">
@@ -296,9 +295,8 @@ export function MobileHeader() {
       >
         <Menu className="w-5 h-5" />
       </Button>
-      <Icon className="w-5 h-5 text-primary" />
-      <h1 className={cn("text-sm font-semibold", rtl && "font-arabic")}>
-        {activeItem ? t(locale, activeItem.labelKey) : ""}
+      <h1 className={cn("text-base font-bold", rtl && "font-arabic")}>
+        {t(locale, "appTitle")}
       </h1>
     </header>
   );
