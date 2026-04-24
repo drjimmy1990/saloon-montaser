@@ -373,8 +373,8 @@ export function DashboardSection() {
                 layout="vertical"
                 margin={{
                   top: 8,
-                  right: rtl ? 16 : 0,
-                  left: rtl ? 0 : 16,
+                  right: rtl ? 50 : 8,
+                  left: rtl ? 8 : 100,
                   bottom: 8,
                 }}
               >
@@ -385,9 +385,10 @@ export function DashboardSection() {
                   dataKey={rtl ? "channelAr" : "channel"}
                   tickLine={false}
                   axisLine={false}
-                  width={100}
-                  tick={{ fontSize: 12 }}
+                  width={1}
+                  tick={{ fontSize: 13, fontWeight: 500 }}
                   orientation={rtl ? "right" : "left"}
+                  mirror
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar

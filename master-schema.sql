@@ -1,113 +1,217 @@
--- ====================================================================
--- SALOON DASHBOARD MASTER SCHEMA (Final Production Version)
--- Optimized for Single-Tenant Environment with Autonomous Chat Logic
--- ====================================================================
+-- ============================================================================
+-- SALON DASHBOARD — MASTER SCHEMA
+-- Generated: 2026-04-24T17:38:20.266Z
+-- Source: Supabase Cloud (schema-only, no data)
+-- ============================================================================
 
--- 1. Core Extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "moddatetime";
-
--- --------------------------------------------------------
--- Table: Channel (e.g. WhatsApp, Facebook, Instagram configurations)
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS "public"."Channel" (
-    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "name" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
-    "isActive" BOOLEAN DEFAULT FALSE,
-    "credentials" JSONB DEFAULT '[]'::jsonb,
-    "variables" JSONB DEFAULT '{}'::jsonb,
-    "imageSets" JSONB DEFAULT '[]'::jsonb,
-    "createdAt" TIMESTAMPTZ DEFAULT NOW(),
-    "updatedAt" TIMESTAMPTZ DEFAULT NOW()
-);
-DROP TRIGGER IF EXISTS handle_updated_at ON "public"."Channel";
-CREATE TRIGGER handle_updated_at BEFORE UPDATE ON "public"."Channel" 
-FOR EACH ROW EXECUTE FUNCTION moddatetime("updatedAt");
-
--- --------------------------------------------------------
--- Table: Product (Services/Items)
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS "public"."Product" (
-    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "name" TEXT NOT NULL,
-    "description" TEXT DEFAULT '',
-    "price" DOUBLE PRECISION DEFAULT 0,
-    "images" JSONB DEFAULT '[]'::jsonb,
-    "isAvailable" BOOLEAN DEFAULT TRUE,
-    "category" TEXT DEFAULT '',
-    "createdAt" TIMESTAMPTZ DEFAULT NOW(),
-    "updatedAt" TIMESTAMPTZ DEFAULT NOW()
-);
-DROP TRIGGER IF EXISTS handle_updated_at ON "public"."Product";
-CREATE TRIGGER handle_updated_at BEFORE UPDATE ON "public"."Product" 
-FOR EACH ROW EXECUTE FUNCTION moddatetime("updatedAt");
-
--- --------------------------------------------------------
--- Table: Booking
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS "public"."Booking" (
-    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "client_id" UUID NOT NULL REFERENCES "public"."Client"("id") ON DELETE CASCADE,
-    "serviceSummary" TEXT NOT NULL,
-    "channelType" TEXT NOT NULL,
-    "bookingDate" TIMESTAMPTZ DEFAULT NOW(),
-    "status" TEXT DEFAULT 'pending',
-    "createdAt" TIMESTAMPTZ DEFAULT NOW(),
-    "updatedAt" TIMESTAMPTZ DEFAULT NOW()
-);
-DROP TRIGGER IF EXISTS handle_updated_at ON "public"."Booking";
-CREATE TRIGGER handle_updated_at BEFORE UPDATE ON "public"."Booking" 
-FOR EACH ROW EXECUTE FUNCTION moddatetime("updatedAt");
-
--- --------------------------------------------------------
--- Table: Client (Unified CRM Profile & Messaging Identity)
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS "public"."Client" (
-    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "channel_id" UUID REFERENCES "public"."Channel"("id") ON DELETE CASCADE,
-    "name" TEXT,
-    "phone" TEXT NOT NULL,
-    "address" TEXT DEFAULT '',
-    "notes" TEXT DEFAULT '',
-    "platform" TEXT DEFAULT 'whatsapp',
-    "platform_user_id" TEXT,
-    "avatar_url" TEXT,
-    "last_interaction_at" TIMESTAMPTZ DEFAULT NOW(),
-    "last_message_preview" TEXT,
-    "unread_count" INTEGER NOT NULL DEFAULT 0,
-    "status" TEXT DEFAULT 'active',
-    "ai_enabled" BOOLEAN NOT NULL DEFAULT TRUE,
-    "createdAt" TIMESTAMPTZ DEFAULT NOW(),
-    "updatedAt" TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT unique_client_per_channel UNIQUE ("channel_id", "platform_user_id")
-);
-DROP TRIGGER IF EXISTS handle_updated_at ON "public"."Client";
-CREATE TRIGGER handle_updated_at BEFORE UPDATE ON "public"."Client" 
-FOR EACH ROW EXECUTE FUNCTION moddatetime("updatedAt");
-
--- --------------------------------------------------------
--- Table: Message
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS "public"."Message" (
-    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "channel_id" UUID REFERENCES "public"."Channel"("id") ON DELETE CASCADE,
-    "client_id" UUID NOT NULL REFERENCES "public"."Client"("id") ON DELETE CASCADE,
-    "message_platform_id" TEXT,
-    "sender_type" TEXT NOT NULL CHECK ("sender_type" IN ('user', 'agent', 'bot', 'system')),
-    "content_type" TEXT NOT NULL DEFAULT 'text',
-    "text_content" TEXT,
-    "attachment_url" TEXT,
-    "is_read_by_agent" BOOLEAN NOT NULL DEFAULT FALSE,
-    "sent_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "platform_timestamp" TIMESTAMPTZ
+-- ═══════════════════════════════════════════════════
+-- TABLE: AppUserRole
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS public."AppUserRole" (
+  "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+  "user_id" uuid,
+  "name" text NOT NULL,
+  "email" text NOT NULL,
+  "role" text NOT NULL,
+  "permissions" jsonb DEFAULT '[]'::jsonb,
+  "createdAt" timestamp with time zone DEFAULT now(),
+  "updatedAt" timestamp with time zone DEFAULT now(),
+  CONSTRAINT "AppUserRole_pkey" PRIMARY KEY ("id")
 );
 
--- --------------------------------------------------------
--- Automated Triggers for Chat Logic
--- --------------------------------------------------------
+ALTER TABLE public."AppUserRole" ADD CONSTRAINT "AppUserRole_email_key" UNIQUE ("email");
+ALTER TABLE public."AppUserRole" ADD CONSTRAINT "AppUserRole_user_id_key" UNIQUE ("user_id");
+
+-- ═══════════════════════════════════════════════════
+-- TABLE: Booking
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS public."Booking" (
+  "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+  "serviceSummary" text NOT NULL,
+  "channelType" text NOT NULL,
+  "bookingDate" timestamp with time zone DEFAULT now(),
+  "status" text DEFAULT 'pending'::text,
+  "createdAt" timestamp with time zone DEFAULT now(),
+  "updatedAt" timestamp with time zone DEFAULT now(),
+  "client_id" uuid NOT NULL,
+  CONSTRAINT "Booking_pkey" PRIMARY KEY ("id")
+);
+
+ALTER TABLE public."Booking" ADD CONSTRAINT "Booking_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES public."Client"("id") ON DELETE CASCADE;
+
+-- ═══════════════════════════════════════════════════
+-- TABLE: Channel
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS public."Channel" (
+  "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+  "name" text NOT NULL,
+  "type" text NOT NULL,
+  "isActive" boolean DEFAULT false,
+  "credentials" jsonb DEFAULT '[]'::jsonb,
+  "variables" jsonb DEFAULT '{}'::jsonb,
+  "imageSets" jsonb DEFAULT '[]'::jsonb,
+  "createdAt" timestamp with time zone DEFAULT now(),
+  "updatedAt" timestamp with time zone DEFAULT now(),
+  "webhookUrl" text DEFAULT ''::text,
+  CONSTRAINT "Channel_pkey" PRIMARY KEY ("id")
+);
+
+-- ═══════════════════════════════════════════════════
+-- TABLE: Client
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS public."Client" (
+  "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+  "name" text,
+  "phone" text NOT NULL,
+  "address" text DEFAULT ''::text,
+  "notes" text DEFAULT ''::text,
+  "createdAt" timestamp with time zone DEFAULT now(),
+  "updatedAt" timestamp with time zone DEFAULT now(),
+  "channel_id" uuid,
+  "platform" text DEFAULT 'whatsapp'::text,
+  "platform_user_id" text,
+  "avatar_url" text,
+  "last_interaction_at" timestamp with time zone DEFAULT now(),
+  "last_message_preview" text,
+  "unread_count" integer NOT NULL DEFAULT 0,
+  "status" text DEFAULT 'active'::text,
+  "ai_enabled" boolean NOT NULL DEFAULT true,
+  CONSTRAINT "Client_pkey" PRIMARY KEY ("id")
+);
+
+ALTER TABLE public."Client" ADD CONSTRAINT "unique_client_per_channel" UNIQUE ("channel_id", "platform_user_id");
+ALTER TABLE public."Client" ADD CONSTRAINT "Client_channel_id_fkey" FOREIGN KEY ("channel_id") REFERENCES public."Channel"("id") ON DELETE CASCADE;
+
+-- ═══════════════════════════════════════════════════
+-- TABLE: DashboardStat
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS public."DashboardStat" (
+  "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+  "activeChannels" integer DEFAULT 0,
+  "totalMessages" integer DEFAULT 0,
+  "totalBookings" integer DEFAULT 0,
+  "conversionRate" double precision DEFAULT 0,
+  "updatedAt" timestamp with time zone DEFAULT now(),
+  CONSTRAINT "DashboardStat_pkey" PRIMARY KEY ("id")
+);
+
+-- ═══════════════════════════════════════════════════
+-- TABLE: Message
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS public."Message" (
+  "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+  "channel_id" uuid,
+  "client_id" uuid NOT NULL,
+  "message_platform_id" text,
+  "sender_type" text NOT NULL,
+  "content_type" text NOT NULL DEFAULT 'text'::text,
+  "text_content" text,
+  "attachment_url" text,
+  "is_read_by_agent" boolean NOT NULL DEFAULT false,
+  "sent_at" timestamp with time zone NOT NULL DEFAULT now(),
+  "platform_timestamp" timestamp with time zone,
+  CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
+);
+
+ALTER TABLE public."Message" ADD CONSTRAINT "Message_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES public."Client"("id") ON DELETE CASCADE;
+ALTER TABLE public."Message" ADD CONSTRAINT "Message_channel_id_fkey" FOREIGN KEY ("channel_id") REFERENCES public."Channel"("id") ON DELETE CASCADE;
+
+-- ═══════════════════════════════════════════════════
+-- TABLE: Product
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS public."Product" (
+  "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+  "name" text NOT NULL DEFAULT ''::text,
+  "description" text DEFAULT ''::text,
+  "price" double precision DEFAULT 0,
+  "isAvailable" boolean DEFAULT true,
+  "category" text DEFAULT ''::text,
+  "createdAt" timestamp with time zone DEFAULT now(),
+  "updatedAt" timestamp with time zone DEFAULT now(),
+  "images" jsonb DEFAULT '[]'::jsonb,
+  "notes" text DEFAULT ''::text,
+  CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
+);
+
+-- ═══════════════════════════════════════════════════
+-- TABLE: SystemSetting
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS public."SystemSetting" (
+  "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+  "key" text NOT NULL,
+  "value" text,
+  "updatedAt" timestamp with time zone DEFAULT now(),
+  CONSTRAINT "SystemSetting_pkey" PRIMARY KEY ("id")
+);
+
+ALTER TABLE public."SystemSetting" ADD CONSTRAINT "SystemSetting_key_key" UNIQUE ("key");
+
+-- ═══════════════════════════════════════════════════
+-- TABLE: queue
+-- ═══════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS public."queue" (
+  "id" bigint NOT NULL,
+  "sender_id" text NOT NULL,
+  "message" text,
+  CONSTRAINT "queue_pkey" PRIMARY KEY ("id")
+);
+
+-- ═══════════════════════════════════════════════════
+-- ROW LEVEL SECURITY
+-- ═══════════════════════════════════════════════════
+ALTER TABLE public."AppUserRole" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."Booking" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."Channel" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."Client" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."DashboardStat" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."Message" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."Product" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."SystemSetting" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public."queue" ENABLE ROW LEVEL SECURITY;
+
+-- ═══════════════════════════════════════════════════
+-- FUNCTIONS
+-- ═══════════════════════════════════════════════════
+CREATE OR REPLACE FUNCTION public.moddatetime()
+ RETURNS trigger
+ LANGUAGE c
+AS '$libdir/moddatetime', $function$moddatetime$function$
+;
+CREATE OR REPLACE FUNCTION public.rls_auto_enable()
+ RETURNS event_trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog'
+AS $function$
+DECLARE
+  cmd record;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
+END;
+$function$
+;
 CREATE OR REPLACE FUNCTION public.update_client_summary_on_message()
-RETURNS TRIGGER AS $$
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
 DECLARE
     v_client_id UUID;
 BEGIN
@@ -131,69 +235,17 @@ BEGIN
 
     RETURN NULL;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$function$
+;
 
--- Clear any existing trigger before creating a new one
-DROP TRIGGER IF EXISTS messages_summary_trigger ON public."Message";
-
-CREATE TRIGGER messages_summary_trigger
-AFTER INSERT OR UPDATE OR DELETE ON public."Message"
-FOR EACH ROW EXECUTE FUNCTION public.update_client_summary_on_message();
-
--- --------------------------------------------------------
--- Table: DashboardStat
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS "public"."DashboardStat" (
-    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "activeChannels" INTEGER DEFAULT 0,
-    "totalMessages" INTEGER DEFAULT 0,
-    "totalBookings" INTEGER DEFAULT 0,
-    "conversionRate" DOUBLE PRECISION DEFAULT 0,
-    "updatedAt" TIMESTAMPTZ DEFAULT NOW()
-);
-DROP TRIGGER IF EXISTS handle_updated_at ON "public"."DashboardStat";
-CREATE TRIGGER handle_updated_at BEFORE UPDATE ON "public"."DashboardStat" 
-FOR EACH ROW EXECUTE FUNCTION moddatetime("updatedAt");
-
--- --------------------------------------------------------
--- Table: SystemSetting
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS "public"."SystemSetting" (
-    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "key" TEXT UNIQUE NOT NULL,
-    "value" TEXT,
-    "updatedAt" TIMESTAMPTZ DEFAULT NOW()
-);
-DROP TRIGGER IF EXISTS handle_updated_at_settings ON "public"."SystemSetting";
-CREATE TRIGGER handle_updated_at_settings BEFORE UPDATE ON "public"."SystemSetting" 
-FOR EACH ROW EXECUTE FUNCTION moddatetime("updatedAt");
-
--- Insert default values
-INSERT INTO "public"."SystemSetting" ("key", "value") VALUES 
-  ('salon_address', ''),
-  ('order_notification_whatsapp', '')
-ON CONFLICT ("key") DO NOTHING;
-
--- --------------------------------------------------------
--- Table: AppUserRole
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS "public"."AppUserRole" (
-    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "user_id" UUID UNIQUE,
-    "name" TEXT NOT NULL,
-    "email" TEXT UNIQUE NOT NULL,
-    "role" TEXT NOT NULL CHECK ("role" IN ('admin', 'team')),
-    "permissions" JSONB DEFAULT '[]'::jsonb,
-    "createdAt" TIMESTAMPTZ DEFAULT NOW(),
-    "updatedAt" TIMESTAMPTZ DEFAULT NOW()
-);
-DROP TRIGGER IF EXISTS handle_updated_at_roles ON "public"."AppUserRole";
-CREATE TRIGGER handle_updated_at_roles BEFORE UPDATE ON "public"."AppUserRole" 
-FOR EACH ROW EXECUTE FUNCTION moddatetime("updatedAt");
-
--- ====================================================================
--- SECURITY (Row Level Security)
--- ====================================================================
--- Note: RLS is disabled by default. If your Next.js API uses the
--- Service Role key, it will bypass RLS. If you plan to expose the
--- Anon key to the client side, you MUST enable RLS and write policies.
+-- ═══════════════════════════════════════════════════
+-- TRIGGERS
+-- ═══════════════════════════════════════════════════
+CREATE TRIGGER handle_updated_at_roles BEFORE UPDATE ON "AppUserRole" FOR EACH ROW EXECUTE FUNCTION moddatetime('updatedAt');
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON "Booking" FOR EACH ROW EXECUTE FUNCTION moddatetime('updatedAt');
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON "Channel" FOR EACH ROW EXECUTE FUNCTION moddatetime('updatedAt');
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON "Client" FOR EACH ROW EXECUTE FUNCTION moddatetime('updatedAt');
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON "DashboardStat" FOR EACH ROW EXECUTE FUNCTION moddatetime('updatedAt');
+CREATE TRIGGER messages_summary_trigger AFTER INSERT OR DELETE OR UPDATE ON "Message" FOR EACH ROW EXECUTE FUNCTION update_client_summary_on_message();
+CREATE TRIGGER handle_updated_at BEFORE UPDATE ON "Product" FOR EACH ROW EXECUTE FUNCTION moddatetime('updatedAt');
+CREATE TRIGGER handle_updated_at_settings BEFORE UPDATE ON "SystemSetting" FOR EACH ROW EXECUTE FUNCTION moddatetime('updatedAt');
