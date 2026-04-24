@@ -1,17 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceRoleClient } from '@/lib/supabase';
 
-// GET /api/bookings
-export async function GET() {
+// GET /api/bookings?page=1&limit=10&search=&channel=all&status=all
+export async function GET(request: NextRequest) {
   try {
     const supabase = getServiceRoleClient();
-    const { data: bookings, error } = await supabase
+    const { searchParams } = request.nextUrl;
+
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)));
+    const search = searchParams.get('search')?.trim() || '';
+    const channel = searchParams.get('channel') || 'all';
+    const status = searchParams.get('status') || 'all';
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    // Build filtered query
+    let query = supabase
       .from('Booking')
-      .select('*, client:Client(*)')
-      .order('createdAt', { ascending: false });
+      .select('*, client:Client(*)', { count: 'exact' });
+
+    if (channel !== 'all') {
+      query = query.eq('channelType', channel);
+    }
+    if (status !== 'all') {
+      query = query.eq('status', status);
+    }
+    if (search) {
+      query = query.ilike('client.name', `%${search}%`);
+    }
+
+    query = query.order('createdAt', { ascending: false }).range(from, to);
+
+    const { data: bookings, error, count } = await query;
 
     if (error) throw error;
-    return NextResponse.json(bookings || []);
+
+    // Filter out rows where client didn't match the search (Supabase still returns the row with client: null)
+    const filtered = search
+      ? (bookings || []).filter((b: Record<string, unknown>) => b.client !== null)
+      : (bookings || []);
+
+    // Stats query (unfiltered totals)
+    const { data: allBookings, error: statsError } = await supabase
+      .from('Booking')
+      .select('status');
+
+    if (statsError) throw statsError;
+
+    const stats = {
+      total: allBookings?.length || 0,
+      pending: allBookings?.filter((b) => b.status === 'pending').length || 0,
+      confirmed: allBookings?.filter((b) => b.status === 'confirmed').length || 0,
+      cancelled: allBookings?.filter((b) => b.status === 'cancelled').length || 0,
+    };
+
+    return NextResponse.json({
+      data: filtered,
+      total: count ?? 0,
+      page,
+      limit,
+      stats,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 });

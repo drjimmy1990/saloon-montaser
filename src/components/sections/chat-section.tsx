@@ -163,6 +163,7 @@ export function ChatSection() {
   const [blockDialogContactId, setBlockDialogContactId] = useState<string | null>(null);
   const [channelFilter, setChannelFilter] = useState<ChannelType | "all">("all");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const [deleteChatId, setDeleteChatId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -216,20 +217,12 @@ export function ChatSection() {
   };
 
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || !activeChatId || !activeClient) return;
+    if (!messageInput.trim() || !activeChatId || !activeClient || isSending) return;
 
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      client_id: activeChatId,
-      sender_type: "agent",
-      content_type: "text",
-      text_content: messageInput,
-      attachment_url: "",
-      platform_timestamp: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    };
+    setIsSending(true);
+    const text = messageInput;
+    setMessageInput("");
 
-    const updatedMessages = [...activeClient.messages, newMessage];
     try {
       await fetch(`/api/messages`, {
         method: "POST",
@@ -238,16 +231,16 @@ export function ChatSection() {
           client_id: activeChatId,
           sender_type: "agent",
           content_type: "text",
-          text_content: messageInput,
+          text_content: text,
           platform_timestamp: new Date().toISOString()
         }),
       });
       fetchClients();
     } catch (err) {
       console.error("Failed to send message", err);
+    } finally {
+      setIsSending(false);
     }
-
-    setMessageInput("");
   };
 
   const handleNewClient = async () => {
@@ -763,7 +756,7 @@ export function ChatSection() {
             placeholder={
               t(locale, "chat.typeHere")
             }
-            className={cn("flex-1 text-center", rtl && "font-arabic")}
+            className={cn("flex-1", rtl && "font-arabic")}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -776,7 +769,7 @@ export function ChatSection() {
             onClick={handleSendMessage}
             size="icon"
             className="shrink-0"
-            disabled={!messageInput.trim()}
+            disabled={!messageInput.trim() || isSending}
           >
             <Send className={cn("w-4 h-4", rtl && "rotate-180")} />
             <span className="sr-only">{t(locale, "chat.send")}</span>

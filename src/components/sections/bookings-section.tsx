@@ -340,6 +340,28 @@ export function BookingsSection() {
     );
   };
 
+  const formatBookingDate = (dateStr: string | undefined) => {
+    if (!dateStr) return { dayName: "", date: "", time: "" };
+    const d = new Date(dateStr);
+    const tz = "UTC";
+    const dayName = rtl
+      ? d.toLocaleDateString("ar-SA", { weekday: "long", timeZone: tz })
+      : d.toLocaleDateString("en-US", { weekday: "long", timeZone: tz });
+    const date = d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone: tz,
+    });
+    const time = d.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: tz,
+    });
+    return { dayName, date, time };
+  };
+
   const renderChannelBadge = (channel: ChannelSource) => {
     const config = channelConfig[channel] || channelConfig.whatsapp;
     const Icon = config.icon;
@@ -612,10 +634,23 @@ export function BookingsSection() {
                       <TableCell
                         className={cn(
                           "tabular-nums",
-                          rtl && "text-right"
+                          rtl && "text-right font-arabic"
                         )}
                       >
-                        {booking.bookingDate ? new Date(booking.bookingDate).toISOString().split('T')[0] : ""}
+                        {(() => {
+                          const fmt = formatBookingDate(booking.bookingDate);
+                          if (!fmt.date) return "";
+                          return (
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium">{fmt.dayName}</div>
+                              <div className="text-xs text-muted-foreground">{fmt.date}</div>
+                              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {fmt.time}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell className={rtl ? "text-right" : ""}>
                         {renderStatusBadge(booking.status)}
@@ -685,7 +720,7 @@ export function BookingsSection() {
           {selectedBooking && (
             <div className="space-y-4 mt-4">
               {/* Booking ID */}
-              <div
+              {/* <div
                 className={cn(
                   "flex items-center gap-2 text-sm text-muted-foreground",
                   ""
@@ -695,7 +730,7 @@ export function BookingsSection() {
                 <span className="font-mono text-xs overflow-hidden text-ellipsis whitespace-nowrap">#{selectedBooking.id}</span>
               </div>
 
-              <Separator />
+              <Separator /> */}
 
               {/* Client Info */}
               <div className="space-y-3">
@@ -756,9 +791,29 @@ export function BookingsSection() {
                   >
                     {t(locale, "bookings.bookingDate")}
                   </p>
-                  <p className="text-sm font-medium tabular-nums">
-                    {new Date(selectedBooking.bookingDate || selectedBooking.createdAt || Date.now()).toLocaleDateString()}
+                  {(() => {
+                    const fmt = formatBookingDate(selectedBooking.bookingDate || selectedBooking.createdAt);
+                    return (
+                      <div className="space-y-0.5">
+                        <p className={cn("text-sm font-semibold", rtl && "font-arabic")}>{fmt.dayName}</p>
+                        <p className="text-sm font-medium tabular-nums">{fmt.date}</p>
+                      </div>
+                    );
+                  })()}
+                </div>
+                <div className={cn(rtl && "text-right")}>
+                  <p
+                    className={cn(
+                      "text-xs text-muted-foreground mb-1",
+                      rtl && "font-arabic"
+                    )}
+                  >
+                    {t(locale, "bookings.bookingTime")}
                   </p>
+                  <div className="flex items-center gap-1.5 text-sm font-medium tabular-nums">
+                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                    {formatBookingDate(selectedBooking.bookingDate || selectedBooking.createdAt).time}
+                  </div>
                 </div>
                 <div className={cn(rtl && "text-right")}>
                   <p
@@ -769,7 +824,7 @@ export function BookingsSection() {
                   >
                     {t(locale, "bookings.channelSource")}
                   </p>
-                  <div className={cn(rtl && "flex justify-end")}>
+                  <div className={cn(rtl && "flex")}>
                     {renderChannelBadge(selectedBooking.channelType)}
                   </div>
                 </div>
@@ -782,10 +837,30 @@ export function BookingsSection() {
                   >
                     {t(locale, "bookings.bookingStatus")}
                   </p>
-                  <div className={cn(rtl && "flex justify-end")}>
+                  <div className={cn(rtl && "flex")}>
                     {renderStatusBadge(selectedBooking.status)}
                   </div>
                 </div>
+                {selectedBooking.createdAt && (
+                  <div className={cn(rtl && "text-right")}>
+                    <p
+                      className={cn(
+                        "text-xs text-muted-foreground mb-1",
+                        rtl && "font-arabic"
+                      )}
+                    >
+                      {t(locale, "bookings.createdAt")}
+                    </p>
+                    {(() => {
+                      const fmt = formatBookingDate(selectedBooking.createdAt);
+                      return (
+                        <p className="text-sm tabular-nums text-muted-foreground">
+                          {fmt.date} - {fmt.time}
+                        </p>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
             </div>
           )}

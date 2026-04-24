@@ -103,34 +103,38 @@ const channelColors: Record<string, string> = {
 // ─── Chart Configs ───────────────────────────────────────────────────────────
 // Colors are direct hex values so recharts can render them without CSS resolution
 
-const channelChartConfig = {
-  messages: {
-    label: "Messages",
-  },
-  whatsapp: {
-    label: "WhatsApp",
-    color: COLORS.sage,
-  },
-  facebook: {
-    label: "Facebook",
-    color: COLORS.sand,
-  },
-  instagram: {
-    label: "Instagram",
-    color: COLORS.terracotta,
-  },
-} satisfies ChartConfig;
+function getChannelChartConfig(locale: string): ChartConfig {
+  return {
+    messages: {
+      label: t(locale as any, "dashboard.messages"),
+    },
+    whatsapp: {
+      label: "WhatsApp",
+      color: COLORS.sage,
+    },
+    facebook: {
+      label: "Facebook",
+      color: COLORS.sand,
+    },
+    instagram: {
+      label: "Instagram",
+      color: COLORS.terracotta,
+    },
+  };
+}
 
-const weeklyChartConfig = {
-  messages: {
-    label: "Messages",
-    color: COLORS.sage,
-  },
-  bookings: {
-    label: "Bookings",
-    color: COLORS.terracotta,
-  },
-} satisfies ChartConfig;
+function getWeeklyChartConfig(locale: string): ChartConfig {
+  return {
+    messages: {
+      label: t(locale as any, "dashboard.messages"),
+      color: COLORS.sage,
+    },
+    bookings: {
+      label: t(locale as any, "dashboard.bookingsLabel"),
+      color: COLORS.terracotta,
+    },
+  };
+}
 
 // ─── Color Maps ──────────────────────────────────────────────────────────────
 
@@ -218,7 +222,7 @@ export function DashboardSection() {
     {
       key: "activeChannels",
       value: stats ? `${stats.activeChannels}/${stats.totalChannels}` : "...",
-      change: "Active",
+      changeKey: "dashboard.active",
       trend: "up" as const,
       icon: Radio,
       colorClass: "sage" as const,
@@ -226,7 +230,7 @@ export function DashboardSection() {
     {
       key: "totalMessages",
       value: stats ? stats.totalMessages.toLocaleString() : "...",
-      change: "Total",
+      changeKey: "dashboard.total",
       trend: "up" as const,
       icon: MessageSquare,
       colorClass: "sand" as const,
@@ -234,7 +238,7 @@ export function DashboardSection() {
     {
       key: "totalBookings",
       value: stats ? stats.totalBookings.toLocaleString() : "...",
-      change: "All Time",
+      changeKey: "dashboard.allTime",
       trend: "up" as const,
       icon: CalendarCheck,
       colorClass: "terracotta" as const,
@@ -242,7 +246,7 @@ export function DashboardSection() {
     {
       key: "conversionRate",
       value: stats ? `${stats.conversionRate}%` : "...",
-      change: "Avg",
+      changeKey: "dashboard.avg",
       trend: "up" as const,
       icon: TrendingUp,
       colorClass: "primary" as const,
@@ -339,7 +343,7 @@ export function DashboardSection() {
                         ) : (
                           <ArrowDownRight className="w-3 h-3" />
                         )}
-                        {kpi.change}
+                        {t(locale, kpi.changeKey)}
                       </span>
                     </div>
                   </div>
@@ -367,7 +371,7 @@ export function DashboardSection() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={channelChartConfig} className="h-[260px] w-full">
+            <ChartContainer config={getChannelChartConfig(locale)} className="h-[260px] w-full">
               <BarChart
                 data={channelPerformanceData}
                 layout="vertical"
@@ -425,7 +429,7 @@ export function DashboardSection() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={weeklyChartConfig} className="h-[260px] w-full">
+            <ChartContainer config={getWeeklyChartConfig(locale)} className="h-[260px] w-full">
               <AreaChart
                 data={weeklyTrendData}
                 margin={{

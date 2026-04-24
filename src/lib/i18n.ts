@@ -63,6 +63,12 @@ export const translations = {
       channelPerformance: "Channel Performance",
       weeklyTrend: "Weekly Trend",
       messagesByChannel: "Messages by Channel",
+      messages: "Messages",
+      bookingsLabel: "Bookings",
+      active: "Active",
+      total: "Total",
+      allTime: "All Time",
+      avg: "Avg",
     },
 
     // Channels
@@ -133,11 +139,18 @@ export const translations = {
       serviceSummary: "Service Summary",
       channelSource: "Channel Source",
       bookingDate: "Booking Date",
+      bookingTime: "Booking Time",
+      bookingDay: "Day",
+      createdAt: "Created At",
       bookingStatus: "Booking Status",
       allStatuses: "All Statuses",
       allChannels: "All Channels",
       viewDetails: "View Details",
       updateStatus: "Update Status",
+      pageOf: "Page {page} of {total}",
+      previous: "Previous",
+      next: "Next",
+      showPerPage: "per page",
     },
 
     // Clients
@@ -193,7 +206,7 @@ export const translations = {
   },
   ar: {
     // General
-    appTitle: "مركز تحكم البوت الذكي",
+    appTitle: "مركز تحكم صالون جاردينا",
     loading: "جارٍ التحميل...",
     save: "حفظ",
     cancel: "إلغاء",
@@ -253,6 +266,12 @@ export const translations = {
       channelPerformance: "أداء القنوات",
       weeklyTrend: "الاتجاه الأسبوعي",
       messagesByChannel: "الرسائل حسب القناة",
+      messages: "الرسائل",
+      bookingsLabel: "الحجوزات",
+      active: "نشط",
+      total: "الإجمالي",
+      allTime: "الكل",
+      avg: "المعدل",
     },
 
     // Channels
@@ -323,11 +342,18 @@ export const translations = {
       serviceSummary: "ملخص الخدمة",
       channelSource: "مصدر القناة",
       bookingDate: "تاريخ الحجز",
+      bookingTime: "وقت الحجز",
+      bookingDay: "اليوم",
+      createdAt: "تاريخ الإنشاء",
       bookingStatus: "حالة الحجز",
       allStatuses: "جميع الحالات",
       allChannels: "جميع القنوات",
       viewDetails: "عرض التفاصيل",
       updateStatus: "تحديث الحالة",
+      pageOf: "صفحة {page} من {total}",
+      previous: "السابق",
+      next: "التالي",
+      showPerPage: "لكل صفحة",
     },
 
     // Clients
