@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const ai_enabled = searchParams.get('ai_enabled');
 
-    let query = supabase.from('Client').select('*, Message(*)').order('last_interaction_at', { ascending: false });
+    let query = supabase.from('Client').select('*, Message(*), Booking(id)').order('last_interaction_at', { ascending: false });
     
     if (ai_enabled !== null) {
       query = query.eq('ai_enabled', ai_enabled === 'true');
@@ -18,10 +18,11 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    // Map Message relation to messages array for frontend compatibility
+    // Map Message relation to messages array for frontend compatibility and calculate bookings_count
     const mapped = (clients || []).map((client: any) => ({
       ...client,
-      messages: client.Message || []
+      messages: client.Message || [],
+      bookings_count: client.Booking ? client.Booking.length : 0
     }));
 
     return NextResponse.json(mapped);

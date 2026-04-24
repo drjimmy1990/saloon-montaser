@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { t, isRTL } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -223,7 +224,8 @@ const statColorMap = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function BookingsSection() {
-  const { locale } = useAppStore();
+  const router = useRouter();
+  const { locale, setActiveChatId } = useAppStore();
   const rtl = isRTL(locale);
 
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -289,6 +291,11 @@ export function BookingsSection() {
     setSelectedBooking(booking);
     setNewStatus(booking.status);
     setUpdateStatusDialogOpen(true);
+  };
+
+  const handleViewChat = (booking: Booking) => {
+    setActiveChatId(booking.client_id);
+    router.push('/chat');
   };
 
   const confirmStatusUpdate = async () => {
@@ -641,6 +648,13 @@ export function BookingsSection() {
                             >
                               <RefreshCw className="w-4 h-4" />
                               {t(locale, "bookings.updateStatus")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleViewChat(booking)}
+                              className={cn("gap-2", rtl && "font-arabic")}
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              {rtl ? "عرض المحادثة" : "View Chat"}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

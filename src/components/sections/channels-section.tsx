@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { t, isRTL } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,11 @@ import {
   Pencil,
   Eye,
   EyeOff,
+  Loader2,
+  Save,
+  ChevronDown,
 } from "lucide-react";
+import { uploadImage, deleteImage } from "@/lib/storage";
 import {
   Card,
   CardContent,
@@ -208,7 +212,31 @@ export function ChannelsSection() {
       setIsLoading(true);
       const res = await fetch("/api/channels");
       const data = await res.json();
-      setChannels(Array.isArray(data) ? data : []);
+      
+      const formattedChannels = (Array.isArray(data) ? data : []).map(ch => {
+        let varsArray: { name: string; value: string }[] = [];
+        if (Array.isArray(ch.variables)) {
+          varsArray = ch.variables;
+        } else if (typeof ch.variables === 'object' && ch.variables !== null) {
+          varsArray = Object.entries(ch.variables).map(([name, value]) => ({ name, value: String(value) }));
+        }
+        if (varsArray.length === 0) varsArray = [{ name: "", value: "" }];
+        
+        let credsArray: { key: string; value: string }[] = Array.isArray(ch.credentials) ? ch.credentials : [];
+        if (credsArray.length === 0) credsArray = [{ key: "", value: "" }];
+        
+        let imgsArray: { name: string; urls: string[] }[] = Array.isArray(ch.imageSets) ? ch.imageSets : [];
+        if (imgsArray.length === 0) imgsArray = [{ name: "", urls: [""] }];
+
+        return {
+          ...ch,
+          variables: varsArray,
+          credentials: credsArray,
+          imageSets: imgsArray
+        };
+      });
+      
+      setChannels(formattedChannels);
     } catch (err) {
       console.error("Failed to fetch channels", err);
     } finally {
@@ -250,19 +278,23 @@ export function ChannelsSection() {
     const cleanedCredentials = formData.credentials.filter(
       (c) => c.key.trim()
     );
-    const cleanedVariables = formData.variables.filter(
-      (v) => v.name.trim()
-    );
+    const cleanedVariablesObj = formData.variables.reduce((acc, v) => {
+      if (v.name.trim()) {
+        acc[v.name.trim()] = v.value;
+      }
+      return acc;
+    }, {} as Record<string, string>);
+
     const cleanedImageSets = formData.imageSets
-      .map((s) => ({ ...s, urls: s.urls.filter((u) => u.trim()) }))
-      .filter((s) => s.name.trim());
+      .map((s) => ({ ...s, urls: s.urls.filter((u) => u && u.trim() !== "") }))
+      .filter((s) => s.urls.length > 0 || s.name.trim());
 
     const payload = {
       name: formData.name,
       type: formData.type,
       isActive: formData.isActive,
       credentials: cleanedCredentials,
-      variables: cleanedVariables,
+      variables: cleanedVariablesObj,
       imageSets: cleanedImageSets,
       webhookUrl: formData.webhookUrl,
     };
@@ -317,8 +349,47 @@ export function ChannelsSection() {
       });
     } catch (error) {
       console.error("Failed to toggle channel status", error);
-      // Revert on error
       fetchChannels();
+    }
+  };
+
+  const [savingChannelId, setSavingChannelId] = useState<string | null>(null);
+
+  const saveChannelInline = async (channel: Channel) => {
+    setSavingChannelId(channel.id);
+    try {
+      const cleanedCredentials = channel.credentials.filter((c) => c.key.trim());
+      const cleanedVariablesObj = channel.variables.reduce((acc, v) => {
+        if (v.name.trim()) {
+          acc[v.name.trim()] = v.value;
+        }
+        return acc;
+      }, {} as Record<string, string>);
+      
+      const cleanedImageSets = channel.imageSets
+        .map((s) => ({ ...s, urls: s.urls.filter((u) => u && u.trim() !== "") }))
+        .filter((s) => s.urls.length > 0 || s.name.trim());
+
+      const payload = {
+        name: channel.name,
+        type: channel.type,
+        isActive: channel.isActive,
+        credentials: cleanedCredentials,
+        variables: cleanedVariablesObj,
+        imageSets: cleanedImageSets,
+        webhookUrl: channel.webhookUrl,
+      };
+
+      await fetch(`/api/channels/${channel.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      // Optionally show a success toast here
+    } catch (error) {
+      console.error("Failed to save channel inline", error);
+    } finally {
+      setSavingChannelId(null);
     }
   };
 
@@ -683,6 +754,8 @@ export function ChannelsSection() {
                 onRemoveImageSetUrl={removeChannelImageSetUrl}
                 onAddImageSet={addChannelImageSet}
                 onRemoveImageSet={removeChannelImageSet}
+                onSaveInline={saveChannelInline}
+                isSaving={savingChannelId === channel.id}
               />
             </motion.div>
           ))}
@@ -1155,6 +1228,8 @@ interface ChannelCardProps {
   ) => void;
   onAddImageSet: (channelId: string) => void;
   onRemoveImageSet: (channelId: string, setIndex: number) => void;
+  onSaveInline: (channel: Channel) => void;
+  isSaving: boolean;
 }
 
 function ChannelCard({
@@ -1178,6 +1253,8 @@ function ChannelCard({
   onRemoveImageSetUrl,
   onAddImageSet,
   onRemoveImageSet,
+  onSaveInline,
+  isSaving,
 }: ChannelCardProps) {
   const config = channelTypeConfig[channel.type];
   const Icon = config.icon;
@@ -1197,6 +1274,34 @@ function ChannelCard({
     });
   };
 
+  const [uploadingSetIdx, setUploadingSetIdx] = useState<number | null>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, setIdx: number) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    try {
+      setUploadingSetIdx(setIdx);
+      const url = await uploadImage(file, 'saloon_uploads', 'channels');
+      const currentLength = channel.imageSets[setIdx].urls.length;
+      onUpdateImageSetUrl(channel.id, setIdx, currentLength, url);
+      
+      // Auto-save to backend
+      const newImageSets = [...channel.imageSets];
+      newImageSets[setIdx] = { ...newImageSets[setIdx], urls: [...newImageSets[setIdx].urls, url] };
+      await fetch(`/api/channels/${channel.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageSets: newImageSets }),
+      });
+    } catch (err) {
+      console.error("Failed to upload image:", err);
+    } finally {
+      setUploadingSetIdx(null);
+      e.target.value = '';
+    }
+  };
+
   // Track open image set sub-sections
   const [openImageSets, setOpenImageSets] = useState<Set<number>>(new Set([0]));
   const toggleImageSet = (idx: number) => {
@@ -1210,6 +1315,15 @@ function ChannelCard({
       return next;
     });
   };
+
+  // Automatically open newly added image sets
+  const prevImageSetCount = useRef(channel.imageSets.length);
+  useEffect(() => {
+    if (channel.imageSets.length > prevImageSetCount.current) {
+      setOpenImageSets((prev) => new Set([...prev, channel.imageSets.length - 1]));
+    }
+    prevImageSetCount.current = channel.imageSets.length;
+  }, [channel.imageSets.length]);
 
   const maskValue = (val: string, revealed: boolean) => {
     if (revealed) return val;
@@ -1623,14 +1737,15 @@ function ChannelCard({
                               )}
                             >
                               <motion.div
-                                animate={{ rotate: isOpen ? 90 : 0 }}
-                                transition={{ duration: 0.15 }}
+                                animate={{ rotate: isOpen ? 180 : 0 }}
+                                transition={{ duration: 0.2 }}
                               >
-                                <Plus className="w-3 h-3" />
+                                <ChevronDown className="w-3.5 h-3.5" />
                               </motion.div>
                             </Button>
                           </CollapsibleTrigger>
                           <Input
+                            placeholder={rtl ? "اسم المجموعة..." : "Set name..."}
                             value={imgSet.name}
                             onChange={(e) =>
                               onUpdateImageSetName(
@@ -1665,55 +1780,69 @@ function ChannelCard({
                         </div>
                         <CollapsibleContent>
                           <div className="px-3 pb-2 space-y-1.5">
-                            {imgSet.urls.map((url, urlIdx) => (
-                              <div
-                                key={urlIdx}
+                            {imgSet.urls.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                {imgSet.urls.filter(u => u && u.trim() !== "").map((url, urlIdx) => (
+                                  <div key={urlIdx} className="relative w-16 h-16 rounded-md overflow-hidden border bg-background shrink-0">
+                                    <img src={url} alt="" className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={async () => {
+                                        await deleteImage(url).catch(console.error);
+                                        onRemoveImageSetUrl(channel.id, setIdx, urlIdx);
+                                        
+                                        // Auto-save to backend
+                                        const newImageSets = [...channel.imageSets];
+                                        newImageSets[setIdx] = {
+                                          ...newImageSets[setIdx],
+                                          urls: newImageSets[setIdx].urls.filter((_, i) => i !== urlIdx)
+                                        };
+                                        try {
+                                          await fetch(`/api/channels/${channel.id}`, {
+                                            method: "PUT",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ imageSets: newImageSets }),
+                                          });
+                                        } catch (err) {
+                                          console.error("Failed to save deletion:", err);
+                                        }
+                                      }}
+                                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            <div className="relative">
+                              <input
+                                type="file"
+                                id={`channel-${channel.id}-set-${setIdx}-upload`}
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleImageUpload(e, setIdx)}
+                                disabled={uploadingSetIdx === setIdx}
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => document.getElementById(`channel-${channel.id}-set-${setIdx}-upload`)?.click()}
+                                disabled={uploadingSetIdx === setIdx}
                                 className={cn(
-                                  "flex items-center gap-1.5",
-                                  ""
+                                  "gap-1 text-[11px] h-6 border-dashed border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20",
+                                  rtl && "font-arabic"
                                 )}
                               >
-                                <Input
-                                  value={url}
-                                  onChange={(e) => {
-                                    onUpdateImageSetUrl(channel.id, setIdx, urlIdx, e.target.value);
-                                  }}
-                                  className={cn(
-                                    "flex-1 font-mono text-[11px] h-7 bg-amber-50/40 dark:bg-amber-900/10 border-amber-200/30 dark:border-amber-800/20 focus:border-amber-400",
-                                    rtl && "text-right"
-                                  )}
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="shrink-0 h-6 w-6 text-muted-foreground hover:text-destructive transition-colors"
-                                  onClick={() =>
-                                    onRemoveImageSetUrl(
-                                      channel.id,
-                                      setIdx,
-                                      urlIdx
-                                    )
-                                  }
-                                  disabled={imgSet.urls.length <= 1}
-                                >
-                                  <Trash2 className="w-2.5 h-2.5" />
-                                </Button>
-                              </div>
-                            ))}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                onAddImageSetUrl(channel.id, setIdx)
-                              }
-                              className={cn(
-                                "gap-1 text-[11px] h-6 border-dashed border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20",
-                                rtl && "font-arabic"
-                              )}
-                            >
-                              <Plus className="w-2.5 h-2.5" />
-                              {t(locale, "channels.addImage")}
-                            </Button>
+                                {uploadingSetIdx === setIdx ? (
+                                  <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                ) : (
+                                  <Plus className="w-2.5 h-2.5" />
+                                )}
+                                {t(locale, "channels.addImage")}
+                              </Button>
+                            </div>
                           </div>
                         </CollapsibleContent>
                       </Collapsible>
@@ -1782,6 +1911,19 @@ function ChannelCard({
             </motion.div>
           ) : (
             <>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => onSaveInline(channel)}
+                disabled={isSaving}
+                className={cn(
+                  "gap-1.5 h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white",
+                  rtl && "font-arabic"
+                )}
+              >
+                {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                {rtl ? "حفظ التعديلات" : "Save Changes"}
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"

@@ -569,7 +569,7 @@ export function ChatSection() {
   // ─── Chat Area Panel ─────────────────────────────────────────────────────
 
   const chatAreaPanel = activeClient ? (
-    <div className="flex flex-col h-full" dir={rtl ? "rtl" : "ltr"}>
+    <div className="flex flex-col h-full min-h-0" dir={rtl ? "rtl" : "ltr"}>
       {/* Chat Header — compact single line */}
       <div className="px-3 py-1.5 border-b shrink-0">
         <div className="flex items-center gap-2">
@@ -676,7 +676,7 @@ export function ChatSection() {
       )}
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-3" dir={rtl ? "rtl" : "ltr"}>
+      <ScrollArea className="flex-1 min-h-0 p-3" dir={rtl ? "rtl" : "ltr"}>
         <div className="space-y-3">
           {activeClient.messages.map((msg) => {
             const config = senderConfig[msg.sender_type] || senderConfig["user"];
@@ -787,7 +787,10 @@ export function ChatSection() {
   // ─── Main Render ──────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col h-full" dir={rtl ? "rtl" : "ltr"}>
+    <div
+      className="flex flex-col h-full min-h-0 overflow-hidden"
+      dir={rtl ? "rtl" : "ltr"}
+    >
       {/* Header */}
       <div className="space-y-1 shrink-0 mb-4">
         <h2 className={cn("text-2xl font-bold tracking-tight", rtl && "font-arabic text-right")}>

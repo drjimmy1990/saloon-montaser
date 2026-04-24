@@ -52,8 +52,14 @@ export default function DashboardLayout({
     }
   }
 
+  const isChat = pathname === "/chat";
+
   return (
-    <div className={cn("min-h-screen flex flex-col", rtl && "font-arabic")} dir={dir}>
+    <div className={cn(
+      isChat ? "h-screen overflow-hidden" : "min-h-screen",
+      "flex flex-col",
+      rtl && "font-arabic"
+    )} dir={dir}>
       <div className="flex flex-1 min-h-0">
         {/* Desktop Sidebar */}
         <div className="hidden md:block" dir={dir}>
@@ -64,17 +70,17 @@ export default function DashboardLayout({
         <MobileSidebar />
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className={cn("flex-1 flex flex-col min-w-0", isChat && "min-h-0")}>
           <MobileHeader />
           <main className={cn(
             "flex-1 p-4 md:p-6 custom-scrollbar",
-            pathname === "/chat" ? "overflow-hidden flex flex-col" : "overflow-auto"
+            isChat ? "overflow-hidden flex flex-col min-h-0" : "overflow-auto"
           )}>
             <div
               key={pathname}
               className={cn(
                 "animate-in fade-in-0 duration-200",
-                pathname === "/chat" && "flex-1 min-h-0"
+                isChat && "flex-1 min-h-0 flex flex-col"
               )}
             >
               {children}

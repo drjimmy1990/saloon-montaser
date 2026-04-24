@@ -82,6 +82,7 @@ export interface Client {
   unread_count?: number;
   status?: string;
   ai_enabled?: boolean;
+  bookings_count?: number;
   createdAt?: string;
 }
 
@@ -324,22 +325,25 @@ export function ClientsSection() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className={cn(rtl && "text-right font-arabic")}>
+                  <TableHead className={cn(rtl && "text-right font-arabic", "w-[250px]")}>
                     {t(locale, "clients.clientName")}
                   </TableHead>
-                  <TableHead className={cn(rtl && "text-right font-arabic")}>
+                  <TableHead className={cn(rtl && "text-right font-arabic", "w-[150px]")}>
                     {t(locale, "clients.clientPhone")}
                   </TableHead>
-                  <TableHead className={cn(rtl && "text-right font-arabic")}>
+                  <TableHead className={cn(rtl && "text-right font-arabic", "w-[120px]")}>
                     {rtl ? "حالة البوت" : "Bot Status"}
                   </TableHead>
-                  <TableHead className={cn(rtl && "text-right font-arabic")}>
+                  <TableHead className={cn(rtl && "text-right font-arabic", "w-[100px]")}>
+                    {rtl ? "الحجوزات" : "Bookings"}
+                  </TableHead>
+                  <TableHead className={cn(rtl && "text-right font-arabic", "max-w-[200px]")}>
                     {t(locale, "clients.clientAddress")}
                   </TableHead>
-                  <TableHead className={cn(rtl && "text-right font-arabic")}>
+                  <TableHead className={cn(rtl && "text-right font-arabic", "max-w-[200px]")}>
                     {t(locale, "clients.clientNotes")}
                   </TableHead>
-                  <TableHead className={cn(rtl && "text-right font-arabic")}>
+                  <TableHead className={cn(rtl && "text-right font-arabic", "w-[120px]")}>
                     {t(locale, "actions")}
                   </TableHead>
                 </TableRow>
@@ -348,7 +352,7 @@ export function ClientsSection() {
                 {isLoading ? (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className={cn(
                         "h-24 text-center text-muted-foreground",
                         rtl && "font-arabic"
@@ -360,7 +364,7 @@ export function ClientsSection() {
                 ) : filteredClients.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className={cn(
                         "h-24 text-center text-muted-foreground",
                         rtl && "font-arabic"
@@ -422,7 +426,15 @@ export function ClientsSection() {
                       </TableCell>
                       <TableCell
                         className={cn(
-                          "max-w-[180px] truncate text-muted-foreground",
+                          "tabular-nums font-medium",
+                          rtl && "text-right"
+                        )}
+                      >
+                        {client.bookings_count || 0}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "max-w-[200px] truncate text-muted-foreground",
                           rtl && "text-right font-arabic"
                         )}
                       >
@@ -430,7 +442,7 @@ export function ClientsSection() {
                       </TableCell>
                       <TableCell
                         className={cn(
-                          "max-w-[180px] truncate text-muted-foreground",
+                          "max-w-[200px] truncate text-muted-foreground",
                           rtl && "text-right font-arabic"
                         )}
                       >
@@ -455,15 +467,6 @@ export function ClientsSection() {
                           >
                             <Pencil className="h-4 w-4 text-muted-foreground" />
                             <span className="sr-only">{t(locale, "edit")}</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className={cn("w-full sm:w-auto", rtl && "font-arabic")}
-                            onClick={() => router.push("/bookings")}
-                          >
-                            <CalendarCheck className="w-4 h-4 mr-2" />
-                            {rtl ? "حجز جديد" : "New Booking"}
                           </Button>
                           <Button
                             variant="ghost"
