@@ -52,6 +52,7 @@ interface ChatMessage {
   text_content: string;
   attachment_url: string;
   platform_timestamp: string;
+  sent_at?: string;
   createdAt: string;
 }
 
@@ -678,7 +679,16 @@ export function ChatSection() {
       {/* Messages Area */}
       <ScrollArea className="flex-1 min-h-0 p-3" dir={rtl ? "rtl" : "ltr"}>
         <div className="space-y-3">
-          {activeClient.messages.map((msg) => {
+          {[...activeClient.messages].sort((a, b) => {
+            const timeA = new Date(a.platform_timestamp || a.sent_at || a.createdAt || 0).getTime();
+            const timeB = new Date(b.platform_timestamp || b.sent_at || b.createdAt || 0).getTime();
+            if (timeA !== timeB) return timeA - timeB;
+            
+            // Tie-breaker using actual database insertion time
+            const sentA = new Date(a.sent_at || a.createdAt || 0).getTime();
+            const sentB = new Date(b.sent_at || b.createdAt || 0).getTime();
+            return sentA - sentB;
+          }).map((msg) => {
             const config = senderConfig[msg.sender_type] || senderConfig["user"];
             const Icon = config.icon;
             const isAgent = msg.sender_type === "agent";

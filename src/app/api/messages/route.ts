@@ -33,10 +33,10 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (client && client.channel_id) {
-          // Fetch channel's webhookUrl
+          // Fetch channel's webhookUrl and full details for n8n
           const { data: channel } = await supabase
             .from('Channel')
-            .select('webhookUrl')
+            .select('*')
             .eq('id', client.channel_id)
             .single();
 
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
                 event: 'message.sent',
                 message: message,
                 client: client,
+                channel: channel,
               }),
             }).catch(err => console.error("Webhook trigger failed:", err));
           }

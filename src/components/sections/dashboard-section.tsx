@@ -385,8 +385,9 @@ export function DashboardSection() {
                   dataKey={rtl ? "channelAr" : "channel"}
                   tickLine={false}
                   axisLine={false}
-                  width={rtl ? 65 : 80}
+                  width={100}
                   tick={{ fontSize: 12 }}
+                  orientation={rtl ? "right" : "left"}
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar

@@ -80,8 +80,8 @@ export function AppSidebar() {
       <Separator />
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 py-3">
-        <nav className="px-3 space-y-1">
+      <ScrollArea className="flex-1 py-3" dir={rtl ? "rtl" : "ltr"}>
+        <nav className="px-3 space-y-1" dir={rtl ? "rtl" : "ltr"}>
           {navItems.filter(item => {
             if (item.adminOnly && userRole === 'team') return false;
             if (userRole === 'team' && item.id !== 'dashboard' && userPermissions.length > 0) {
@@ -119,7 +119,7 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full flex items-center gap-3 px-3"
+          className="w-full flex items-center justify-start gap-3 px-3"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
           {theme === "dark" ? <Sun className="w-4 h-4 shrink-0" /> : <Moon className="w-4 h-4 shrink-0" />}
@@ -131,7 +131,7 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full flex items-center gap-3 px-3"
+          className="w-full flex items-center justify-start gap-3 px-3"
           onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
         >
           <Globe className="w-4 h-4 shrink-0" />
@@ -143,7 +143,7 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           className={cn(
-            "w-full justify-start gap-3 h-10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
+            "w-full flex items-center justify-start gap-3 px-3 h-10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
             rtl && "font-arabic"
           )}
           onClick={() => logout()}

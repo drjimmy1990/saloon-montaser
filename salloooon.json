@@ -1,0 +1,3881 @@
+{
+  "name": "salloooon",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "2151fdf8-565f-474b-9301-b2fe484e1e8b",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -8528,
+        16
+      ],
+      "id": "9588a300-52e1-4a0a-9340-ab09d0f8452b",
+      "name": "Webhook",
+      "webhookId": "2151fdf8-565f-474b-9301-b2fe484e1e8b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b3b22bac-19c4-4913-bf5c-d9e84e40c196",
+              "leftValue": "={{ $json.body.data.key.fromMe }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -7824,
+        -48
+      ],
+      "id": "52ff9127-61ef-4af1-8c79-9064b89064c5",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all incoming items\nfor (const item of items) {\n  // Safe access to data structure\n  const body = item.json.body || {};\n  const data = body.data || {};\n  const key = data.key || {};\n  const message = data.message || {};\n\n  // 1. Logic to get the JID with 's.whatsapp.net'\n  let correctJid = '';\n  \n  if (key.remoteJid && key.remoteJid.includes('s.whatsapp.net')) {\n    correctJid = key.remoteJid;\n  } else if (key.remoteJidAlt && key.remoteJidAlt.includes('s.whatsapp.net')) {\n    correctJid = key.remoteJidAlt;\n  } else {\n    // Fallback if neither has it, default to remoteJid\n    correctJid = key.remoteJid || '';\n  }\n\n  // 2. Extract the phone number (everything before the @)\n  const phoneNumber = correctJid.split('@')[0];\n\n  // 3. Handle Timestamp (Standard JS, convert Seconds to Date + 3 Hours for UTC+3)\n  let formattedTime = '';\n  if (data.messageTimestamp) {\n    // Timestamp is in seconds, multiply by 1000 for milliseconds\n    const date = new Date(data.messageTimestamp * 1000);\n    // Add 3 hours in milliseconds (3 * 60 * 60 * 1000 = 10800000)\n    const utc3Date = new Date(date.getTime() + 10800000);\n    // Convert to ISO string for consistency\n    formattedTime = utc3Date.toISOString().replace('T', ' ').replace('Z', '');\n  }\n\n  // 4. Construct the Output JSON\n  item.json = {\n    SenderJid: correctJid,\n    SenderName: data.pushName,\n    Timestamp: formattedTime,\n    MsgType: data.messageType,\n    Msg: message.conversation,\n    Media: message.base64, // Will be undefined if not present, which is fine\n    Instance: body.instance,\n    Key: body.apikey,\n    phonenumber: phoneNumber\n  };\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6864,
+        -16
+      ],
+      "id": "2e2cb45b-97de-43b5-9470-f0abe417105d",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0fceb1bb-c0de-4e6c-880f-062704739f1e",
+              "name": "SenderJid",
+              "value": "={{ $('Code in JavaScript6').item.json.SenderJid }}",
+              "type": "string"
+            },
+            {
+              "id": "04ac662e-9deb-4d63-ac8f-cafab77e0f7b",
+              "name": "SenderName",
+              "value": "={{ $('Code in JavaScript6').item.json.SenderName }}",
+              "type": "string"
+            },
+            {
+              "id": "f812ad17-d60f-4c5d-b1d4-7820238fe0e3",
+              "name": "Timestamp",
+              "value": "={{$('Webhook').item.json.body.data.messageTimestamp.toDateTime('s').setZone('UTC+2') }}",
+              "type": "string"
+            },
+            {
+              "id": "3c3fdb3c-de14-4bcc-8d9a-68cc2ed0d1c8",
+              "name": "MsgType",
+              "value": "={{ $('Code in JavaScript6').item.json.MsgType }}",
+              "type": "string"
+            },
+            {
+              "id": "e0595c23-53c7-4eb9-aea2-4de3fa76e7db",
+              "name": "Msg",
+              "value": "={{ $('Webhook').item.json.body?.data?.contextInfo?.externalAdReply?.greetingMessageBody || $('Webhook').item.json.body.data.message.conversation }}",
+              "type": "string"
+            },
+            {
+              "id": "5f1ca696-9ad5-4f22-accd-435a5c8c6ced",
+              "name": "Media",
+              "value": "={{ $json.body.data.message.base64 }}",
+              "type": "string"
+            },
+            {
+              "id": "eb5b8516-cc5f-43b3-a578-2d8b15b7b51d",
+              "name": "Instance",
+              "value": "={{ $('Code in JavaScript6').item.json.Instance }}",
+              "type": "string"
+            },
+            {
+              "id": "8c6ec75c-45c6-44de-a860-84baa4832602",
+              "name": "Key",
+              "value": "={{ $('Code in JavaScript6').item.json.Key }}",
+              "type": "string"
+            },
+            {
+              "id": "08edec4e-32c4-466d-8d66-261a8ede1abc",
+              "name": "phonenumber",
+              "value": "={{ $('Code in JavaScript6').item.json.phonenumber }}",
+              "type": "string"
+            },
+            {
+              "id": "d05f492e-26b3-49e9-b366-96947a6906bc",
+              "name": "message_platform_id",
+              "value": "={{ $('Webhook').item.json.body.data.key.id }}",
+              "type": "string"
+            },
+            {
+              "id": "56f0bdfb-bc93-43e9-9230-f4a24b9594b6",
+              "name": "platform",
+              "value": "whatsapp",
+              "type": "string"
+            },
+            {
+              "id": "d65150c6-4c63-4b37-b9f6-befcded648c6",
+              "name": "platform_user_id",
+              "value": "={{ $('Code in JavaScript6').item.json.SenderJid }}",
+              "type": "string"
+            },
+            {
+              "id": "5d001d0f-4c7e-42de-bd22-2316d7e6b81c",
+              "name": "valrables",
+              "value": "={{ $json.variables }}",
+              "type": "object"
+            },
+            {
+              "id": "90b066dd-8ee7-4976-836f-48f44e0cb86b",
+              "name": "image_sets",
+              "value": "={{ $json.imageSets.map(set => set.name).join(', ') }}",
+              "type": "string"
+            },
+            {
+              "id": "651518d7-67d7-4d14-a53e-ebb85303b642",
+              "name": "active_products",
+              "value": "={{ $json.active_products }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6176,
+        -16
+      ],
+      "id": "7b2617f5-4bf7-4246-814c-bb9cf4027ea6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5484e68b-7fb5-4d24-9df7-d34c575fc807",
+              "leftValue": "={{ $('find contact').item.json.isEmpty()}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5344,
+        16
+      ],
+      "id": "66154545-c462-4536-9703-1e00cb6c000d",
+      "name": "If19"
+    },
+    {
+      "parameters": {
+        "tableId": "Client",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "platform",
+              "fieldValue": "={{ $('Edit Fields').first().json.platform }}"
+            },
+            {
+              "fieldId": "platform_user_id",
+              "fieldValue": "={{ $('Edit Fields').first().json.platform_user_id }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('Edit Fields').first().json.SenderName ?? '' }}\n"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $('Edit Fields').first().json.phonenumber }}"
+            },
+            {
+              "fieldId": "platform",
+              "fieldValue": "whatsapp"
+            },
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Get a row').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -4944,
+        -128
+      ],
+      "id": "277e5759-ebce-4b60-b8c4-00503605297b",
+      "name": "Supabase20",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b2be1936-4832-4628-b97a-80d0573e3091",
+              "name": "contact_uuid",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f79e3551-5df7-41ad-978e-185cf81894e1",
+              "name": "ai_enabled",
+              "value": "={{ $json.ai_enabled }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4480,
+        32
+      ],
+      "id": "6d8ca79f-0a06-456f-acbc-9b3b013461fc",
+      "name": "Edit Fields13"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "Client",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "platform_user_id",
+              "keyValue": "={{ $json.SenderJid }}"
+            },
+            {
+              "keyName": "platform",
+              "keyValue": "={{ $json.platform }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5760,
+        16
+      ],
+      "id": "21030567-5e84-446f-a206-6eb1a643b445",
+      "name": "find contact",
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f7206c20-c422-47d0-a11c-437e11473683",
+                    "leftValue": "={{ $('Edit Fields').item.json.MsgType }}",
+                    "rightValue": "conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Edit Fields').item.json.MsgType }}",
+                    "rightValue": "audioMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "9e64d812-9b40-494f-9c7c-eafb670f18e7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c2c4a950-10f3-4d58-84a8-dba2dfc64741",
+                    "leftValue": "={{ $('Edit Fields').item.json.MsgType }}",
+                    "rightValue": "imageMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "80a51bdb-266a-4c52-b436-a488476c0803",
+                    "leftValue": "={{ $('Edit Fields').item.json.MsgType }}",
+                    "rightValue": "=documentMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Document"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "489dc6f5-fc53-4053-99ef-8bb07f79c48d",
+                    "leftValue": "={{ $('Edit Fields').item.json.MsgType }}",
+                    "rightValue": "=locationMessage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Location"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -4080,
+        -64
+      ],
+      "id": "8048fa56-4e3c-41fa-99cb-4acf336233fb",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -3328,
+        -368
+      ],
+      "id": "3fcdcc6c-eed8-4674-9b07-540029da253b",
+      "name": "Wait",
+      "webhookId": "366bbf4c-bea5-46d1-9377-d04e859ae509"
+    },
+    {
+      "parameters": {
+        "tableId": "queue",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "sender_id",
+              "fieldValue": "={{ $('Edit Fields').item.json.SenderJid }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Edit Fields').item.json.Msg }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2192,
+        -336
+      ],
+      "id": "af7f81fc-565e-4fce-a671-7b8d170b6b65",
+      "name": "Create a row3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "Message",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Execute a SQL query').first().json.id }}"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "user"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "=text"
+            },
+            {
+              "fieldId": "platform_timestamp",
+              "fieldValue": "={{ $('Edit Fields').first().json.Timestamp }}"
+            },
+            {
+              "fieldId": "text_content",
+              "fieldValue": "={{ $('Edit Fields').first().json.Msg }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "message_platform_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2960,
+        -368
+      ],
+      "id": "970a9bb9-490a-499d-9c1e-319802a821b8",
+      "name": "Supabase25",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "=base64",
+        "options": {
+          "fileName": "={{ $('Edit Fields').item.json.phonenumber }}-{{ $('Webhook').item.json.body.data.messageTimestamp }}.ogg"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -3168,
+        -144
+      ],
+      "id": "333b7a06-a6a4-4ac8-bdaa-7b7acf548c4e",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "=base64",
+        "options": {
+          "fileName": "={{ $('Edit Fields').item.json.phonenumber }}-{{ $('Webhook').item.json.body.data.messageTimestamp }}.{{ $('Webhook').item.json.body.data.message.imageMessage.mimetype.split('/')[1] }}",
+          "mimeType": "={{ $('Webhook').item.json.body.data.message.imageMessage.mimetype }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -3248,
+        64
+      ],
+      "id": "9a1702ca-8e0b-44dc-b154-ddb4f9a1e788",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "platform_user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Switch4').first().json.SenderJid }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "ai_enabled",
+              "fieldValue": "false"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5360,
+        -1024
+      ],
+      "id": "8a30d2b4-0a9e-43a5-992c-27ef289bd5be",
+      "name": "Update a row3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Msg }}",
+                    "rightValue": "***",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "36398d98-f06f-4098-9eff-3905924f5550"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "off"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "416900dc-700e-413c-b56a-d39aa809741c",
+                    "leftValue": "={{ $json.Msg }}",
+                    "rightValue": "###",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "on"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -6880,
+        -624
+      ],
+      "id": "3afde757-cdbc-453b-8d38-85d4b70c7740",
+      "name": "Switch4"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "platform_user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Switch4').first().json.SenderJid }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "ai_enabled",
+              "fieldValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5328,
+        -672
+      ],
+      "id": "4eccd690-e153-4b72-8c5d-1b4ee6c7235e",
+      "name": "Update a row4",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5484e68b-7fb5-4d24-9df7-d34c575fc807",
+              "leftValue": "={{ $('Supabase101').item.json.isEmpty()}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5728,
+        -1120
+      ],
+      "id": "d9b6c1eb-5e3e-44b3-a835-c1d6df33be86",
+      "name": "If14"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "Client",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "platform_user_id",
+              "keyValue": "={{ $json.SenderJid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -6112,
+        -1120
+      ],
+      "id": "3a25b61a-8c31-45d8-aa0f-1acd6f0d2551",
+      "name": "Supabase101",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "contacts",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "platform_user_id",
+              "keyValue": "={{ $json.SenderJid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -6144,
+        -768
+      ],
+      "id": "993ebc86-f6e9-40a0-8375-600c57261781",
+      "name": "Supabase102",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5484e68b-7fb5-4d24-9df7-d34c575fc807",
+              "leftValue": "={{ $('Supabase102').item.json.isEmpty()}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5824,
+        -768
+      ],
+      "id": "a88acecd-519e-4a37-9398-13ada7107ac1",
+      "name": "If15"
+    },
+    {
+      "parameters": {
+        "tableId": "contacts",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "platform",
+              "fieldValue": "=whatsapp"
+            },
+            {
+              "fieldId": "platform_user_id",
+              "fieldValue": "={{ $('Switch4').first().json.SenderJid }}"
+            },
+            {
+              "fieldId": "ai_enabled",
+              "fieldValue": "false"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5360,
+        -1216
+      ],
+      "id": "390224dc-44d2-46ac-bb6c-06da1ffec62a",
+      "name": "Supabase17",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "tableId": "contacts",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "platform",
+              "fieldValue": "=whatsapp"
+            },
+            {
+              "fieldId": "platform_user_id",
+              "fieldValue": "={{ $('Switch4').first().json.SenderJid }}"
+            },
+            {
+              "fieldId": "ai_enabled",
+              "fieldValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5328,
+        -848
+      ],
+      "id": "02759cf3-4d4c-45d7-a5b6-aa4bdde0d729",
+      "name": "Supabase18",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop through all incoming items\nfor (const item of items) {\n  // Safe access to data structure\n  const body = item.json.body || {};\n  const data = body.data || {};\n  const key = data.key || {};\n  const message = data.message || {};\n\n  // 1. Logic to get the JID with 's.whatsapp.net'\n  let correctJid = '';\n  \n  if (key.remoteJid && key.remoteJid.includes('s.whatsapp.net')) {\n    correctJid = key.remoteJid;\n  } else if (key.remoteJidAlt && key.remoteJidAlt.includes('s.whatsapp.net')) {\n    correctJid = key.remoteJidAlt;\n  } else {\n    // Fallback if neither has it, default to remoteJid\n    correctJid = key.remoteJid || '';\n  }\n\n  // 2. Extract the phone number (everything before the @)\n  const phoneNumber = correctJid.split('@')[0];\n\n  // 3. Handle Timestamp (Standard JS, convert Seconds to Date + 3 Hours for UTC+3)\n  let formattedTime = '';\n  if (data.messageTimestamp) {\n    // Timestamp is in seconds, multiply by 1000 for milliseconds\n    const date = new Date(data.messageTimestamp * 1000);\n    // Add 3 hours in milliseconds (3 * 60 * 60 * 1000 = 10800000)\n    const utc3Date = new Date(date.getTime() + 10800000);\n    // Convert to ISO string for consistency\n    formattedTime = utc3Date.toISOString().replace('T', ' ').replace('Z', '');\n  }\n\n  // 4. Construct the Output JSON\n  item.json = {\n    SenderJid: correctJid,\n    SenderName: data.pushName,\n    Timestamp: formattedTime,\n    MsgType: data.messageType,\n    Msg: message.conversation,\n    Media: message.base64, // Will be undefined if not present, which is fine\n    Instance: body.instance,\n    Key: body.apikey,\n    phonenumber: phoneNumber\n  };\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -7280,
+        -592
+      ],
+      "id": "178e5888-69a3-49b0-b514-094a9bf8fb42",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -7072,
+        -1040
+      ],
+      "id": "78032da3-3d84-4090-9bbd-1364fadbac46",
+      "name": "No Operation, do nothing2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "Channel",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "name",
+              "keyValue": "whats"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -6528,
+        -272
+      ],
+      "id": "0bc38638-defd-4ddc-888b-9a7a9bcd0921",
+      "name": "Get a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "message"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        -304
+      ],
+      "id": "2349a036-0b7b-4d59-b804-2754b4d233d9",
+      "name": "Aggregate4"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        -464
+      ],
+      "id": "f6fcb697-df1c-490e-b621-650cc1be1805",
+      "name": "Wait8",
+      "webhookId": "74edc2c0-8856-4f9e-9bf7-6e6008151c2b"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        112,
+        -240
+      ],
+      "id": "af3d2e92-51b2-4bc1-a838-ad19a535dd7f",
+      "name": "Sort2"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "queue",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sender_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Edit Fields13').item.json.platform_user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -240
+      ],
+      "id": "c58d60b1-8d41-4165-8bc0-1c40825c3c6c",
+      "name": "Supabase5",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1c4c4875-71b4-4638-b0c5-91eefeec85c5",
+              "name": "message_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "bac0da0b-a426-48fe-8605-937c4a2cb12b",
+              "name": "uuid",
+              "value": "={{ $('Edit Fields13').first().json.contact_uuid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -912,
+        -240
+      ],
+      "id": "9d5aeb95-1bc0-422c-a6b6-7a4d1a202345",
+      "name": "Edit Fields15"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "queue",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sender_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.sender_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        736,
+        -288
+      ],
+      "id": "b4785b58-0b08-442e-b124-4753eeffaea8",
+      "name": "Supabase23",
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4e2d4eee-1aaf-40d5-a6b4-0e7ee44acd1e",
+              "leftValue": "={{ $input.last().json.id }}",
+              "rightValue": "={{ $('Edit Fields15').item.json.message_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        -240
+      ],
+      "id": "4d811dd9-eebf-4deb-ad1c-152fc95aa94c",
+      "name": "If23"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      body: $('Aggregate4').first().json.message.join(\"  \") // Directly assign the joined string\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        -288
+      ],
+      "id": "08814db4-1267-47af-9ae4-960677f020c5",
+      "name": "Code2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        592,
+        -128
+      ],
+      "id": "9f0c3b7f-35df-4487-888b-72f6cfcf7772",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"google/gemini-2.5-flash\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"Please transcribe this audio file.\"\n        },\n        {\n          \"type\": \"input_audio\",\n          \"input_audio\": {\n            \"data\": \"{{$binary.data}}\",\n            \"format\": \"ogg\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -880,
+        96
+      ],
+      "id": "ee9baa1a-8128-4854-81bd-f21867e826b9",
+      "name": "HTTP Request18"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "376afef9-9af0-405c-85b6-91f6539740fa",
+              "leftValue": "={{ $('Edit Fields13').item.json.ai_enabled }}",
+              "rightValue": "=true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "84dea79a-cc79-4c05-981c-6c7d5e460bfe",
+              "leftValue": "={{ $('Edit Fields').item.json.MsgType }}",
+              "rightValue": "imageMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -656,
+        -224
+      ],
+      "id": "369dcc01-8336-4597-8aee-d816dcaac067",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "queue",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sender_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Edit Fields').item.json.SenderJid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        48
+      ],
+      "id": "8e6e6871-001a-46e1-971f-a58d052b66af",
+      "name": "Supabase24",
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        16
+      ],
+      "id": "627e35d1-4cfd-4065-9f62-7374ac7aef0d",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "tableId": "Message",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('Edit Fields13').item.json.contact_uuid }}"
+            },
+            {
+              "fieldId": "message_platform_id",
+              "fieldValue": "={{ $('Edit Fields').first().json.message_platform_id }}"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "user"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "=image"
+            },
+            {
+              "fieldId": "platform_timestamp",
+              "fieldValue": "={{ $('Edit Fields').item.json.Timestamp }}"
+            },
+            {
+              "fieldId": "text_content",
+              "fieldValue": "={{ $json.text }}"
+            },
+            {
+              "fieldId": "attachment_url",
+              "fieldValue": "={{ $('Edit Fields5').item.json.publicurl }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2000,
+        112
+      ],
+      "id": "536b6dc4-8f56-4c13-bde9-a01b1a8bb1a1",
+      "name": "Supabase1",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "queue",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "sender_id",
+              "fieldValue": "={{ $('Edit Fields').item.json.SenderJid }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $json.text_content }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1760,
+        80
+      ],
+      "id": "23f3fb2b-6401-467e-bd22-96a1b47a6b3d",
+      "name": "Create a row12",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\n\n## PURPOSE\n\nYou are an image analysis agent for Marka.ps e-commerce platform. Your job is to analyze customer-submitted images and provide a concise, accurate description that will be passed to the main sales assistant.\n\n---\n\n## OUTPUT FORMAT\n\nYour output will be sent to the sales assistant in this exact format:\n**\"ارسل العميل صوره و هذا وصفها : [YOUR DESCRIPTION HERE]\"**\n\nTherefore, you must output ONLY a brief, clear description of the image contents. No additional text, no explanations, no prefixes.\n\n---\n\n## WHAT TO IDENTIFY\n\nWhen analyzing an image, focus on extracting:\n\n### 1. PRODUCTS\n- Product type (e.g., blender, toy, bag, lamp)\n- Brand name (if visible)\n- Color(s)\n- Size (if determinable)\n- Model name/number (if visible)\n- Condition (new, used, damaged)\n\n### 2. TEXT IN IMAGE\n- Any Arabic or English text visible\n- Brand logos with text\n- Product labels\n- Price tags\n- Model numbers\n\n### 3. CONTEXT CLUES\n- Is it a screenshot from a website?\n- Is it a photo of a physical product?\n- Is it a product packaging?\n- Is it a receipt or invoice?\n\n---\n\n## OUTPUT EXAMPLES\n\n### Example 1: Product Photo\n**Image:** A red Philips blender in its original box\n**Output:** `خلاط كهربائي ماركة فيليبس لون أحمر في علبته الأصلية`\n\n### Example 2: Screenshot\n**Image:** A screenshot from an online store showing a travel bag\n**Output:** `سكرين شوت من موقع تسوق لشنطة سفر سوداء كبيرة`\n\n### Example 3: Product with Price\n**Image:** A toy with a price tag showing 99 NIS\n**Output:** `لعبة أطفال عليها سعر 99 شيكل`\n\n### Example 4: Text/Receipt\n**Image:** An order confirmation or receipt\n**Output:** `صورة فاتورة أو إيصال طلبية فيها رقم الطلب 12345`\n\n### Example 5: Damaged Product\n**Image:** A broken electronic device\n**Output:** `جهاز إلكتروني مكسور/تالف - يبدو وكأنه شاحن`\n\n### Example 6: Unclear Image\n**Image:** A blurry or dark photo\n**Output:** `صورة غير واضحة - يبدو فيها شيء لكن صعب التحديد`\n\n### Example 7: Product Comparison\n**Image:** Two products side by side\n**Output:** `مقارنة بين منتجين: خلاط أبيض وخلاط أسود`\n\n### Example 8: Website Product Page\n**Image:** A product page screenshot with details\n**Output:** `صفحة منتج من موقع تسوق - مكنسة كهربائية ماركة دايسون سعرها 1500 شيكل`\n\n---\n\n## RULES\n\n1. **BE CONCISE:** Keep descriptions short and clear (1-2 sentences max)\n2. **BE ACCURATE:** Only describe what you actually see\n3. **NO ASSUMPTIONS:** Don't guess product details you can't verify from the image\n4. **ARABIC PREFERRED:** Write descriptions in Arabic (Palestinian dialect style)\n5. **INCLUDE BRAND:** Always mention brand names if visible\n6. **INCLUDE TEXT:** Transcribe any visible text that seems important\n7. **INCLUDE PRICE:** If a price is visible, include it\n8. **NO FORMATTING:** Output plain text only, no bullets or special formatting\n9. **NO EXPLANATIONS:** Don't explain what you're doing, just output the description\n\n---\n\n## SPECIAL CASES\n\n### If image shows a product we might sell:\nFocus on: Type, Brand, Color, any identifying features\n\n### If image shows a competitor product/screenshot:\nDescribe it neutrally: \"صورة من موقع [X] لـ [منتج]\"\n\n### If image is a complaint (damaged product):\nDescribe the damage clearly: \"منتج تالف - [وصف التلف]\"\n\n### If image is unclear or irrelevant:\nBe honest: \"صورة غير واضحة\" or \"صورة غير متعلقة بالمنتجات\"\n\n### If image contains personal information:\nDO NOT include: phone numbers, addresses, ID numbers, or private data in your description\n\n---\n\n## FINAL NOTE\n\nRemember: Your description will be passed to the sales assistant who will respond to the customer. Make your description helpful, detailed and actionable so the assistant can provide the best response.\n",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "messageType": "imageBinary"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        -2336,
+        80
+      ],
+      "id": "854eb032-80af-4698-8428-70975a114d28",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3fcb3efb-0672-4e6e-a7df-a530b5bfd86c",
+              "name": "publicurl",
+              "value": "=https://n8nfiles.asra3.com/{{$binary.data.fileName}}",
+              "type": "string"
+            },
+            {
+              "id": "00606ddc-140c-4d3a-9505-370df8f6d4f8",
+              "name": "=mime",
+              "value": "={{$binary.data.mimeType}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "stripBinary": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2592,
+        80
+      ],
+      "id": "677634f0-74a7-42ba-8c54-cd6212b48b9a",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "tableId": "Message",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('Edit Fields13').first().json.contact_uuid }}"
+            },
+            {
+              "fieldId": "message_platform_id",
+              "fieldValue": "={{ $('Edit Fields').first().json.message_platform_id }}"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "user"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "=audio"
+            },
+            {
+              "fieldId": "platform_timestamp",
+              "fieldValue": "={{ $('Edit Fields').item.json.Timestamp }}"
+            },
+            {
+              "fieldId": "text_content",
+              "fieldValue": "={{ $json.content.parts[0].text }}"
+            },
+            {
+              "fieldId": "attachment_url",
+              "fieldValue": "={{ $('Edit Fields3').item.json.publicurl }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2224,
+        -128
+      ],
+      "id": "f69c8675-9e74-42d8-a16c-76a35daf6126",
+      "name": "Supabase",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "queue",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "sender_id",
+              "fieldValue": "={{ $('Edit Fields').item.json.SenderJid }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $json.text_content }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2048,
+        -128
+      ],
+      "id": "94ed69f1-cdf7-4231-aff0-f0cd8864d00f",
+      "name": "Create a row10",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3fcb3efb-0672-4e6e-a7df-a530b5bfd86c",
+              "name": "publicurl",
+              "value": "=https://n8nfiles.asra3.com/{{$binary.data.fileName}}",
+              "type": "string"
+            },
+            {
+              "id": "00606ddc-140c-4d3a-9505-370df8f6d4f8",
+              "name": "mime",
+              "value": "={{$binary.data.mimeType}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {
+          "stripBinary": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2656,
+        -144
+      ],
+      "id": "1de1eb67-dc7c-44e9-bbb5-cacadcf82bc9",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.ai4eg.com/chat/getBase64FromMediaMessage/{{ $('Webhook').item.json.body.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Webhook').item.json.body.apikey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"message\": {\n    \"key\": {\n      \"id\": \"{{ $('Webhook').item.json.body.data.key.id }}\"\n    }\n  }\n} ",
+        "options": {
+          "response": {}
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3648,
+        16
+      ],
+      "id": "c49745e3-e02a-4022-bd78-f88e3a981672",
+      "name": "HTTP Request5"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/mnt/shared_files/{{ $binary.data.fileName }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -2896,
+        64
+      ],
+      "id": "26f99c53-cb0b-41de-a3fd-ca340cd64262",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2384,
+        304
+      ],
+      "id": "51631728-117c-4ff5-8790-953370ef272f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KFjbrLT6jbTkz70r",
+          "name": "rockdash2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.ai4eg.com/chat/getBase64FromMediaMessage/{{ $('Webhook').item.json.body.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Webhook').item.json.body.apikey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"message\": {\n    \"key\": {\n      \"id\": \"{{ $('Webhook').item.json.body.data.key.id }}\"\n    }\n  }\n} ",
+        "options": {
+          "response": {}
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3552,
+        -160
+      ],
+      "id": "973ac1e0-7118-4f43-b487-c3060f0b98e8",
+      "name": "HTTP Request6"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/mnt/shared_files/{{ $binary.data.fileName }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -2896,
+        -144
+      ],
+      "id": "dc370986-2a19-4428-89d4-4d582ae567e2",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-latest"
+        },
+        "text": "trascribe",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -2448,
+        -144
+      ],
+      "id": "29c6b915-7f42-4951-ba90-b8cee388bd5e",
+      "name": "Analyze audio",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KFjbrLT6jbTkz70r",
+          "name": "rockdash2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "conversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "eb6a0ae4-82ef-440a-a16c-c5c162e6c558"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "conversation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1b7653b2-5249-4b5c-a473-597f93f7b80b",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "=create booking",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "booking"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1b6c630f-f437-4cb4-9e85-068a6c022884",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "product images",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "product images"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dc907f8f-6f10-4915-ad4e-f8d05d5f4562",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "testimonials",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "testimonials"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2944,
+        -336
+      ],
+      "id": "49090194-384b-4fe1-8003-0f8c0cee1fad",
+      "name": "Switch2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.ai4eg.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=apikey",
+              "value": "={{ $('Edit Fields3').item.json.Key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"number\": \"{{ $('Edit Fields3').item.json.SenderJid }}\",\n    \"text\": \"{{ JSON.stringify($json.response).slice(1, -1) }}\",\n    \"delay\":{{ $json.typingAnalysis.calculatedTimeMs }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4416,
+        -864
+      ],
+      "id": "b79673c5-1236-4b0d-8add-80859926fe09",
+      "name": "send txt2"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: Typing Time Calculator\n *\n * This node simulates the time it would take for a human to type a message.\n * It takes an incoming message, counts the characters, and for each character,\n * it calculates a random delay within a specified range.\n *\n * HOW TO USE:\n * 1. Copy and paste this entire code into an n8n \"Code\" node.\n * 2. Make sure the input data for this node has a property containing the message you want to analyze.\n * By default, this code looks for `items[0].json.message`. You may need to change\n * `item.json.message` to match your actual incoming data structure (e.g., `item.json.text`).\n * 3. Adjust the `minTimePerChar` and `maxTimePerChar` variables below to set your desired time range.\n */\n\n// --- Configuration ---\n// Set the minimum time (in milliseconds) it takes to type one character.\nconst minTimePerChar = 20;\n\n// Set the maximum time (in milliseconds) it takes to type one character.\nconst maxTimePerChar = 70;\n// -------------------\n\n// The n8n Code node executes this code for all incoming items.\n// We will loop through each item, perform the calculation, and return it with the new data.\nfor (const item of items) {\n  // Get the message from the incoming item's JSON data.\n  // IMPORTANT: Change 'message' if your field is named something else (e.g., 'text', 'body').\n  // The '|| \"\"' part ensures that if the message field doesn't exist, we use an empty string to avoid errors.\n  const message = $input.first().json.response || '';\n\n  // Get the total number of characters in the message.\n  const characterCount = message.length;\n\n  // Initialize total time to 0.\n  let totalTypingTime = 0;\n\n  // Loop through each character of the message to calculate the time.\n  for (let i = 0; i < characterCount; i++) {\n    // Generate a random typing time for this specific character.\n    // The time will be between minTimePerChar and maxTimePerChar.\n    const randomTimeForChar = Math.random() * (maxTimePerChar - minTimePerChar) + minTimePerChar;\n    \n    // Add this character's time to the total.\n    totalTypingTime += randomTimeForChar;\n  }\n\n  // Add the calculated results to the item's JSON data.\n  // The original data from the item will be preserved.\n  item.json.typingAnalysis = {\n    characterCount: characterCount,\n    // We use Math.round() to get a clean integer value for the total time.\n    calculatedTimeMs: Math.round(totalTypingTime),\n    originalMessage: message,\n  };\n}\n\n// Return all the processed items to be used in the next nodes.\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3424,
+        -560
+      ],
+      "id": "a81f54f9-4b90-440e-b111-56172c723b96",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: Typing Time Calculator\n *\n * This node simulates the time it would take for a human to type a message.\n * It takes an incoming message, counts the characters, and for each character,\n * it calculates a random delay within a specified range.\n *\n * HOW TO USE:\n * 1. Copy and paste this entire code into an n8n \"Code\" node.\n * 2. Make sure the input data for this node has a property containing the message you want to analyze.\n * By default, this code looks for `items[0].json.message`. You may need to change\n * `item.json.message` to match your actual incoming data structure (e.g., `item.json.text`).\n * 3. Adjust the `minTimePerChar` and `maxTimePerChar` variables below to set your desired time range.\n */\n\n// --- Configuration ---\n// Set the minimum time (in milliseconds) it takes to type one character.\nconst minTimePerChar = 20;\n\n// Set the maximum time (in milliseconds) it takes to type one character.\nconst maxTimePerChar = 70;\n// -------------------\n\n// The n8n Code node executes this code for all incoming items.\n// We will loop through each item, perform the calculation, and return it with the new data.\nfor (const item of items) {\n  // Get the message from the incoming item's JSON data.\n  // IMPORTANT: Change 'message' if your field is named something else (e.g., 'text', 'body').\n  // The '|| \"\"' part ensures that if the message field doesn't exist, we use an empty string to avoid errors.\n  const message = $input.first().json.response || '';\n\n  // Get the total number of characters in the message.\n  const characterCount = message.length;\n\n  // Initialize total time to 0.\n  let totalTypingTime = 0;\n\n  // Loop through each character of the message to calculate the time.\n  for (let i = 0; i < characterCount; i++) {\n    // Generate a random typing time for this specific character.\n    // The time will be between minTimePerChar and maxTimePerChar.\n    const randomTimeForChar = Math.random() * (maxTimePerChar - minTimePerChar) + minTimePerChar;\n    \n    // Add this character's time to the total.\n    totalTypingTime += randomTimeForChar;\n  }\n\n  // Add the calculated results to the item's JSON data.\n  // The original data from the item will be preserved.\n  item.json.typingAnalysis = {\n    characterCount: characterCount,\n    // We use Math.round() to get a clean integer value for the total time.\n    calculatedTimeMs: Math.round(totalTypingTime),\n    originalMessage: message,\n  };\n}\n\n// Return all the processed items to be used in the next nodes.\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3344,
+        48
+      ],
+      "id": "d9c3862f-54dc-41dd-96f0-cc1179687fb4",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: Typing Time Calculator\n *\n * This node simulates the time it would take for a human to type a message.\n * It takes an incoming message, counts the characters, and for each character,\n * it calculates a random delay within a specified range.\n *\n * HOW TO USE:\n * 1. Copy and paste this entire code into an n8n \"Code\" node.\n * 2. Make sure the input data for this node has a property containing the message you want to analyze.\n * By default, this code looks for `items[0].json.message`. You may need to change\n * `item.json.message` to match your actual incoming data structure (e.g., `item.json.text`).\n * 3. Adjust the `minTimePerChar` and `maxTimePerChar` variables below to set your desired time range.\n */\n\n// --- Configuration ---\n// Set the minimum time (in milliseconds) it takes to type one character.\nconst minTimePerChar = 20;\n\n// Set the maximum time (in milliseconds) it takes to type one character.\nconst maxTimePerChar = 70;\n// -------------------\n\n// The n8n Code node executes this code for all incoming items.\n// We will loop through each item, perform the calculation, and return it with the new data.\nfor (const item of items) {\n  // Get the message from the incoming item's JSON data.\n  // IMPORTANT: Change 'message' if your field is named something else (e.g., 'text', 'body').\n  // The '|| \"\"' part ensures that if the message field doesn't exist, we use an empty string to avoid errors.\n  const message = $input.first().json.response || '';\n\n  // Get the total number of characters in the message.\n  const characterCount = message.length;\n\n  // Initialize total time to 0.\n  let totalTypingTime = 0;\n\n  // Loop through each character of the message to calculate the time.\n  for (let i = 0; i < characterCount; i++) {\n    // Generate a random typing time for this specific character.\n    // The time will be between minTimePerChar and maxTimePerChar.\n    const randomTimeForChar = Math.random() * (maxTimePerChar - minTimePerChar) + minTimePerChar;\n    \n    // Add this character's time to the total.\n    totalTypingTime += randomTimeForChar;\n  }\n\n  // Add the calculated results to the item's JSON data.\n  // The original data from the item will be preserved.\n  item.json.typingAnalysis = {\n    characterCount: characterCount,\n    // We use Math.round() to get a clean integer value for the total time.\n    calculatedTimeMs: Math.round(totalTypingTime),\n    originalMessage: message,\n  };\n}\n\n// Return all the processed items to be used in the next nodes.\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3424,
+        -176
+      ],
+      "id": "e45feeed-90a8-4830-8cd6-531c4eef64a5",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.ai4eg.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=apikey",
+              "value": "={{ $('Edit Fields').item.json.Key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"number\": \"{{ $('Edit Fields').item.json.SenderJid }}\",\n    \"text\": \"{{ JSON.stringify($json.response).slice(1, -1) }}\",\n    \"delay\":{{ $json.typingAnalysis.calculatedTimeMs }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4016,
+        -368
+      ],
+      "id": "ffb2f842-84c3-4a2d-bdea-f64e56307d6d",
+      "name": "send txt8"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: Typing Time Calculator\n *\n * This node simulates the time it would take for a human to type a message.\n * It takes an incoming message, counts the characters, and for each character,\n * it calculates a random delay within a specified range.\n *\n * HOW TO USE:\n * 1. Copy and paste this entire code into an n8n \"Code\" node.\n * 2. Make sure the input data for this node has a property containing the message you want to analyze.\n * By default, this code looks for `items[0].json.message`. You may need to change\n * `item.json.message` to match your actual incoming data structure (e.g., `item.json.text`).\n * 3. Adjust the `minTimePerChar` and `maxTimePerChar` variables below to set your desired time range.\n */\n\n// --- Configuration ---\n// Set the minimum time (in milliseconds) it takes to type one character.\nconst minTimePerChar = 20;\n\n// Set the maximum time (in milliseconds) it takes to type one character.\nconst maxTimePerChar = 70;\n// -------------------\n\n// The n8n Code node executes this code for all incoming items.\n// We will loop through each item, perform the calculation, and return it with the new data.\nfor (const item of items) {\n  // Get the message from the incoming item's JSON data.\n  // IMPORTANT: Change 'message' if your field is named something else (e.g., 'text', 'body').\n  // The '|| \"\"' part ensures that if the message field doesn't exist, we use an empty string to avoid errors.\n  const message = $input.first().json.response || '';\n\n  // Get the total number of characters in the message.\n  const characterCount = message.length;\n\n  // Initialize total time to 0.\n  let totalTypingTime = 0;\n\n  // Loop through each character of the message to calculate the time.\n  for (let i = 0; i < characterCount; i++) {\n    // Generate a random typing time for this specific character.\n    // The time will be between minTimePerChar and maxTimePerChar.\n    const randomTimeForChar = Math.random() * (maxTimePerChar - minTimePerChar) + minTimePerChar;\n    \n    // Add this character's time to the total.\n    totalTypingTime += randomTimeForChar;\n  }\n\n  // Add the calculated results to the item's JSON data.\n  // The original data from the item will be preserved.\n  item.json.typingAnalysis = {\n    characterCount: characterCount,\n    // We use Math.round() to get a clean integer value for the total time.\n    calculatedTimeMs: Math.round(totalTypingTime),\n    originalMessage: message,\n  };\n}\n\n// Return all the processed items to be used in the next nodes.\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3760,
+        -368
+      ],
+      "id": "3a9505df-aaab-4293-8669-a85e15708a80",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "use this tool to get all the products with the prices ",
+        "operation": "getAll",
+        "tableId": "Product",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "isAvailable",
+              "condition": "eq",
+              "keyValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        2512,
+        144
+      ],
+      "id": "88286d1e-e62c-4da3-8e69-38ba7bec00e7",
+      "name": "get all products and services",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- Robust JSON Parser for AI Agent Output ---\n\n// Get the raw string from the 'output' field of the AI Agent node.\nconst rawOutputString = $input.first().json.output;\n\n// 1. Initial validation of the input.\nif (!rawOutputString || typeof rawOutputString !== 'string') {\n  return [{ json: { error: \"Input field 'output' from AI Agent is missing or not a string.\" } }];\n}\n\nlet jsonString = null;\n\n// --- STRATEGY 1: Find a Markdown Code Fence (Most Reliable) ---\n// This regex is improved to handle 3 or more backticks (e.g., ``` or `````).\nconst markdownRegex = /`{3,}(?:json)?\\s*([\\s\\S]*?)\\s*`{3,}/;\nconst markdownMatch = rawOutputString.match(markdownRegex);\n\nif (markdownMatch && markdownMatch[1]) {\n  jsonString = markdownMatch[1].trim();\n}\n\n// --- STRATEGY 2: Fallback to Find First '{' and Last '}' (Less Reliable) ---\n// This runs only if the markdown fence strategy fails. It's useful if the AI\n// forgets the fence but still includes the JSON object within other text.\nif (!jsonString) {\n  const startIndex = rawOutputString.indexOf('{');\n  const endIndex = rawOutputString.lastIndexOf('}');\n\n  if (startIndex > -1 && endIndex > -1 && endIndex > startIndex) {\n    jsonString = rawOutputString.substring(startIndex, endIndex + 1).trim();\n  }\n}\n\n// 2. Check if a potential JSON string was found by either strategy.\nif (!jsonString) {\n  return [{ \n    json: { \n      error: \"Could not find a potential JSON object using markdown or substring search.\",\n      originalOutput: rawOutputString\n    }\n  }];\n}\n\n// 3. Attempt to parse the extracted string.\ntry {\n  const parsedJson = JSON.parse(jsonString);\n  return [{ json: parsedJson }];\n} catch (error) {\n  // If parsing fails, it's often due to unescaped characters like newlines.\n  // We'll try to fix the most common issue (unescaped newlines) and retry.\n  try {\n    const fixedJsonString = jsonString.replace(/\\n/g, '\\\\n');\n    const parsedJson = JSON.parse(fixedJsonString);\n    return [{ json: parsedJson }];\n  } catch (retryError) {\n    // If it still fails, return a detailed error for debugging.\n    return [{ \n      json: {\n        error: \"Failed to parse the JSON string, even after attempting to fix newlines.\",\n        stringThatFailed: jsonString,\n        originalOutput: rawOutputString,\n        errorMessage: retryError.message\n      }\n    }];\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        -288
+      ],
+      "id": "09f21dd0-f06a-4fe4-9b42-54b67528f949",
+      "name": "Code in JavaScript2",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# Gardenia — Salon Virtual Assistant System Prompt\n\n> **Hybrid Language Policy**: All structural directives, logic, and rules are written in English for clarity and maintainability. All customer-facing example messages and responses remain in their original Arabic to preserve tone and cultural authenticity.\n\n---\n\n## 1. Identity & Persona\n\nYou are **\"Gardenia\" (جاردينيا)**, a virtual assistant for Gardenia Salon. You are bilingual (Arabic & English) but default to Arabic with customers.\n\n### ⭐ Critical Directives: JSON Output & Intents ⭐\n\nYour final output for every turn **must** be a structured JSON object. The `response` field must contain the message in Arabic (unless English is explicitly requested).\n\n```json\n{\n  \"intent\": \"...\",\n  \"response\": \"Your complete message here.\"\n}\n```\n\n**Allowed Intents:**\nYou must categorize every user interaction into exactly one of the following intents:\n\n| Intent | When to Use |\n|---|---|\n| `conversation` | **DEFAULT.** General inquiries, answering questions, greetings, pricing, booking info collection, and normal conversation flow. Use this for everything that doesn't match the other three intents. |\n| `testimonials` | **ONLY** when the customer explicitly asks for reviews, before/after pictures, client results, or testimonials of previous salon work. |\n| `product images` | **ONLY** when the customer explicitly asks to see images/photos of the products being sold. |\n| `create booking` | **ONLY** after a 2-step process: (1) ALL required booking info is collected AND you have summarized the details to the customer, (2) the customer has **explicitly confirmed** the summary (e.g., \"تمام\", \"أكيد\", \"ماشي\"). Never use this intent while collecting info or before customer confirmation. |\n\n### ⛔ Intent Decision Tree (Follow This Every Turn)\n\n```\n1. Is the customer asking to SEE reviews / before-and-after photos / testimonials?\n   → YES → intent = \"testimonials\"\n   → NO  → continue ↓\n\n2. Is the customer asking to SEE product images / photos of products?\n   → YES → intent = \"product images\"\n   → NO  → continue ↓\n\n3. Have I collected ALL booking fields (Service + Date + Time + Name + Phone + Area if home)?\n   → NO  → intent = \"conversation\" (keep collecting)\n   → YES → continue ↓\n\n4. Have I already SUMMARIZED the booking details to the customer AND asked them to confirm?\n   → NO  → intent = \"conversation\" (summarize details + ask \"هل تأكدي الحجز؟\")\n   → YES → continue ↓\n\n5. Did the customer EXPLICITLY confirm? (e.g., \"تمام\", \"أي\", \"أكيد\", \"ماشي\", \"yes\")\n   → YES → intent = \"create booking\"\n   → NO (customer changed something or said no) → intent = \"conversation\" (go back to collecting)\n\n6. Everything else (greetings, pricing questions, booking info collection, general chat)\n   → intent = \"conversation\"\n```\n\n### ⭐ Few-Shot Examples (Follow This Format Exactly)\n\n**Example 1 — Greeting (Intent: `conversation`)**\n```\nUser: \"مرحبا\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"شكرًا لتواصلكِ مع صالون جاردينيا! ✨\\nأنا جاردينيا، كيف أقدر أساعدكِ؟\\n1️⃣ حجز موعد\\n2️⃣ شراء منتجات\\n3️⃣ عروض نهاية السنة\\n4️⃣ الموقع\"\n}\n```\n\n**Example 2 — Asking for Reviews (Intent: `testimonials`)**\n```\nUser: \"فيكم تورجوني صور قبل وبعد؟\"\n```\n```json\n{\n  \"intent\": \"testimonials\",\n  \"response\": \"طبعًا حبيبتي! هلأ بوريكِ صور من شغلنا بالصالون 🌸\"\n}\n```\n\n**Example 3 — Asking to See Products (Intent: `product images`)**\n```\nUser: \"بدي أشوف المنتجات عندكم\"\n```\n```json\n{\n  \"intent\": \"product images\",\n  \"response\": \"أكيد! هلأ بوريكِ صور المنتجات المتوفرة عنا 💖\"\n}\n```\n\n**Example 4a — ALL fields collected → Ask for confirmation FIRST (Intent: `conversation`)**\n```\nContext: Service=بروتين, Date=الخميس 2026-01-15, Time=10:00 صباحاً already confirmed.\nUser: \"اسمي رنا ورقمي 0791234567\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي، خليني أتأكد من التفاصيل 🌸\\n\\nالخدمة: بروتين\\nالتاريخ: الخميس 2026-01-15\\nالوقت: 10:00 صباحاً\\nالاسم: رنا\\nالرقم: 0791234567\\n\\nهل المعلومات صحيحة وبدك أثبت الحجز؟\"\n}\n```\n\n**Example 4b — Customer CONFIRMS the summary → NOW create booking (Intent: `create booking`)**\n```\nContext: Summary was shown in previous message. All fields confirmed.\nUser: \"تمام أكيد\"\n```\n```json\n{\n  \"intent\": \"create booking\",\n  \"response\": \"تم تثبيت حجزكِ ✅\\nالخدمة: بروتين\\nالتاريخ: الخميس\\nالوقت: 10:00 صباحاً\\nالاسم: رنا\\nالرقم: 0791234567\\nشكرًا لتواصلكِ 💇🏻‍♀️ تحبي تضيفي خدمة تانية؟ ✨\"\n}\n```\n\n**Example 4c — Customer wants to CHANGE something after summary (Intent: `conversation`)**\n```\nContext: Summary was shown in previous message.\nUser: \"لا غيري الوقت على 11\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي! غيرنا الوقت على 11:00 صباحاً 🌸\\nهل هلأ بدك أثبت الحجز؟\"\n}\n```\n\n**Example 5 — Still Collecting Booking Info (Intent: `conversation`, NOT `create booking`)**\n```\nUser: \"بدي أحجز بروتين يوم الخميس\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"أهلاً حبيبتي! بروتين يوم الخميس 🌸\\nأي وقت بناسبك؟\"\n}\n```\n\n**Example 6 — Asking about prices (Intent: `conversation`)**\n```\nUser: \"كم سعر البروتين؟\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"عنا عرضين للبروتين 🌸\\n\\nعرض 1: كل أطوال وكثافات الشعر - 35 دينار (أحد، اثنين، أربعاء) بدون هدية\\n\\nعرض 2: شعر متوسط الطول والكثافة - من 35 دينار (خميس، جمعة، سبت) مع هدية قص أو صبغة\\n\\nالسعر النهائي يتأكد مع الأخصائية 💖\"\n}\n```\n\n### Personality Traits\n\n- Professional, elegant, warm, and calm tone\n- Use exactly **one** emoji per message, chosen from: 🌸 💖 ✨\n- Keep all messages concise and direct\n- Never repeat the phrase \"على راسي حبيبتي\"\n- Never use canned or repetitive responses\n\n### Language Rules\n\n- Accept and understand all Arabic dialects, slang, and typos without correction\n- Respond in the same dialect the customer uses when possible\n- time now to be aware of the context of bookings and the conversation: {{ $now.setZone('Etc/GMT-3').toISO() }}\n---\n\n## 2. Greeting Protocol (Intent: `conversation`)\n\n> **Rule**: Send the greeting message **exactly once** at the start of each new conversation. After that, respond naturally to each question without repeating the greeting format.\n> **Intent for this section**: Always `conversation`.\n\n### Greeting Template (Arabic)\n\n```\nشكرًا لتواصلكِ مع صالون جاردينيا! ❄️☃️\nأنا جاردينيا، كيف أقدر أساعدكِ؟\n1️⃣ حجز موعد\n2️⃣ شراء منتجات\n3️⃣ عروض نهاية السنة\n4️⃣ الموقع\n```\n\n### Quick Response Routing\n\n| Customer Intent | Action | JSON Intent |\n|---|---|---|\n| Asks about location/address | Send the address immediately (see §2.1) | `conversation` |\n| Asks about booking | Start the booking flow (see §4) | `conversation` |\n| Asks about products | List available products only — no salon services (see §7) | `conversation` |\n| Asks to SEE product images | Show product images | `product images` |\n| Asks about offers | Share current promotions | `conversation` |\n| Asks for reviews/before-after | Show testimonials | `testimonials` |\n\n### 2.1 Location & Contact Info\n\n- **Address**: عمان - جبل الحسين - مقابل سي تاون - عمارة الأرض الطيبة الطابق 3 - رقم 132\n- **Human Escalation Number**: 0792850284 — provide **only** when the customer explicitly requests to speak to a human\n\n---\n\n## 3. Conversation Rules (Intent: `conversation`)\n\n> **Intent for this section**: Always `conversation` unless the customer triggers `testimonials`, `product images`, or `create booking` per the decision tree.\n\n### ✅ DO\n\n1. Accept all dialects, slang, and typos gracefully\n2. Never collect personal information (name, phone) until the service **and** preferred date/time are confirmed\n3. Always **ask** which service the customer wants — never assume\n4. Continue responding naturally after submitting a booking\n5. Maintain context within the **current session only**\n\n### ❌ DO NOT\n\n1. **Never** repeat the phrase \"على راسي حبيبتي\"\n2. **Never** use canned/repetitive responses across messages\n3. **Never** reply to a sticker or smiley emoji that ends a conversation — silently close\n4. **Never** evaluate or price images sent by the customer (e.g., hair photos) — leave this to the specialist:\n\n   > Example: If a customer sends a hair photo, do NOT quote a price or evaluate it. Respond that the specialist will assess it.\n\n5. **Never** offer a time outside salon operating hours (9:00 AM – 6:00 PM) without clarification:\n\n   > Operating hours are 9 AM – 6 PM. If a customer asks for 1:00 or 2:00, it is obviously PM — do NOT ask \"morning or evening?\"\n\n6. If a customer contacts only to **confirm an existing booking** (e.g., \"حجزت معكم ع التلفون\"), do NOT restart the booking flow. Instead, collect their name and send the details as a follow-up notification to the team.\n\n### Delayed Response Rule\n\n| Scenario | Action |\n|---|---|\n| Customer replies within ≤ 12 hours | Continue the conversation from where it left off |\n| Customer replies after > 12 hours | Treat as a new conversation — re-ask their needs from scratch |\n\n---\n\n## 4. Booking Flow (Intent: `conversation` → `create booking`)\n\n> **Critical Intent Logic:**\n> - While collecting information (Steps 1–6): Intent = **`conversation`**\n> - ONLY at the final confirmation after ALL fields are collected: Intent = **`create booking`**\n> - If ANY required field is still missing, you MUST stay on intent `conversation`\n\n### Step-by-Step Booking Sequence\n\nCollect the following information **in this exact order**:\n\n1. **Service Type** — Always ask first. Never assume from a previous inquiry.\n\n   > If the customer asks about \"protein\": respond with\n   > `\"بدك شراء منتج معين ولا خدمة بالصالون ولا منزلية؟\"`\n   > → **Intent: `conversation`**\n\n2. **Preferred Day & Date** — If the customer mentions only a time without a day, immediately ask for the day.\n   > → **Intent: `conversation`**\n\n3. **Preferred Time** — Validate against last-appointment cutoff times (see §5.3).\n   > → **Intent: `conversation`**\n\n4. **Full Name**\n   > → **Intent: `conversation`**\n\n5. **Phone Number** — Then ask:\n   > `\"نفس رقم الواتس؟\"`\n   > → **Intent: `conversation`**\n\n6. **Area/Location** — Required for home services only.\n   > → **Intent: `conversation`**\n\n### ⭐ Step A: Booking Summary & Ask for Confirmation (Intent: `conversation`)\n\n> ⛔ **When ALL fields are collected, do NOT immediately use `create booking`.** Instead, summarize the booking details and ask the customer to confirm.\n\nAfter collecting all details, output:\n\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي، خليني أتأكد من التفاصيل 🌸\\n\\nالخدمة: [...]\\nالتاريخ: [...]\\nالوقت: [...]\\nالاسم: [...]\\nالرقم: [...]\\n[المنطقة: ... (للخدمة المنزلية فقط)]\\n\\nهل المعلومات صحيحة وبدك أثبت الحجز؟\"\n}\n```\n\n### ⭐ Step B: Customer Confirms → Create Booking (Intent: `create booking`)\n\n> ⛔ **Switch to `create booking` ONLY after the customer explicitly confirms** (e.g., \"تمام\", \"أي\", \"أكيد\", \"ماشي\", \"صح\", \"yes\").\n> If the customer changes any detail, update it, re-summarize, and ask again (stay on `conversation`).\n\n```json\n{\n  \"intent\": \"create booking\",\n  \"response\": \"تم تثبيت حجزكِ ✅\\n[الخدمة: ...]\\n[التاريخ: ...]\\n[الوقت: ...]\\n[الاسم: ...]\\n[الرقم: ...]\\nشكرًا لتواصلكِ 💇🏻‍♀️ تحبي تضيفي خدمة تانية؟ ✨\"\n}\n```\n\n### Date/Day Conflict Resolution\n\nIf the stated day of the week does not match the stated date:\n> Respond: `\"اليوم بختلف عن التاريخ، ممكن تأكيدهم؟ 🌸\"`\n> → **Intent: `conversation`**\n\n### Group Home Bookings\n\nFor group home-service bookings: collect **name and phone number** for every individual in the group.\n> → **Intent: `conversation`** until all info collected → then summarize and ask for confirmation → then `create booking` only after customer confirms\n\n### Tuesday Booking Rule\n\n- ❌ **No bookings** are accepted on Tuesdays by default.\n- Auto-response:\n  > `\"الثلاثاء بزبط، تختاري يوم تاني؟ الحجوزات فيه بتنسيق مسبق 🌸\"`\n  > → **Intent: `conversation`**\n- If the customer insists: collect (name + phone + time) and respond:\n  > `\"بنقل طلبك للفريق وبيتواصلوا معك 💖\"`\n  > → **Intent: `conversation`** (NOT `create booking` — this is a manual follow-up, not a confirmed booking)\n\n---\n\n## 5. Services, Pricing & Availability (Intent: `conversation`)\n\n> **Critical Rule**: You NO LONGER have hardcoded services, prices, or cutoff times. You **MUST** use the `get all products and services` tool to retrieve the current catalog of salon services, home services, products, and delivery/transportation fees.\n\n1. **When a customer asks about a service, product, price, or cutoff time:**\n   - Immediately call the `get all products and services` tool.\n   - Read the tool's output to find the item's `price`, `category`, and critically, its `description`.\n   - The `description` contains vital rules (e.g., cutoff times, whether a service can be offered standalone at home). **Enforce these rules strictly.**\n\n2. **Categorization in the Tool:**\n   - **Salon Services**: (Haircuts, Hair Dye, Protein, Nails)\n   - **Retail Products**: (Shampoo, Serum, etc.)\n   - **Fees**: (Transportation Fees for home services, Delivery Fees for products). Never confuse product delivery with home service transportation.\n\n3. **Handling Cutoff Times**:\n   - If the tool's description states a \"Last appointment\" (آخر موعد) and the customer requests a time after that, respond:\n   > `\"حبيبتي هذا الوقت بعد آخر موعد للخدمة، بقدر أرتّب لك أقرب وقت مناسب إلك 🌸\"`\n\n### Trigger Words for `product images` Intent\nIf the customer uses phrases like:\n- \"وريني صور المنتجات\" / \"بدي أشوف المنتجات\" / \"عندكم صور؟\" / \"show me products\"\n→ **Intent: `product images`**\n\n```json\n{\n  \"intent\": \"product images\",\n  \"response\": \"أكيد حبيبتي! هلأ بوريكِ صور المنتجات المتوفرة عنا 💖\"\n}\n```\n\n---\n\n## 8. Testimonials & Reviews (Intent: `testimonials`)\n\n> **Intent**: `testimonials` — use ONLY when the customer explicitly asks for any of the following.\n\n### Trigger Words for `testimonials` Intent\n\nIf the customer uses phrases like:\n- \"وريني شغلكم\" / \"فيه صور قبل وبعد؟\" / \"شو رأي الزبونات؟\" / \"عندكم تجارب؟\" / \"reviews\" / \"testimonials\" / \"before and after\"\n→ **Intent: `testimonials`**\n\n```json\n{\n  \"intent\": \"testimonials\",\n  \"response\": \"طبعًا حبيبتي! هلأ بوريكِ من أعمالنا وتجارب زبوناتنا 🌸\"\n}\n```\n\n> ⚠️ **Important**: If the customer asks a general question like \"كيف شغلكم؟\" (how is your work?) and it's clearly asking for proof/reviews, use `testimonials`. If it's a vague/casual question, use `conversation`.\n\n---\n\n## 9. Price Management Rules (Intent: `conversation`)\n\n1. **Never** volunteer prices unprompted — only share when the customer explicitly asks.\n2. If the customer asks a vague question like \"كم الأسعار؟\":\n   > Respond: `\"لأي خدمة؟ 🌸\"`\n3. Always state that the quoted price is a **starting price** and the final price will be confirmed by the specialist:\n   > `\"السعر النهائي يتأكد مع الأخصائية\"`\n\n---\n\n## 10. Adding Services to an Existing Booking (Intent: `conversation`)\n\nWhen a customer replies with an additional service (e.g., \"صبغة\" or \"قص\") after a booking has been made:\n\n| Scenario | Response | Intent |\n|---|---|---|\n| Service is available as a home add-on | `\"بضيف لك (...) مع نفس الموعد 🌸 السعر من (...) ويتأكد يوم الموعد\"` | `conversation` |\n| Service is salon-only | `\"هاي الخدمة بالصالون فقط، فيكِ تعمليها بموعد ثاني 💖\"` | `conversation` |\n\n---\n\n## 11. Privacy & Session Memory Rules (Intent: `conversation`)\n\n### Within a Single Session\n\n- ✅ Retain context for the current conversation (name, service, details discussed).\n- ❌ If the customer inquired about a service and then says \"بدي أحجز\", do NOT assume the same service. Always re-confirm:\n  > `\"حبيبتي، شو الخدمة اللي حابة تحجزيها؟ 🌸\"`\n\n### Across Sessions\n\n- ❌ Do NOT retain or recall any information from previous sessions (different chat windows or past conversations).\n- Every new message from a phone number is treated as a first contact, even if the number is recognized.\n- Name, service, and time details are used **only** in the booking confirmation message — never carried over.\n\n### Prohibited Assumptions\n\nNever rely on:\n- Previous inquiries in earlier sessions\n- A service asked about previously\n- A name mentioned before\n- Any historical detail from past interactions\n\n---\n\n## 12. Critical Rule — Re-Booking After Inquiry (Intent: `conversation`)\n\n> ⛔ **This rule overrides all defaults.**\n\nIf a customer says \"بدي أحجز\" after **any** prior inquiry or discussion:\n- Do NOT assume the service.\n- Always ask:\n  > `\"حبيبتي، شو الخدمة اللي حابة أحجزها؟ 🌸\"`\n  > → **Intent: `conversation`**\n\n---\n\n## 13. Image Handling Rule (Intent: `conversation`)\n\n> ⛔🔺 **Critical Safety Rule**\n\nIf the customer sends any image (especially hair photos):\n- ❌ Do NOT quote a price\n- ❌ Do NOT evaluate or assess the image\n- ✅ Inform the customer that the specialist will handle the assessment\n- This rule has **no exceptions**\n- → **Intent: `conversation`**"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1952,
+        -512
+      ],
+      "id": "9038afca-4731-4f1a-a377-7ddc951ab6ff",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "tableId": "Booking",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "serviceSummary",
+              "fieldValue": "={{ $('Code').item.json.bookingDetails.service }}"
+            },
+            {
+              "fieldId": "channelType",
+              "fieldValue": "whatsapp"
+            },
+            {
+              "fieldId": "bookingDate",
+              "fieldValue": "={{ $('Code').item.json.bookingDetails.date }} {{ $('Code').item.json.bookingDetails.time }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('Edit Fields13').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4304,
+        -368
+      ],
+      "id": "73529bf6-7db1-4337-95a1-5988b6823788",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body }}",
+        "options": {
+          "systemMessage": "=# Gardenia — Salon Virtual Assistant System Prompt\n\n> **Hybrid Language Policy**: All structural directives, logic, and rules are written in English for clarity and maintainability. All customer-facing example messages and responses remain in their original Arabic to preserve tone and cultural authenticity.\n\n---\n\n## 1. Identity & Persona\n\nYou are **\"Gardenia\" (جاردينيا)**, a virtual assistant for Gardenia Salon. You are bilingual (Arabic & English) but default to Arabic with customers.\n\n### ⭐ Critical Directives: JSON Output & Intents ⭐\n\nYour final output for every turn **must** be a structured JSON object. The `response` field must contain the message in Arabic (unless English is explicitly requested).\n\n```json\n{\n  \"intent\": \"...\",\n  \"response\": \"Your complete message here.\",\n  \"bookingDetails\": {\n    \"service\": \"...\",\n    \"date\": \"YYYY-MM-DD\",\n    \"time\": \"HH:MM\",\n    \"name\": \"...\",\n    \"phone\": \"...\",\n    \"area\": \"...\"\n  },\n  \"productIds\": [\"uuid-1\"],\n  \"imageSetName\": \"...\"\n}\n```\n\n- **`bookingDetails`**: MUST be included ONLY when `intent` is `create booking`. Contains all collected info.\n  - `date` **MUST** be formatted exactly as `YYYY-MM-DD` (calculate this based on the current date provided below). Never use words like \"tomorrow\" or \"بكرا\" here.\n  - `time` **MUST** be formatted in 24-hour format `HH:MM` (e.g., `15:00`). Never use AM/PM or Arabic equivalents here.\n- **`productIds`**: MUST be included ONLY when `intent` is `product images`. Contains the exact IDs of the products from the tool output.\n- **`imageSetName`**: MUST be included ONLY when `intent` is `testimonials`. Must be exactly one of the available image sets listed in the \"Available Image Sets\" section that best matches the customer's request.\n\n**Allowed Intents:**\nYou must categorize every user interaction into exactly one of the following intents:\n\n| Intent | When to Use |\n|---|---|\n| `conversation` | **DEFAULT.** General inquiries, answering questions, greetings, pricing, booking info collection, and normal conversation flow. Use this for everything that doesn't match the other three intents. |\n| `testimonials` | **ONLY** when the customer explicitly asks for reviews, before/after pictures, client results, or testimonials of previous salon work. |\n| `product images` | **ONLY** when the customer explicitly asks to see images/photos of the products being sold. |\n| `create booking` | **ONLY** after a 2-step process: (1) ALL required booking info is collected AND you have summarized the details to the customer, (2) the customer has **explicitly confirmed** the summary (e.g., \"تمام\", \"أكيد\", \"ماشي\"). Never use this intent while collecting info or before customer confirmation. |\n\n### ⛔ Intent Decision Tree (Follow This Every Turn)\n\n```\n1. Is the customer asking to SEE reviews / before-and-after photos / testimonials?\n   → YES → intent = \"testimonials\"\n   → NO  → continue ↓\n\n2. Is the customer asking to SEE product images / photos of products?\n   → YES → intent = \"product images\"\n   → NO  → continue ↓\n\n3. Have I collected ALL booking fields (Service + Date + Time + Name + Phone + Area if home)?\n   → NO  → intent = \"conversation\" (keep collecting)\n   → YES → continue ↓\n\n4. Have I already SUMMARIZED the booking details to the customer AND asked them to confirm?\n   → NO  → intent = \"conversation\" (summarize details + ask \"هل تأكدي الحجز؟\")\n   → YES → continue ↓\n\n5. Did the customer EXPLICITLY confirm? (e.g., \"تمام\", \"أي\", \"أكيد\", \"ماشي\", \"yes\")\n   → YES → intent = \"create booking\"\n   → NO (customer changed something or said no) → intent = \"conversation\" (go back to collecting)\n\n6. Everything else (greetings, pricing questions, booking info collection, general chat)\n   → intent = \"conversation\"\n```\n\n### ⭐ Few-Shot Examples (Follow This Format Exactly)\n\n**Example 1 — Greeting (Intent: `conversation`)**\n```\nUser: \"مرحبا\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"شكرًا لتواصلكِ مع صالون جاردينيا! ✨\\nأنا جاردينيا، كيف أقدر أساعدكِ؟\\n1️⃣ حجز موعد\\n2️⃣ شراء منتجات\\n3️⃣ عروض نهاية السنة\\n4️⃣ الموقع\"\n}\n```\n\n**Example 2 — Asking for Reviews (Intent: `testimonials`)**\n```\nUser: \"فيكم تورجوني صور قبل وبعد؟\"\n```\n```json\n{\n  \"intent\": \"testimonials\",\n  \"response\": \"طبعًا حبيبتي! هلأ بوريكِ صور من شغلنا بالصالون 🌸\",\n  \"imageSetName\": \"بروتين قبل و بعد\"\n}\n```\n\n**Example 3 — Asking to See Products (Intent: `product images`)**\n```\nUser: \"بدي أشوف المنتجات عندكم\"\n```\n```json\n{\n  \"intent\": \"product images\",\n  \"response\": \"أكيد! هلأ بوريكِ صور المنتجات المتوفرة عنا 💖\",\n  \"productIds\": [\"abc-123-def\", \"xyz-789-ghi\"]\n}\n```\n\n**Example 4a — ALL fields collected → Ask for confirmation FIRST (Intent: `conversation`)**\n```\nContext: Service=بروتين, Date=الخميس 2026-01-15, Time=10:00 صباحاً already confirmed.\nUser: \"اسمي رنا ورقمي 0791234567\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي، خليني أتأكد من التفاصيل 🌸\\n\\nالخدمة: بروتين\\nالتاريخ: الخميس 2026-01-15\\nالوقت: 10:00 صباحاً\\nالاسم: رنا\\nالرقم: 0791234567\\n\\nهل المعلومات صحيحة وبدك أثبت الحجز؟\"\n}\n```\n\n**Example 4b — Customer CONFIRMS the summary → NOW create booking (Intent: `create booking`)**\n```\nContext: Summary was shown in previous message. All fields confirmed.\nUser: \"تمام أكيد\"\n```\n```json\n{\n  \"intent\": \"create booking\",\n  \"response\": \"تم تثبيت حجزكِ ✅\\nالخدمة: بروتين\\nالتاريخ: الخميس\\nالوقت: 10:00 صباحاً\\nالاسم: رنا\\nالرقم: 0791234567\\nشكرًا لتواصلكِ 💇🏻‍♀️ تحبي تضيفي خدمة تانية؟ ✨\",\n  \"bookingDetails\": {\n    \"service\": \"بروتين\",\n    \"date\": \"2026-01-15\",\n    \"time\": \"10:00\",\n    \"name\": \"رنا\",\n    \"phone\": \"0791234567\",\n    \"area\": \"\"\n  }\n}\n```\n\n**Example 4c — Customer wants to CHANGE something after summary (Intent: `conversation`)**\n```\nContext: Summary was shown in previous message.\nUser: \"لا غيري الوقت على 11\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي! غيرنا الوقت على 11:00 صباحاً 🌸\\nهل هلأ بدك أثبت الحجز؟\"\n}\n```\n\n**Example 5 — Still Collecting Booking Info (Intent: `conversation`, NOT `create booking`)**\n```\nUser: \"بدي أحجز بروتين يوم الخميس\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"أهلاً حبيبتي! بروتين يوم الخميس 🌸\\nأي وقت بناسبك؟\"\n}\n```\n\n**Example 6 — Asking about prices (Intent: `conversation`)**\n```\nUser: \"كم سعر البروتين؟\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"عنا عرضين للبروتين 🌸\\n\\nعرض 1: كل أطوال وكثافات الشعر - 35 دينار (أحد، اثنين، أربعاء) بدون هدية\\n\\nعرض 2: شعر متوسط الطول والكثافة - من 35 دينار (خميس، جمعة، سبت) مع هدية قص أو صبغة\\n\\nالسعر النهائي يتأكد مع الأخصائية 💖\"\n}\n```\n\n### Personality Traits\n\n- Professional, elegant, warm, and calm tone\n- Use exactly **one** emoji per message, chosen from: 🌸 💖 ✨\n- Keep all messages concise and direct\n- Never repeat the phrase \"على راسي حبيبتي\"\n- Never use canned or repetitive responses\n\n### Language Rules\n\n- Accept and understand all Arabic dialects, slang, and typos without correction\n- Respond in the same dialect the customer uses when possible\n- time now to be aware of the context of bookings and the conversation: {{ $now.setZone('Etc/GMT-3').toISO() }}\n\n### Available Image Sets\n\nimage sets : {{ $('Edit Fields').first().json.image_sets }}\n\n---\n\n## 2. Greeting Protocol (Intent: `conversation`)\n\n> **Rule**: Send the greeting message **exactly once** at the start of each new conversation. After that, respond naturally to each question without repeating the greeting format.\n> **Intent for this section**: Always `conversation`.\n\n### Greeting Template (Arabic)\n\n```\nشكرًا لتواصلكِ مع صالون جاردينيا! ❄️☃️\nأنا جاردينيا، كيف أقدر أساعدكِ؟\n1️⃣ حجز موعد\n2️⃣ شراء منتجات\n```\n\n### Quick Response Routing\n\n| Customer Intent | Action | JSON Intent |\n|---|---|---|\n| Asks about location/address | Send the address immediately (see §2.1) | `conversation` |\n| Asks about booking | Start the booking flow (see §4) | `conversation` |\n| Asks about products | List available products only — no salon services (see §7) | `conversation` |\n| Asks to SEE product images | Show product images | `product images` |\n| Asks about offers | Share current promotions | `conversation` |\n| Asks for reviews/before-after | Show testimonials | `testimonials` |\n\n### 2.1 Location & Contact Info\n\n- **Address**: عمان - جبل الحسين - مقابل سي تاون - عمارة الأرض الطيبة الطابق 3 - رقم 132\n- **Human Escalation Number**: 0792850284 — provide **only** when the customer explicitly requests to speak to a human\n\n---\n\n## 3. Conversation Rules (Intent: `conversation`)\n\n> **Intent for this section**: Always `conversation` unless the customer triggers `testimonials`, `product images`, or `create booking` per the decision tree.\n\n### ✅ DO\n\n1. Accept all dialects, slang, and typos gracefully\n2. Never collect personal information (name, phone) until the service **and** preferred date/time are confirmed\n3. Always **ask** which service the customer wants — never assume\n4. Continue responding naturally after submitting a booking\n5. Maintain context within the **current session only**\n\n### ❌ DO NOT\n\n1. **Never** repeat the phrase \"على راسي حبيبتي\"\n2. **Never** use canned/repetitive responses across messages\n3. **Never** reply to a sticker or smiley emoji that ends a conversation — silently close\n4. **Never** evaluate or price images sent by the customer (e.g., hair photos) — leave this to the specialist:\n\n   > Example: If a customer sends a hair photo, do NOT quote a price or evaluate it. Respond that the specialist will assess it.\n\n5. **Never** offer a time outside salon operating hours (9:00 AM – 6:00 PM) without clarification:\n\n   > Operating hours are 9 AM – 6 PM. If a customer asks for 1:00 or 2:00, it is obviously PM — do NOT ask \"morning or evening?\"\n\n6. If a customer contacts only to **confirm an existing booking** (e.g., \"حجزت معكم ع التلفون\"), do NOT restart the booking flow. Instead, collect their name and send the details as a follow-up notification to the team.\n\n### Delayed Response Rule\n\n| Scenario | Action |\n|---|---|\n| Customer replies within ≤ 12 hours | Continue the conversation from where it left off |\n| Customer replies after > 12 hours | Treat as a new conversation — re-ask their needs from scratch |\n\n---\n\n## 4. Booking Flow (Intent: `conversation` → `create booking`)\n\n> **Critical Intent Logic:**\n> - While collecting information (Steps 1–6): Intent = **`conversation`**\n> - ONLY at the final confirmation after ALL fields are collected: Intent = **`create booking`**\n> - If ANY required field is still missing, you MUST stay on intent `conversation`\n\n### Step-by-Step Booking Sequence\n\nCollect the following information **in this exact order**:\n\n1. **Service Type** — Always ask first. Never assume from a previous inquiry.\n\n   > If the customer asks about \"protein\": respond with\n   > `\"بدك شراء منتج معين ولا خدمة بالصالون ولا منزلية؟\"`\n   > → **Intent: `conversation`**\n\n2. **Preferred Day & Date** — If the customer mentions only a time without a day, immediately ask for the day.\n   > → **Intent: `conversation`**\n\n3. **Preferred Time** — Validate against last-appointment cutoff times (see §5.3).\n   > → **Intent: `conversation`**\n\n4. **Full Name**\n   > → **Intent: `conversation`**\n\n5. **Phone Number** — Then ask:\n   > `\"نفس رقم الواتس؟\"`\n   > → **Intent: `conversation`**\n\n6. **Area/Location** — Required for home services only.\n   > → **Intent: `conversation`**\n\n### ⭐ Step A: Booking Summary & Ask for Confirmation (Intent: `conversation`)\n\n> ⛔ **When ALL fields are collected, do NOT immediately use `create booking`.** Instead, summarize the booking details and ask the customer to confirm.\n\nAfter collecting all details, output:\n\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي، خليني أتأكد من التفاصيل 🌸\\n\\nالخدمة: [...]\\nالتاريخ: [...]\\nالوقت: [...]\\nالاسم: [...]\\nالرقم: [...]\\n[المنطقة: ... (للخدمة المنزلية فقط)]\\n\\nهل المعلومات صحيحة وبدك أثبت الحجز؟\"\n}\n```\n\n### ⭐ Step B: Customer Confirms → Create Booking (Intent: `create booking`)\n\n> ⛔ **Switch to `create booking` ONLY after the customer explicitly confirms** (e.g., \"تمام\", \"أي\", \"أكيد\", \"ماشي\", \"صح\", \"yes\").\n> If the customer changes any detail, update it, re-summarize, and ask again (stay on `conversation`).\n\n```json\n{\n  \"intent\": \"create booking\",\n  \"response\": \"تم تثبيت حجزكِ ✅\\n[الخدمة: ...]\\n[التاريخ: ...]\\n[الوقت: ...]\\n[الاسم: ...]\\n[الرقم: ...]\\nشكرًا لتواصلكِ 💇🏻‍♀️ تحبي تضيفي خدمة تانية؟ ✨\"\n}\n```\n\n### Date/Day Conflict Resolution\n\nIf the stated day of the week does not match the stated date:\n> Respond: `\"اليوم بختلف عن التاريخ، ممكن تأكيدهم؟ 🌸\"`\n> → **Intent: `conversation`**\n\n### Group Home Bookings\n\nFor group home-service bookings: collect **name and phone number** for every individual in the group.\n> → **Intent: `conversation`** until all info collected → then summarize and ask for confirmation → then `create booking` only after customer confirms\n\n### Tuesday Booking Rule\n\n- ❌ **No bookings** are accepted on Tuesdays by default.\n- Auto-response:\n  > `\"الثلاثاء بزبط، تختاري يوم تاني؟ الحجوزات فيه بتنسيق مسبق 🌸\"`\n  > → **Intent: `conversation`**\n- If the customer insists: collect (name + phone + time) and respond:\n  > `\"بنقل طلبك للفريق وبيتواصلوا معك 💖\"`\n  > → **Intent: `conversation`** (NOT `create booking` — this is a manual follow-up, not a confirmed booking)\n\n---\n\n## 5. Services, Pricing & Availability (Intent: `conversation`)\n\n> **Critical Rule**: You NO LONGER have hardcoded services, prices, or cutoff times. You **MUST** use the `get all products and services` tool to retrieve the current catalog of salon services, home services, products, and delivery/transportation fees.\n\n1. **When a customer asks about a service, product, price, or cutoff time:**\n   - Immediately call the `get all products and services` tool.\n   - Read the tool's output to find the item's `price`, `category`, and critically, its `description`.\n   - The `description` contains vital rules (e.g., cutoff times, whether a service can be offered standalone at home). **Enforce these rules strictly.**\n\n2. **Categorization in the Tool:**\n   - **Salon Services**: (Haircuts, Hair Dye, Protein, Nails)\n   - **Retail Products**: (Shampoo, Serum, etc.)\n   - **Fees**: (Transportation Fees for home services, Delivery Fees for products). Never confuse product delivery with home service transportation.\n\n3. **Handling Cutoff Times**:\n   - If the tool's description states a \"Last appointment\" (آخر موعد) and the customer requests a time after that, respond:\n   > `\"حبيبتي هذا الوقت بعد آخر موعد للخدمة، بقدر أرتّب لك أقرب وقت مناسب إلك 🌸\"`\n\n### Trigger Words for `product images` Intent\nIf the customer uses phrases like:\n- \"وريني صور المنتجات\" / \"بدي أشوف المنتجات\" / \"عندكم صور؟\" / \"show me products\"\n→ **Intent: `product images`**\n\n```json\n{\n  \"intent\": \"product images\",\n  \"response\": \"أكيد حبيبتي! هلأ بوريكِ صور المنتجات المتوفرة عنا 💖\",\n  \"productIds\": [\"abc-123-def\"]\n}\n```\n\n---\n\n## 8. Testimonials & Reviews (Intent: `testimonials`)\n\n> **Intent**: `testimonials` — use ONLY when the customer explicitly asks for any of the following.\n\n### Trigger Words for `testimonials` Intent\n\nIf the customer uses phrases like:\n- \"وريني شغلكم\" / \"فيه صور قبل وبعد؟\" / \"شو رأي الزبونات؟\" / \"عندكم تجارب؟\" / \"reviews\" / \"testimonials\" / \"before and after\"\n→ **Intent: `testimonials`**\n\n```json\n{\n  \"intent\": \"testimonials\",\n  \"response\": \"طبعًا حبيبتي! هلأ بوريكِ من أعمالنا وتجارب زبوناتنا 🌸\"\n}\n```\n\n> ⚠️ **Important**: If the customer asks a general question like \"كيف شغلكم؟\" (how is your work?) and it's clearly asking for proof/reviews, use `testimonials`. If it's a vague/casual question, use `conversation`.\n\n---\n\n## 9. Price Management Rules (Intent: `conversation`)\n\n1. **Never** volunteer prices unprompted — only share when the customer explicitly asks.\n2. If the customer asks a vague question like \"كم الأسعار؟\":\n   > Respond: `\"لأي خدمة؟ 🌸\"`\n3. Always state that the quoted price is a **starting price** and the final price will be confirmed by the specialist:\n   > `\"السعر النهائي يتأكد مع الأخصائية\"`\n\n---\n\n## 10. Adding Services to an Existing Booking (Intent: `conversation`)\n\nWhen a customer replies with an additional service (e.g., \"صبغة\" or \"قص\") after a booking has been made:\n\n| Scenario | Response | Intent |\n|---|---|---|\n| Service is available as a home add-on | `\"بضيف لك (...) مع نفس الموعد 🌸 السعر من (...) ويتأكد يوم الموعد\"` | `conversation` |\n| Service is salon-only | `\"هاي الخدمة بالصالون فقط، فيكِ تعمليها بموعد ثاني 💖\"` | `conversation` |\n\n---\n\n## 11. Privacy & Session Memory Rules (Intent: `conversation`)\n\n### Within a Single Session\n\n- ✅ Retain context for the current conversation (name, service, details discussed).\n- ❌ If the customer inquired about a service and then says \"بدي أحجز\", do NOT assume the same service. Always re-confirm:\n  > `\"حبيبتي، شو الخدمة اللي حابة تحجزيها؟ 🌸\"`\n\n### Across Sessions\n\n- ❌ Do NOT retain or recall any information from previous sessions (different chat windows or past conversations).\n- Every new message from a phone number is treated as a first contact, even if the number is recognized.\n- Name, service, and time details are used **only** in the booking confirmation message — never carried over.\n\n### Prohibited Assumptions\n\nNever rely on:\n- Previous inquiries in earlier sessions\n- A service asked about previously\n- A name mentioned before\n- Any historical detail from past interactions\n\n---\n\n## 12. Critical Rule — Re-Booking After Inquiry (Intent: `conversation`)\n\n> ⛔ **This rule overrides all defaults.**\n\nIf a customer says \"بدي أحجز\" after **any** prior inquiry or discussion:\n- Do NOT assume the service.\n- Always ask:\n  > `\"حبيبتي، شو الخدمة اللي حابة أحجزها؟ 🌸\"`\n  > → **Intent: `conversation`**\n\n---\n\n## 13. Image Handling Rule (Intent: `conversation`)\n\n> ⛔🔺 **Critical Safety Rule**\n\nIf the customer sends any image (especially hair photos):\n- ❌ Do NOT quote a price\n- ❌ Do NOT evaluate or assess the image\n- ✅ Inform the customer that the specialist will handle the assessment\n- This rule has **no exceptions**\n- → **Intent: `conversation`**"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1872,
+        -304
+      ],
+      "id": "1441677c-10c5-4bcd-ba95-7c2618d35464",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Client",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Edit Fields13').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "address",
+              "fieldValue": "={{ $('Code').item.json.bookingDetails.area }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $('Code').item.json.bookingDetails.name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4528,
+        -368
+      ],
+      "id": "b99aa6f7-8df1-4710-9258-ad9555dcc6de",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.ai4eg.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=apikey",
+              "value": "={{ $('Edit Fields').item.json.Key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"number\": \"{{ $('Edit Fields').item.json.SenderJid }}\",\n    \"text\": \"{{ JSON.stringify($json.response).slice(1, -1) }}\",\n    \"delay\":{{ $json.typingAnalysis.calculatedTimeMs }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3712,
+        -576
+      ],
+      "id": "e6af3289-fe8b-4f19-9e56-cba91abcf560",
+      "name": "send txt"
+    },
+    {
+      "parameters": {
+        "tableId": "Message",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Execute a SQL query').first().json.id }}"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "bot"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "=text"
+            },
+            {
+              "fieldId": "platform_timestamp",
+              "fieldValue": "={{ $('Edit Fields').first().json.Timestamp }}"
+            },
+            {
+              "fieldId": "text_content",
+              "fieldValue": "={{ $('Code1').item.json.response }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('Edit Fields13').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4064,
+        -576
+      ],
+      "id": "2cb8d131-2a47-40e5-bebb-2fb60a1d67b5",
+      "name": "Supabase27",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.ai4eg.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=apikey",
+              "value": "={{ $('Edit Fields').item.json.Key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"number\": \"{{ $('Edit Fields').item.json.SenderJid }}\",\n    \"text\": \"{{ JSON.stringify($json.response).slice(1, -1) }}\",\n    \"delay\":{{ $json.typingAnalysis.calculatedTimeMs }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3760,
+        48
+      ],
+      "id": "b2d26aa4-d9dd-4ab4-9972-5c3efb9c4ba3",
+      "name": "send txt1"
+    },
+    {
+      "parameters": {
+        "tableId": "Message",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Execute a SQL query').first().json.id }}"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "bot"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "=text"
+            },
+            {
+              "fieldId": "platform_timestamp",
+              "fieldValue": "={{ $('Edit Fields').first().json.Timestamp }}"
+            },
+            {
+              "fieldId": "text_content",
+              "fieldValue": "={{ $('Code3').item.json.response }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('Edit Fields13').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4032,
+        48
+      ],
+      "id": "ef8d8732-4282-43f4-9469-b35abea3681b",
+      "name": "Supabase28",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.ai4eg.com/message/sendMedia/{{ $('Edit Fields').first().json.Instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Edit Fields').first().json.Key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Edit Fields').item.json.SenderJid }}"
+            },
+            {
+              "name": "mediatype",
+              "value": "image"
+            },
+            {
+              "name": "mimetype",
+              "value": "image/png"
+            },
+            {
+              "name": "media",
+              "value": "={{ $json.imageSets }}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4896,
+        48
+      ],
+      "id": "fd71a0eb-b9de-4c07-b849-67d1979ce412",
+      "name": "HTTP Request12",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: the JSON you showed (array with one object containing imageSets)\n// Output: normalized array of URLs for the requested imageSetName\n\nconst row = $('Execute a SQL query').first().json; // or $('Get a row').item.json if chaining\nconst imageSetName = $('Code3').first().json.imageSetName;\n\n// Find the matching set\nconst match = row.imageSets.find(set => set.name === imageSetName);\n\n// Return a clean array of URLs\nreturn {\n  imageSets: match ? match.urls : []\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4352,
+        48
+      ],
+      "id": "037b5d98-b7e0-43da-960d-14f539fbaaa0",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "imageSets",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        4560,
+        48
+      ],
+      "id": "fd8699d5-e9bf-4912-9f09-0780adf9160b",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "tableId": "Message",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Execute a SQL query').first().json.id }}"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "bot"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "=text"
+            },
+            {
+              "fieldId": "platform_timestamp",
+              "fieldValue": "={{ $('Edit Fields').first().json.Timestamp }}"
+            },
+            {
+              "fieldId": "text_content",
+              "fieldValue": "={{ $('Code').item.json.response }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('Edit Fields13').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4816,
+        -368
+      ],
+      "id": "a96112fb-9e84-467b-8355-de126bbdc453",
+      "name": "Supabase26",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "Message",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Execute a SQL query').first().json.id }}"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "bot"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "=image"
+            },
+            {
+              "fieldId": "platform_timestamp",
+              "fieldValue": "={{ $('Edit Fields').first().json.Timestamp }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('Edit Fields13').item.json.id }}"
+            },
+            {
+              "fieldId": "attachment_url",
+              "fieldValue": "={{ $('Split Out').item.json.imageSets }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        5184,
+        48
+      ],
+      "id": "7859d25f-a9ed-488d-b387-38ae853dd277",
+      "name": "Supabase29",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  c.*,\n  (\n    SELECT json_agg(\n      json_build_object(\n        'id', p.id,\n        'name', p.name,\n        'price', p.price,\n        'images', p.images\n      )\n    )\n    FROM public.\"Product\" p\n    WHERE p.\"isAvailable\" = true\n  ) as active_products,\n  (\n    SELECT json_object_agg(key, value)\n    FROM public.\"SystemSetting\"\n  ) as system_settings\nFROM public.\"Channel\" c\nWHERE c.name = 'whats'\nLIMIT 1;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -6496,
+        0
+      ],
+      "id": "65bb773e-5951-405b-bb91-5e9fae7cff79",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "F4KT8MX3x5S53qyf",
+          "name": "Postgres account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.ai4eg.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=apikey",
+              "value": "={{ $('Edit Fields').item.json.Key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"number\": \"{{ $('Edit Fields').item.json.SenderJid }}\",\n    \"text\": \"{{ JSON.stringify($json.response).slice(1, -1) }}\",\n    \"delay\":{{ $json.typingAnalysis.calculatedTimeMs }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3744,
+        -176
+      ],
+      "id": "3cd08fef-5e0e-423e-996a-72716607e9a0",
+      "name": "send txt3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get product IDs from Code4\nconst productIds = $('Code4').first().json.productIds;\n\n// Get all active products from SQL query\nconst activeProducts = $('Execute a SQL query').first().json.active_products;\n\n// Collect matching image links\nlet imageLinks = [];\n\nfor (const id of productIds) {\n  const matches = activeProducts.filter(p => p.id === id);\n  for (const product of matches) {\n    if (product && product.images) {\n      imageLinks.push(...product.images);\n    }\n  }\n}\n\n// Return normalized array of image links\nreturn {\n  productImages: imageLinks\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4304,
+        -176
+      ],
+      "id": "6143a1b8-2a73-4d4c-90be-4c2cf94f0299",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "tableId": "Message",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Execute a SQL query').item.json.id }}"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "bot"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "=text"
+            },
+            {
+              "fieldId": "platform_timestamp",
+              "fieldValue": "={{ $('Edit Fields').first().json.Timestamp }}"
+            },
+            {
+              "fieldId": "text_content",
+              "fieldValue": "={{ $('Code4').item.json.response }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('Edit Fields13').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3984,
+        -176
+      ],
+      "id": "2952d3c3-7c25-480d-a55b-8163e6b1f653",
+      "name": "Supabase30",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.ai4eg.com/message/sendMedia/{{ $('Edit Fields').first().json.Instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Edit Fields').first().json.Key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Edit Fields').item.json.SenderJid }}"
+            },
+            {
+              "name": "mediatype",
+              "value": "image"
+            },
+            {
+              "name": "mimetype",
+              "value": "image/png"
+            },
+            {
+              "name": "media",
+              "value": "={{ $json.productImages }}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4928,
+        -160
+      ],
+      "id": "1f915b76-0dc8-4571-9f14-94f758d10147",
+      "name": "HTTP Request13",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "tableId": "Message",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Execute a SQL query').first().json.id }}"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "bot"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "=image"
+            },
+            {
+              "fieldId": "platform_timestamp",
+              "fieldValue": "={{ $('Edit Fields').first().json.Timestamp }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('Edit Fields13').item.json.id }}"
+            },
+            {
+              "fieldId": "attachment_url",
+              "fieldValue": "={{ $('Split Out1').item.json.productImages }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        5296,
+        -176
+      ],
+      "id": "1e5e4819-d759-4cbd-8072-a641aeaac26f",
+      "name": "Supabase31",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "productImages",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        4576,
+        -160
+      ],
+      "id": "ee3f5a98-d921-4ea9-8467-9d8a5cc3897d",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "61125f9b-475b-49f1-b7dd-094f9584f9cc",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -9360,
+        880
+      ],
+      "id": "c4b18cbc-f7c3-4944-b697-5a64ae0e00e4",
+      "name": "Webhook1",
+      "webhookId": "61125f9b-475b-49f1-b7dd-094f9584f9cc"
+    },
+    {
+      "parameters": {
+        "tableId": "Message",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "=26d9092b-269d-4318-98e5-e15d23f0dc21"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "agent"
+            },
+            {
+              "fieldId": "content_type",
+              "fieldValue": "=text"
+            },
+            {
+              "fieldId": "text_content",
+              "fieldValue": "={{ $('Code in JavaScript').item.json.Msg }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5408,
+        -416
+      ],
+      "id": "5eea04d7-562d-419f-bda9-cbcb8e5f3f62",
+      "name": "Supabase32",
+      "retryOnFail": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "Client",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "platform_user_id",
+              "keyValue": "={{ $json.SenderJid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5952,
+        -416
+      ],
+      "id": "98b77194-6d8a-4992-ae19-1f139f3d45c0",
+      "name": "Get a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "FGYOe1jcApU3WtbS",
+          "name": "Supabase account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Edit Fields').item.json.SenderJid }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1888,
+        272
+      ],
+      "id": "9f745125-e544-45f2-991a-c8cc606eb025",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Edit Fields').item.json.SenderJid }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1888,
+        -80
+      ],
+      "id": "6cb07feb-6605-4e11-ae4c-e977da02eebb",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "use this tool to get all the products with the prices ",
+        "url": "https://vftatwykyypaisjmkcql.supabase.co/rest/v1/Product",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "id,name,price,images"
+            },
+            {
+              "name": "isAvailable",
+              "value": "eq.true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdGF0d3lreXlwYWlzam1rY3FsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njk2MTMyNCwiZXhwIjoyMDkyNTM3MzI0fQ.A-KRW4TPIvgBJwKa1hwOWO1ki8vN7g-r3Cj291zpjsk"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdGF0d3lreXlwYWlzam1rY3FsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njk2MTMyNCwiZXhwIjoyMDkyNTM3MzI0fQ.A-KRW4TPIvgBJwKa1hwOWO1ki8vN7g-r3Cj291zpjsk"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        2080,
+        -128
+      ],
+      "id": "2e36ac90-5930-4f4e-9f2a-64c1680d3bef",
+      "name": "get all products and services1"
+    },
+    {
+      "parameters": {
+        "model": "gemma4:31b-cloud",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        -80
+      ],
+      "id": "9a27922a-961d-4fe4-bf6b-f26138fad69f",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "onxMheT2Sfe0xQpG",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.asra3.com",
+            "x-real-ip": "172.70.246.201",
+            "x-forwarded-for": "152.53.146.113, 172.70.246.201",
+            "x-forwarded-proto": "https",
+            "connection": "Upgrade",
+            "content-length": "1421",
+            "accept": "application/json, text/plain, */*",
+            "accept-encoding": "gzip, br",
+            "user-agent": "axios/1.12.2",
+            "cf-ray": "9f14f8bd59d7bb9b-FRA",
+            "content-type": "application/json",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "152.53.146.113",
+            "cf-ipcountry": "DE",
+            "cf-visitor": "{\"scheme\":\"https\"}"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "messages.upsert",
+            "instance": "saloon",
+            "data": {
+              "key": {
+                "remoteJid": "42034995970062@lid",
+                "remoteJidAlt": "201099238811@s.whatsapp.net",
+                "fromMe": false,
+                "id": "ACD39D25C2394AD01E24A4D574519E92",
+                "participant": "",
+                "addressingMode": "lid"
+              },
+              "pushName": null,
+              "status": "DELIVERY_ACK",
+              "message": {
+                "conversation": "شكرا",
+                "messageContextInfo": {
+                  "deviceListMetadata": {
+                    "senderKeyIndexes": [],
+                    "recipientKeyIndexes": [],
+                    "senderKeyHash": {
+                      "0": 225,
+                      "1": 130,
+                      "2": 2,
+                      "3": 134,
+                      "4": 132,
+                      "5": 62,
+                      "6": 158,
+                      "7": 76,
+                      "8": 187,
+                      "9": 227
+                    },
+                    "senderTimestamp": {
+                      "low": 1776043000,
+                      "high": 0,
+                      "unsigned": true
+                    },
+                    "recipientKeyHash": {
+                      "0": 175,
+                      "1": 204,
+                      "2": 171,
+                      "3": 0,
+                      "4": 91,
+                      "5": 38,
+                      "6": 167,
+                      "7": 190,
+                      "8": 85,
+                      "9": 53
+                    },
+                    "recipientTimestamp": {
+                      "low": 1776957684,
+                      "high": 0,
+                      "unsigned": true
+                    }
+                  },
+                  "deviceListMetadataVersion": 2,
+                  "messageSecret": {
+                    "0": 194,
+                    "1": 237,
+                    "2": 72,
+                    "3": 113,
+                    "4": 241,
+                    "5": 247,
+                    "6": 185,
+                    "7": 204,
+                    "8": 60,
+                    "9": 93,
+                    "10": 162,
+                    "11": 200,
+                    "12": 209,
+                    "13": 105,
+                    "14": 228,
+                    "15": 107,
+                    "16": 163,
+                    "17": 17,
+                    "18": 55,
+                    "19": 238,
+                    "20": 235,
+                    "21": 200,
+                    "22": 197,
+                    "23": 219,
+                    "24": 187,
+                    "25": 78,
+                    "26": 239,
+                    "27": 85,
+                    "28": 80,
+                    "29": 57,
+                    "30": 162,
+                    "31": 145
+                  }
+                }
+              },
+              "messageType": "conversation",
+              "messageTimestamp": 1777032278,
+              "instanceId": "6839d2f7-72b0-438e-a2cd-130b963b22a7",
+              "source": "android"
+            },
+            "destination": "https://n8n.asra3.com/webhook/2151fdf8-565f-474b-9301-b2fe484e1e8b",
+            "date_time": "2026-04-24T09:04:38.540Z",
+            "sender": "201201104696@s.whatsapp.net",
+            "server_url": "http://152.53.146.113:8080",
+            "apikey": "FA3AD00DB9E4-4576-9193-BDB8D326A6E7"
+          },
+          "webhookUrl": "https://n8n.asra3.com/webhook/2151fdf8-565f-474b-9301-b2fe484e1e8b",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Webhook1": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.asra3.com",
+            "x-real-ip": "172.68.234.122",
+            "x-forwarded-for": "41.235.207.74, 172.68.234.122",
+            "x-forwarded-proto": "https",
+            "connection": "Upgrade",
+            "content-length": "897",
+            "accept": "*/*",
+            "accept-language": "*",
+            "accept-encoding": "gzip, br",
+            "user-agent": "node",
+            "cf-ray": "9f15246b9dcde181-MRS",
+            "sec-fetch-mode": "cors",
+            "content-type": "application/json",
+            "cdn-loop": "cloudflare; loops=1",
+            "cf-connecting-ip": "41.235.207.74",
+            "cf-ipcountry": "EG",
+            "cf-visitor": "{\"scheme\":\"https\"}"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "event": "message.sent",
+            "message": {
+              "id": "597a5d66-2a5e-4797-9321-3f1219d76491",
+              "channel_id": null,
+              "client_id": "3bf716b5-26c1-4bf4-98ce-909abcc2a9b5",
+              "message_platform_id": null,
+              "sender_type": "agent",
+              "content_type": "text",
+              "text_content": "hi",
+              "attachment_url": "",
+              "is_read_by_agent": false,
+              "sent_at": "2026-04-24T12:34:27.278192+00:00",
+              "platform_timestamp": "2026-04-24T12:34:28.081+00:00"
+            },
+            "client": {
+              "id": "3bf716b5-26c1-4bf4-98ce-909abcc2a9b5",
+              "name": "ساره",
+              "phone": "201099238811",
+              "address": "وسط المدينة",
+              "notes": "",
+              "createdAt": "2026-04-23T18:37:51.663725+00:00",
+              "updatedAt": "2026-04-24T12:34:27.278192+00:00",
+              "channel_id": "26d9092b-269d-4318-98e5-e15d23f0dc21",
+              "platform": "whatsapp",
+              "platform_user_id": "201099238811@s.whatsapp.net",
+              "avatar_url": null,
+              "last_interaction_at": "2026-04-24T12:34:27.278192+00:00",
+              "last_message_preview": "hi",
+              "unread_count": 0,
+              "status": "active",
+              "ai_enabled": true
+            }
+          },
+          "webhookUrl": "https://n8n.asra3.com/webhook/61125f9b-475b-49f1-b7dd-094f9584f9cc",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "find contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If19": {
+      "main": [
+        [
+          {
+            "node": "Supabase20",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase20": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields13": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "find contact": {
+      "main": [
+        [
+          {
+            "node": "If19",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Supabase25",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase25": {
+      "main": [
+        [
+          {
+            "node": "Create a row3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch4": {
+      "main": [
+        [
+          {
+            "node": "Supabase101",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase102",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If14": {
+      "main": [
+        [
+          {
+            "node": "Supabase17",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update a row3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase101": {
+      "main": [
+        [
+          {
+            "node": "If14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase102": {
+      "main": [
+        [
+          {
+            "node": "If15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If15": {
+      "main": [
+        [
+          {
+            "node": "Supabase18",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update a row4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        []
+      ]
+    },
+    "Aggregate4": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait8": {
+      "main": [
+        [
+          {
+            "node": "Supabase5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort2": {
+      "main": [
+        [
+          {
+            "node": "If23",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase5": {
+      "main": [
+        [
+          {
+            "node": "Sort2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields15": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase23": {
+      "main": [
+        [
+          {
+            "node": "Aggregate4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If23": {
+      "main": [
+        [
+          {
+            "node": "Supabase23",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Wait8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase24",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase24": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase1": {
+      "main": [
+        [
+          {
+            "node": "Create a row12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "Create a row10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row12": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request6": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Analyze audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze audio": {
+      "main": [
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row10": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch2": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "send txt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "send txt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "send txt3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send txt8": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "send txt8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get all products and services": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Switch2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Supabase26",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send txt": {
+      "main": [
+        [
+          {
+            "node": "Supabase27",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send txt1": {
+      "main": [
+        [
+          {
+            "node": "Supabase28",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase28": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request12": {
+      "main": [
+        [
+          {
+            "node": "Supabase29",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send txt3": {
+      "main": [
+        [
+          {
+            "node": "Supabase30",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase30": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request13": {
+      "main": [
+        [
+          {
+            "node": "Supabase31",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row1": {
+      "main": [
+        [
+          {
+            "node": "Supabase32",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        []
+      ]
+    },
+    "get all products and services1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "abf00001-73d7-4860-aa31-bb3bcb14984a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c522d6cf09b0723c95e34292cfbafc5cdf9b6368e7bfb1a7b64562f91c23ca99"
+  },
+  "id": "JmWJDeeV8lYOzp5T",
+  "tags": []
+}

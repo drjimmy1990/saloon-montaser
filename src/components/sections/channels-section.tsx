@@ -1,5 +1,7 @@
 "use client";
 
+import { toast } from "sonner";
+
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { t, isRTL } from "@/lib/i18n";
@@ -168,25 +170,46 @@ const sectionAccents = {
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
+const PROTECTED_VARIABLES = ["delay", "bot-on", "bot-off"];
+
 function createEmptyChannelForm(): Omit<Channel, "id"> {
   return {
     name: "",
     type: "whatsapp",
     isActive: true,
     credentials: [{ key: "", value: "" }],
-    variables: [{ name: "", value: "" }],
+    variables: [
+      { name: "delay", value: "15" },
+      { name: "bot-on", value: "**" },
+      { name: "bot-off", value: "##" }
+    ],
     imageSets: [{ name: "", urls: [""] }],
     webhookUrl: "",
   };
 }
 
 function deepCloneChannel(ch: Channel): Omit<Channel, "id"> {
+  const vars = ch.variables.map((v) => ({ ...v }));
+  
+  // Ensure protected variables exist
+  const protectedDefaults = [
+    { name: "delay", value: "15" },
+    { name: "bot-on", value: "**" },
+    { name: "bot-off", value: "##" }
+  ];
+  
+  protectedDefaults.forEach(pd => {
+    if (!vars.find(v => v.name === pd.name)) {
+      vars.push({ ...pd });
+    }
+  });
+
   return {
     name: ch.name,
     type: ch.type,
     isActive: ch.isActive,
     credentials: ch.credentials.map((c) => ({ ...c })),
-    variables: ch.variables.map((v) => ({ ...v })),
+    variables: vars,
     imageSets: ch.imageSets.map((s) => ({ ...s, urls: [...s.urls] })),
     webhookUrl: ch.webhookUrl || "",
   };
@@ -314,8 +337,10 @@ export function ChannelsSection() {
         });
       }
       fetchChannels();
+      toast.success("تم حفظ الاعدادات");
     } catch (error) {
       console.error("Failed to save channel", error);
+      toast.error("فشل في حفظ الاعدادات");
     }
 
     setDialogOpen(false);
@@ -326,8 +351,10 @@ export function ChannelsSection() {
     try {
       await fetch(`/api/channels/${id}`, { method: "DELETE" });
       fetchChannels();
+      toast.success("تم حذف القناة");
     } catch (error) {
       console.error("Failed to delete channel", error);
+      toast.error("فشل في حذف القناة");
     }
     setDeleteConfirmId(null);
   };
@@ -385,9 +412,10 @@ export function ChannelsSection() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      // Optionally show a success toast here
+      toast.success("تم حفظ الاعدادات");
     } catch (error) {
       console.error("Failed to save channel inline", error);
+      toast.error("فشل في حفظ الاعدادات");
     } finally {
       setSavingChannelId(null);
     }
@@ -439,10 +467,16 @@ export function ChannelsSection() {
   }, []);
 
   const removeFormVariable = useCallback((index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      variables: prev.variables.filter((_, i) => i !== index),
-    }));
+    setFormData((prev) => {
+      const v = prev.variables[index];
+      if (v && PROTECTED_VARIABLES.includes(v.name.trim().toLowerCase())) {
+        return prev;
+      }
+      return {
+        ...prev,
+        variables: prev.variables.filter((_, i) => i !== index),
+      };
+    });
   }, []);
 
   const updateFormImageSetName = useCallback(
@@ -577,14 +611,17 @@ export function ChannelsSection() {
   const removeChannelVariable = useCallback(
     (channelId: string, index: number) => {
       setChannels((prev) =>
-        prev.map((ch) =>
-          ch.id === channelId
-            ? {
-                ...ch,
-                variables: ch.variables.filter((_, i) => i !== index),
-              }
-            : ch
-        )
+        prev.map((ch) => {
+          if (ch.id !== channelId) return ch;
+          const v = ch.variables[index];
+          if (v && PROTECTED_VARIABLES.includes(v.name.trim().toLowerCase())) {
+            return ch;
+          }
+          return {
+            ...ch,
+            variables: ch.variables.filter((_, i) => i !== index),
+          };
+        })
       );
     },
     []
@@ -797,6 +834,9 @@ export function ChannelsSection() {
             <div className="space-y-2">
               <Label className={cn(rtl && "font-arabic")}>
                 {t(locale, "channels.channelName")}
+                <span className="text-red-500 text-xs mr-2 ml-2 block sm:inline">
+                  {rtl ? "(يجب أن يتطابق تماماً مع اسم Instance في Evolution API)" : "(Must match the Evolution API Instance name exactly)"}
+                </span>
               </Label>
               <Input
                 value={formData.name}
@@ -972,50 +1012,55 @@ export function ChannelsSection() {
                 </Label>
               </div>
               <div className="space-y-2">
-                {formData.variables.map((v, idx) => (
-                  <div
-                    key={idx}
-                    className={cn(
-                      "flex items-center gap-2",
-                      ""
-                    )}
-                  >
-                    <Input
-                      value={v.name}
-                      onChange={(e) =>
-                        updateFormVariable(idx, "name", e.target.value)
-                      }
-                      placeholder={t(locale, "channels.variableName")}
+                {formData.variables.map((v, idx) => {
+                  const isProtected = PROTECTED_VARIABLES.includes(v.name.trim().toLowerCase());
+                  return (
+                    <div
+                      key={idx}
                       className={cn(
-                        "flex-1 font-mono text-xs",
-                        rtl && "text-right"
+                        "flex items-center gap-2",
+                        ""
                       )}
-                    />
-                    <span className="text-muted-foreground text-xs font-bold">
-                      =
-                    </span>
-                    <Input
-                      value={v.value}
-                      onChange={(e) =>
-                        updateFormVariable(idx, "value", e.target.value)
-                      }
-                      placeholder={t(locale, "channels.variableValue")}
-                      className={cn(
-                        "flex-1 font-mono text-xs",
-                        rtl && "text-right"
-                      )}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
-                      onClick={() => removeFormVariable(idx)}
-                      disabled={formData.variables.length <= 1}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                ))}
+                      <Input
+                        value={v.name}
+                        onChange={(e) =>
+                          updateFormVariable(idx, "name", e.target.value)
+                        }
+                        placeholder={t(locale, "channels.variableName")}
+                        disabled={isProtected}
+                        className={cn(
+                          "flex-1 font-mono text-xs",
+                          rtl && "text-right",
+                          isProtected && "opacity-60 cursor-not-allowed bg-muted"
+                        )}
+                      />
+                      <span className="text-muted-foreground text-xs font-bold">
+                        =
+                      </span>
+                      <Input
+                        value={v.value}
+                        onChange={(e) =>
+                          updateFormVariable(idx, "value", e.target.value)
+                        }
+                        placeholder={t(locale, "channels.variableValue")}
+                        className={cn(
+                          "flex-1 font-mono text-xs",
+                          rtl && "text-right"
+                        )}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                        onClick={() => removeFormVariable(idx)}
+                        disabled={isProtected || formData.variables.length <= 1}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
               <Button
                 variant="outline"
@@ -1294,8 +1339,10 @@ function ChannelCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageSets: newImageSets }),
       });
+      toast.success("تم حفظ الاعدادات");
     } catch (err) {
       console.error("Failed to upload image:", err);
+      toast.error("فشل في رفع الصورة");
     } finally {
       setUploadingSetIdx(null);
       e.target.value = '';
@@ -1602,58 +1649,63 @@ function ChannelCard({
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2">
-                {channel.variables.map((v, idx) => (
-                  <div
-                    key={idx}
-                    className={cn(
-                      "flex items-center gap-2",
-                      ""
-                    )}
-                  >
-                    <Input
-                      value={v.name}
-                      onChange={(e) =>
-                        onUpdateVariable(
-                          channel.id,
-                          idx,
-                          "name",
-                          e.target.value
-                        )
-                      }
+                {channel.variables.map((v, idx) => {
+                  const isProtected = PROTECTED_VARIABLES.includes(v.name.trim().toLowerCase());
+                  return (
+                    <div
+                      key={idx}
                       className={cn(
-                        "flex-1 font-mono text-xs h-8 bg-sage-50/30 dark:bg-sage-900/10 border-sage-200/50 dark:border-sage-800/30 focus:border-sage-400",
-                        rtl && "text-right"
+                        "flex items-center gap-2",
+                        ""
                       )}
-                    />
-                    <span className="text-muted-foreground text-xs font-bold">
-                      =
-                    </span>
-                    <Input
-                      value={v.value}
-                      onChange={(e) =>
-                        onUpdateVariable(
-                          channel.id,
-                          idx,
-                          "value",
-                          e.target.value
-                        )
-                      }
-                      className={cn(
-                        "flex-1 font-mono text-xs h-8 bg-sage-50/30 dark:bg-sage-900/10 border-sage-200/50 dark:border-sage-800/30 focus:border-sage-400",
-                        rtl && "text-right"
-                      )}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive transition-colors"
-                      onClick={() => onRemoveVariable(channel.id, idx)}
-                      disabled={channel.variables.length <= 1}
                     >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ))}
+                      <Input
+                        value={v.name}
+                        onChange={(e) =>
+                          onUpdateVariable(
+                            channel.id,
+                            idx,
+                            "name",
+                            e.target.value
+                          )
+                        }
+                        disabled={isProtected}
+                        className={cn(
+                          "flex-1 font-mono text-xs h-8 bg-sage-50/30 dark:bg-sage-900/10 border-sage-200/50 dark:border-sage-800/30 focus:border-sage-400",
+                          rtl && "text-right",
+                          isProtected && "opacity-60 cursor-not-allowed bg-muted"
+                        )}
+                      />
+                      <span className="text-muted-foreground text-xs font-bold">
+                        =
+                      </span>
+                      <Input
+                        value={v.value}
+                        onChange={(e) =>
+                          onUpdateVariable(
+                            channel.id,
+                            idx,
+                            "value",
+                            e.target.value
+                          )
+                        }
+                        className={cn(
+                          "flex-1 font-mono text-xs h-8 bg-sage-50/30 dark:bg-sage-900/10 border-sage-200/50 dark:border-sage-800/30 focus:border-sage-400",
+                          rtl && "text-right"
+                        )}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive transition-colors"
+                        onClick={() => onRemoveVariable(channel.id, idx)}
+                        disabled={isProtected || channel.variables.length <= 1}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
                 <Button
                   variant="outline"
                   size="sm"
@@ -1803,8 +1855,10 @@ function ChannelCard({
                                             headers: { "Content-Type": "application/json" },
                                             body: JSON.stringify({ imageSets: newImageSets }),
                                           });
+                                          toast.success("تم حفظ الاعدادات");
                                         } catch (err) {
                                           console.error("Failed to save deletion:", err);
+                                          toast.error("فشل في حذف الصورة");
                                         }
                                       }}
                                       className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
