@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceRoleClient } from '@/lib/supabase';
 
-// GET /api/bookings?page=1&limit=10&search=&channel=all&status=all
+export const dynamic = 'force-dynamic';
+
+// GET /api/bookings?page=1&limit=10&search=&channel=all&status=all&dateFrom=&dateTo=
 export async function GET(request: NextRequest) {
   try {
     const supabase = getServiceRoleClient();
@@ -12,6 +14,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')?.trim() || '';
     const channel = searchParams.get('channel') || 'all';
     const status = searchParams.get('status') || 'all';
+    const dateFrom = searchParams.get('dateFrom') || '';
+    const dateTo = searchParams.get('dateTo') || '';
 
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -29,6 +33,12 @@ export async function GET(request: NextRequest) {
     }
     if (search) {
       query = query.ilike('client.name', `%${search}%`);
+    }
+    if (dateFrom) {
+      query = query.gte('bookingDate', `${dateFrom}T00:00:00Z`);
+    }
+    if (dateTo) {
+      query = query.lte('bookingDate', `${dateTo}T23:59:59Z`);
     }
 
     query = query.order('createdAt', { ascending: false }).range(from, to);

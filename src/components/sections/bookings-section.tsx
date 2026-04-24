@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { t, isRTL } from "@/lib/i18n";
@@ -18,6 +18,8 @@ import {
   MapPin,
   Hash,
   MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   Card,
@@ -238,47 +240,66 @@ export function BookingsSection() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [newStatus, setNewStatus] = useState<BookingStatus>("pending");
 
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  // ─── Pagination ──────────────────────────────────────────────────────────
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [stats, setStats] = useState({ total: 0, pending: 0, confirmed: 0, cancelled: 0 });
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
   // ─── Fetch Data ───────────────────────────────────────────────────────────
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async (p: number, limit: number, search: string, channel: string, status: string, from: string, to: string) => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/bookings");
-      const data = await res.json();
-      setBookings(Array.isArray(data) ? data : []);
+      const params = new URLSearchParams({
+        page: String(p),
+        limit: String(limit),
+        search,
+        channel,
+        status,
+      });
+      if (from) params.set("dateFrom", from);
+      if (to) params.set("dateTo", to);
+      const res = await fetch(`/api/bookings?${params}`);
+      const json = await res.json();
+      setBookings(json.data || []);
+      setTotalCount(json.total ?? 0);
+      if (json.stats) setStats(json.stats);
     } catch (err) {
       console.error("Failed to fetch bookings", err);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  React.useEffect(() => {
-    fetchBookings();
   }, []);
 
-  // ─── Filtering ────────────────────────────────────────────────────────────
+  // Debounce search input
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const filteredBookings = useMemo(() => {
-    return bookings.filter((b) => {
-      const name = b.client?.name || "";
-      const nameMatch = name.toLowerCase().includes(searchQuery.toLowerCase());
-      const channelMatch =
-        channelFilter === "all" || b.channelType === channelFilter;
-      const statusMatch = statusFilter === "all" || b.status === statusFilter;
-      return nameMatch && channelMatch && statusMatch;
-    });
-  }, [bookings, searchQuery, channelFilter, statusFilter]);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 400);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchQuery]);
 
-  // ─── Stats ────────────────────────────────────────────────────────────────
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [channelFilter, statusFilter, dateFrom, dateTo]);
 
-  const stats = useMemo(() => {
-    return {
-      total: bookings.length,
-      pending: bookings.filter((b) => b.status === "pending").length,
-      confirmed: bookings.filter((b) => b.status === "confirmed").length,
-      cancelled: bookings.filter((b) => b.status === "cancelled").length,
-    };
-  }, [bookings]);
+  // Fetch on param change
+  useEffect(() => {
+    fetchBookings(page, pageSize, debouncedSearch, channelFilter, statusFilter, dateFrom, dateTo);
+  }, [page, pageSize, debouncedSearch, channelFilter, statusFilter, dateFrom, dateTo, fetchBookings]);
+
+  const filteredBookings = bookings;
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
@@ -309,7 +330,7 @@ export function BookingsSection() {
       });
       
       if (res.ok) {
-        fetchBookings();
+        fetchBookings(page, pageSize, debouncedSearch, channelFilter, statusFilter, dateFrom, dateTo);
       }
     } catch (err) {
       console.error("Failed to update status", err);
@@ -403,69 +424,103 @@ export function BookingsSection() {
       </div>
 
       {/* Filter Bar */}
-      <div
-        className={cn(
-          "flex flex-col sm:flex-row gap-3",
-          ""
-        )}
-      >
-        <div className="relative flex-1 min-w-0">
-          <Search
-            className={cn(
-              "absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground",
-              rtl ? "right-3" : "left-3"
-            )}
-          />
-          <Input
-            placeholder={t(locale, "search")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={cn(rtl ? "pr-9 pl-3" : "pl-9 pr-3", rtl && "font-arabic text-right")}
-          />
+      <div className="space-y-3">
+        <div
+          className={cn(
+            "flex flex-col sm:flex-row gap-3",
+          )}
+        >
+          <div className="relative flex-1 min-w-0">
+            <Search
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground",
+                rtl ? "right-3" : "left-3"
+              )}
+            />
+            <Input
+              placeholder={t(locale, "search")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={cn(rtl ? "pr-9 pl-3" : "pl-9 pr-3", rtl && "font-arabic text-right")}
+            />
+          </div>
+
+          <Select value={channelFilter} onValueChange={setChannelFilter}>
+            <SelectTrigger className={cn("w-full sm:w-[180px]", rtl && "font-arabic")}>
+              <SelectValue placeholder={t(locale, "bookings.allChannels")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className={rtl ? "font-arabic" : ""}>
+                {t(locale, "bookings.allChannels")}
+              </SelectItem>
+              <SelectItem value="whatsapp" className={rtl ? "font-arabic" : ""}>
+                {t(locale, "channels.whatsapp")}
+              </SelectItem>
+              <SelectItem value="facebook" className={rtl ? "font-arabic" : ""}>
+                {t(locale, "channels.facebook")}
+              </SelectItem>
+              <SelectItem value="instagram" className={rtl ? "font-arabic" : ""}>
+                {t(locale, "channels.instagram")}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className={cn("w-full sm:w-[180px]", rtl && "font-arabic")}>
+              <SelectValue placeholder={t(locale, "bookings.allStatuses")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className={rtl ? "font-arabic" : ""}>
+                {t(locale, "bookings.allStatuses")}
+              </SelectItem>
+              <SelectItem value="pending" className={rtl ? "font-arabic" : ""}>
+                {t(locale, "pending")}
+              </SelectItem>
+              <SelectItem value="confirmed" className={rtl ? "font-arabic" : ""}>
+                {t(locale, "confirmed")}
+              </SelectItem>
+              <SelectItem value="cancelled" className={rtl ? "font-arabic" : ""}>
+                {t(locale, "cancelled")}
+              </SelectItem>
+              <SelectItem value="completed" className={rtl ? "font-arabic" : ""}>
+                {t(locale, "completed")}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <Select value={channelFilter} onValueChange={setChannelFilter}>
-          <SelectTrigger className={cn("w-full sm:w-[180px]", rtl && "font-arabic")}>
-            <SelectValue placeholder={t(locale, "bookings.allChannels")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className={rtl ? "font-arabic" : ""}>
-              {t(locale, "bookings.allChannels")}
-            </SelectItem>
-            <SelectItem value="whatsapp" className={rtl ? "font-arabic" : ""}>
-              {t(locale, "channels.whatsapp")}
-            </SelectItem>
-            <SelectItem value="facebook" className={rtl ? "font-arabic" : ""}>
-              {t(locale, "channels.facebook")}
-            </SelectItem>
-            <SelectItem value="instagram" className={rtl ? "font-arabic" : ""}>
-              {t(locale, "channels.instagram")}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className={cn("w-full sm:w-[180px]", rtl && "font-arabic")}>
-            <SelectValue placeholder={t(locale, "bookings.allStatuses")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className={rtl ? "font-arabic" : ""}>
-              {t(locale, "bookings.allStatuses")}
-            </SelectItem>
-            <SelectItem value="pending" className={rtl ? "font-arabic" : ""}>
-              {t(locale, "pending")}
-            </SelectItem>
-            <SelectItem value="confirmed" className={rtl ? "font-arabic" : ""}>
-              {t(locale, "confirmed")}
-            </SelectItem>
-            <SelectItem value="cancelled" className={rtl ? "font-arabic" : ""}>
-              {t(locale, "cancelled")}
-            </SelectItem>
-            <SelectItem value="completed" className={rtl ? "font-arabic" : ""}>
-              {t(locale, "completed")}
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Date Range Filter */}
+        <div className={cn("flex items-center gap-2")}>
+          <CalendarCheck className="w-4 h-4 text-muted-foreground shrink-0" />
+          <span className={cn("text-sm text-muted-foreground shrink-0", rtl && "font-arabic")}>
+            {rtl ? "من" : "From"}
+          </span>
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-full sm:w-[150px] text-sm"
+          />
+          <span className={cn("text-sm text-muted-foreground shrink-0", rtl && "font-arabic")}>
+            {rtl ? "إلى" : "To"}
+          </span>
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-full sm:w-[150px] text-sm"
+          />
+          {(dateFrom || dateTo) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => { setDateFrom(""); setDateTo(""); }}
+            >
+              <XCircle className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Row */}
@@ -701,6 +756,60 @@ export function BookingsSection() {
             </Table>
           </div>
         </CardContent>
+
+        {/* Pagination Controls */}
+        <div
+          className={cn(
+            "flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t",
+            rtl && "flex-row-reverse"
+          )}
+        >
+          <div className={cn("flex items-center gap-2 text-sm text-muted-foreground", rtl && "font-arabic")}>
+            <Select value={String(pageSize)} onValueChange={(val) => { setPageSize(Number(val)); setPage(1); }}>
+              <SelectTrigger className="w-[70px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[10, 20, 50].map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span>{t(locale, "bookings.showPerPage")}</span>
+          </div>
+
+          <div className={cn("flex items-center gap-2", rtl && "flex-row-reverse")}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1 || isLoading}
+              className="h-8 gap-1"
+            >
+              {rtl ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              <span className={cn("text-xs", rtl && "font-arabic")}>{t(locale, "bookings.previous")}</span>
+            </Button>
+
+            <span className={cn("text-sm tabular-nums px-2", rtl && "font-arabic")}>
+              {t(locale, "bookings.pageOf")
+                .replace("{page}", String(page))
+                .replace("{total}", String(totalPages))}
+            </span>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages || isLoading}
+              className="h-8 gap-1"
+            >
+              <span className={cn("text-xs", rtl && "font-arabic")}>{t(locale, "bookings.next")}</span>
+              {rtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
+          </div>
+        </div>
       </Card>
 
       {/* Booking Detail Dialog */}
