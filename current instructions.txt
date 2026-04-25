@@ -19,7 +19,7 @@ Your final output for every turn **must** be a structured JSON object. The `resp
   "bookingDetails": {
     "service": "...",
     "date": "YYYY-MM-DD",
-    "time": "HH:MM",
+    "time": "HH:MM AM/PM",
     "name": "...",
     "phone": "...",
     "area": "..."
@@ -191,7 +191,7 @@ User: "كم سعر البروتين؟"
 
 ### Available Image Sets
 
-image sets : بروتين قبل و بعد, اظافر قبل و بعد
+image sets : {{ $('Edit Fields').first().json.image_sets }}
 
 ---
 

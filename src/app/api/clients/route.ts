@@ -1,20 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceRoleClient } from '@/lib/supabase';
 
-// GET /api/clients
+// GET /api/clients?page=1&limit=10&ai_enabled=true&search=john
 export async function GET(request: NextRequest) {
   try {
     const supabase = getServiceRoleClient();
     const { searchParams } = new URL(request.url);
     const ai_enabled = searchParams.get('ai_enabled');
+    const pageParam = searchParams.get('page');
+    const limitParam = searchParams.get('limit');
+    const search = searchParams.get('search')?.trim() || '';
 
-    let query = supabase.from('Client').select('*, Channel(name, type), Message(*), Booking(id)').order('last_interaction_at', { ascending: false });
+    const paginated = pageParam !== null && limitParam !== null;
+    const page = Math.max(1, parseInt(pageParam || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(limitParam || '10', 10)));
+
+    let query = supabase.from('Client').select('*, Channel(name, type), Message(*), Booking(id)', paginated ? { count: 'exact' } : undefined).order('last_interaction_at', { ascending: false });
     
     if (ai_enabled !== null) {
       query = query.eq('ai_enabled', ai_enabled === 'true');
     }
 
-    const { data: clients, error } = await query;
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%,platform_user_id.ilike.%${search}%`);
+    }
+
+    if (paginated) {
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+      query = query.range(from, to);
+    }
+
+    const { data: clients, error, count } = await query;
 
     if (error) throw error;
 
@@ -24,6 +41,10 @@ export async function GET(request: NextRequest) {
       messages: client.Message || [],
       bookings_count: client.Booking ? client.Booking.length : 0
     }));
+
+    if (paginated) {
+      return NextResponse.json({ data: mapped, total: count ?? 0 });
+    }
 
     return NextResponse.json(mapped);
   } catch (error) {

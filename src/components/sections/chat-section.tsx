@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import { t, isRTL } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   Trash2,
+  Search,
 } from "lucide-react";
 import {
   Card,
@@ -167,22 +168,100 @@ export function ChatSection() {
   const [deleteChatId, setDeleteChatId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const fetchClients = async () => {
+  // ─── Search State ──────────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 400);
+    return () => { if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current); };
+  }, [searchQuery]);
+
+  // ─── Infinite Scroll State ──────────────────────────────────────────────
+  const PAGE_SIZE = 10;
+  const [clientPage, setClientPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const fetchClients = useCallback(async (page = 1, append = false, search = "") => {
     try {
-      setIsLoading(true);
-      const res = await fetch("/api/clients");
-      const data = await res.json();
-      setClients(Array.isArray(data) ? data : []);
+      if (page === 1) setIsLoading(true);
+      else setIsLoadingMore(true);
+
+      const params = new URLSearchParams({ page: String(page), limit: String(PAGE_SIZE) });
+      if (search) params.set("search", search);
+
+      const res = await fetch(`/api/clients?${params}`);
+      const json = await res.json();
+      const newClients: Client[] = json.data || [];
+      const total: number = json.total ?? 0;
+
+      setClients(prev => {
+        if (!append) return newClients;
+        const existingIds = new Set(prev.map(c => c.id));
+        const unique = newClients.filter(c => !existingIds.has(c.id));
+        return [...prev, ...unique];
+      });
+      setHasMore(page * PAGE_SIZE < total);
     } catch (err) {
       console.error("Failed to fetch conversations", err);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  };
-
-  useEffect(() => {
-    fetchClients();
   }, []);
+
+  // Refetch from page 1 (used after mutations like send, toggle AI, delete)
+  const refetchClients = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({ page: "1", limit: String(clientPage * PAGE_SIZE) });
+      if (debouncedSearch) params.set("search", debouncedSearch);
+
+      const res = await fetch(`/api/clients?${params}`);
+      const json = await res.json();
+      const allClients: Client[] = json.data || [];
+      const total: number = json.total ?? 0;
+      setClients(allClients);
+      setHasMore(clientPage * PAGE_SIZE < total);
+    } catch (err) {
+      console.error("Failed to refetch conversations", err);
+    }
+  }, [clientPage, debouncedSearch]);
+
+  // Reset pagination and fetch when search changes
+  useEffect(() => {
+    setClientPage(1);
+    fetchClients(1, false, debouncedSearch);
+  }, [debouncedSearch, fetchClients]);
+
+  // Load more when sentinel is visible
+  const loadMore = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+    const nextPage = clientPage + 1;
+    setClientPage(nextPage);
+    fetchClients(nextPage, true, debouncedSearch);
+  }, [clientPage, hasMore, isLoadingMore, fetchClients, debouncedSearch]);
+
+  // IntersectionObserver for infinite scroll sentinel
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   const activeClient = clients.find((c) => c.id === activeChatId) || null;
 
@@ -194,7 +273,7 @@ export function ChatSection() {
   const markAsRead = async (id: string) => {
     try {
       await fetch(`/api/clients/${id}/read`, { method: "POST" });
-      fetchClients();
+      refetchClients();
     } catch (err) {
       console.error("Failed to mark as read", err);
     }
@@ -235,7 +314,7 @@ export function ChatSection() {
           platform_timestamp: new Date().toISOString()
         }),
       });
-      fetchClients();
+      refetchClients();
     } catch (err) {
       console.error("Failed to send message", err);
     } finally {
@@ -282,7 +361,7 @@ export function ChatSection() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ai_enabled: newAiEnabled }),
       });
-      fetchClients();
+      refetchClients();
     } catch (err) {
       console.error("Failed to toggle AI status", err);
     }
@@ -297,7 +376,7 @@ export function ChatSection() {
         setActiveChatId(null);
         setMobileShowChat(false);
       }
-      fetchClients();
+      refetchClients();
     } catch (err) {
       console.error("Failed to delete chat", err);
     }
@@ -433,7 +512,7 @@ export function ChatSection() {
   // ─── Conversation List Panel ──────────────────────────────────────────────
 
   const conversationListPanel = (
-    <div className="flex flex-col h-full" dir={rtl ? "rtl" : "ltr"}>
+    <div className="flex flex-col h-full min-h-0 overflow-hidden" dir={rtl ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="px-3 py-3 border-b">
         <div className="flex items-center justify-between">
@@ -453,8 +532,29 @@ export function ChatSection() {
         </div>
       </div>
 
+      {/* Search Input */}
+      <div className="px-3 py-2 border-b shrink-0">
+        <div className="relative">
+          <Search
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground",
+              rtl ? "right-2.5" : "left-2.5"
+            )}
+          />
+          <Input
+            placeholder={rtl ? "بحث بالاسم أو الرقم..." : "Search name or number..."}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={cn(
+              "h-8 text-xs",
+              rtl ? "pr-8 pl-2 font-arabic text-right" : "pl-8 pr-2"
+            )}
+          />
+        </div>
+      </div>
+
       {/* Conversation List */}
-      <ScrollArea className="flex-1" dir={rtl ? "rtl" : "ltr"}>
+      <ScrollArea className="flex-1 min-h-0 overflow-hidden" dir={rtl ? "rtl" : "ltr"}>
         <div className="p-1.5 space-y-0.5">
           {clients.filter(c => channelFilter === "all" || c.platform === channelFilter).length === 0 ? (
             <div className={cn("p-6 text-center text-muted-foreground", rtl && "font-arabic")}>
@@ -533,6 +633,14 @@ export function ChatSection() {
                 </div>
               );
             })
+          )}
+          {/* Infinite scroll sentinel */}
+          {hasMore && (
+            <div ref={loadMoreRef} className="flex items-center justify-center py-3">
+              {isLoadingMore && (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+              )}
+            </div>
           )}
         </div>
       </ScrollArea>
