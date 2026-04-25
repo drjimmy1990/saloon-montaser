@@ -9,7 +9,9 @@ import {
   Phone,
   Clock,
   Bot,
-  User
+  User,
+  Plus,
+  Loader2
 } from "lucide-react";
 import {
   Card,
@@ -49,6 +51,8 @@ export function BlacklistSection() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<PausedClient | null>(null);
+  const [newBlacklistId, setNewBlacklistId] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
 
   // ─── Fetch Data ───────────────────────────────────────────────────────────
   const fetchPausedClients = async () => {
@@ -111,6 +115,32 @@ export function BlacklistSection() {
     setSelectedClient(null);
   };
 
+  const handleAddToBlacklist = async () => {
+    if (!newBlacklistId.trim()) return;
+    setIsAdding(true);
+    try {
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          phone: newBlacklistId.trim(), 
+          platform_user_id: newBlacklistId.trim(),
+          ai_enabled: false
+        }),
+      });
+      if (res.ok) {
+        setNewBlacklistId("");
+        fetchPausedClients();
+      } else {
+        console.error("Failed to add to blacklist");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -160,6 +190,32 @@ export function BlacklistSection() {
               rtl && "font-arabic text-right"
             )}
           />
+        </div>
+        <div className={cn("flex items-center gap-2", rtl && "flex-row-reverse")}>
+          <Input
+            placeholder={rtl ? "رقم الهاتف أو المعرف" : "Phone or ID"}
+            value={newBlacklistId}
+            onChange={(e) => setNewBlacklistId(e.target.value)}
+            className={cn("w-48 text-sm", rtl && "font-arabic text-right")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleAddToBlacklist();
+              }
+            }}
+          />
+          <Button
+            onClick={handleAddToBlacklist}
+            disabled={!newBlacklistId.trim() || isAdding}
+            className={cn("bg-orange-600 hover:bg-orange-700 text-white shrink-0", rtl && "font-arabic")}
+          >
+            {isAdding ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2 ml-2" />
+            ) : (
+              <Plus className="w-4 h-4 mr-1.5 ml-1.5" />
+            )}
+            {rtl ? "إضافة للحظر" : "Add to List"}
+          </Button>
         </div>
       </div>
 

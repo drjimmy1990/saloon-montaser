@@ -84,6 +84,8 @@ export interface Client {
   ai_enabled?: boolean;
   bookings_count?: number;
   createdAt?: string;
+  channel_id?: string;
+  Channel?: { name: string; type: string } | null;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -100,6 +102,23 @@ export function ClientsSection() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [aiFilter, setAiFilter] = useState<"all" | "active" | "inactive">("all");
+  const [channelFilter, setChannelFilter] = useState<string>("all");
+
+  const uniqueChannels = useMemo(() => {
+    const channelMap = new Map<string, { value: string, label: string }>();
+    clients.forEach(c => {
+      const value = c.channel_id || c.platform;
+      if (value && !channelMap.has(value)) {
+        const name = c.Channel?.name || c.platform || "Unknown";
+        const type = c.Channel?.type || c.platform || "Unknown";
+        channelMap.set(value, {
+          value,
+          label: `${name} (${type})`
+        });
+      }
+    });
+    return Array.from(channelMap.values());
+  }, [clients]);
 
   // Form state
   const [formName, setFormName] = useState("");
@@ -147,8 +166,12 @@ export function ClientsSection() {
       result = result.filter((c) => c.ai_enabled === false);
     }
 
+    if (channelFilter !== "all") {
+      result = result.filter((c) => (c.channel_id || c.platform) === channelFilter);
+    }
+
     return result;
-  }, [clients, searchQuery, aiFilter]);
+  }, [clients, searchQuery, aiFilter, channelFilter]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
@@ -272,7 +295,25 @@ export function ClientsSection() {
             )}
           />
         </div>
-        
+        <Select
+          value={channelFilter}
+          onValueChange={(val: string) => setChannelFilter(val)}
+        >
+          <SelectTrigger className={cn("w-[160px] shrink-0", rtl && "font-arabic")}>
+            <SelectValue placeholder={rtl ? "تصفية القناة" : "Filter Channel"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" className={cn(rtl && "font-arabic")}>
+              {rtl ? "كل القنوات" : "All Channels"}
+            </SelectItem>
+            {uniqueChannels.map(channel => (
+              <SelectItem key={channel.value} value={channel.value} className={cn(rtl && "font-arabic")}>
+                {channel.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select
           value={aiFilter}
           onValueChange={(val: any) => setAiFilter(val)}
@@ -331,6 +372,9 @@ export function ClientsSection() {
                   <TableHead className={cn(rtl && "text-right font-arabic", "w-[150px]")}>
                     {t(locale, "clients.clientPhone")}
                   </TableHead>
+                  <TableHead className={cn(rtl && "text-right font-arabic", "w-[150px]")}>
+                    {rtl ? "القناة" : "Channel"}
+                  </TableHead>
                   <TableHead className={cn(rtl && "text-right font-arabic", "w-[120px]")}>
                     {rtl ? "حالة البوت" : "Bot Status"}
                   </TableHead>
@@ -352,7 +396,7 @@ export function ClientsSection() {
                 {isLoading ? (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className={cn(
                         "h-24 text-center text-muted-foreground",
                         rtl && "font-arabic"
@@ -364,7 +408,7 @@ export function ClientsSection() {
                 ) : filteredClients.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className={cn(
                         "h-24 text-center text-muted-foreground",
                         rtl && "font-arabic"
@@ -410,6 +454,16 @@ export function ClientsSection() {
                         )}
                       >
                         {client.phone}
+                      </TableCell>
+                      <TableCell className={cn(rtl && "text-right")}>
+                        <div className="flex flex-col">
+                          <span className={cn("font-medium", rtl && "font-arabic")}>
+                            {client.Channel?.name || client.platform || "-"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                            {client.Channel?.type || client.platform || "-"}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         {client.ai_enabled === false ? (

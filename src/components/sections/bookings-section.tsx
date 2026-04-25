@@ -243,6 +243,15 @@ export function BookingsSection() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
+  const [channels, setChannels] = useState<{ id: string; name: string; type: string }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/channels')
+      .then(r => r.json())
+      .then(data => setChannels(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  }, []);
+
   // ─── Pagination ──────────────────────────────────────────────────────────
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -453,15 +462,11 @@ export function BookingsSection() {
               <SelectItem value="all" className={rtl ? "font-arabic" : ""}>
                 {t(locale, "bookings.allChannels")}
               </SelectItem>
-              <SelectItem value="whatsapp" className={rtl ? "font-arabic" : ""}>
-                {t(locale, "channels.whatsapp")}
-              </SelectItem>
-              <SelectItem value="facebook" className={rtl ? "font-arabic" : ""}>
-                {t(locale, "channels.facebook")}
-              </SelectItem>
-              <SelectItem value="instagram" className={rtl ? "font-arabic" : ""}>
-                {t(locale, "channels.instagram")}
-              </SelectItem>
+              {channels.map((ch) => (
+                <SelectItem key={ch.id} value={ch.id} className={rtl ? "font-arabic" : ""}>
+                  {ch.name} ({ch.type})
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 

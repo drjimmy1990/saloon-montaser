@@ -23,10 +23,15 @@ export async function GET(request: NextRequest) {
     // Build filtered query
     let query = supabase
       .from('Booking')
-      .select('*, client:Client(*)', { count: 'exact' });
+      .select('*, client:Client!inner(*)', { count: 'exact' });
 
     if (channel !== 'all') {
-      query = query.eq('channelType', channel);
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(channel);
+      if (isUUID) {
+        query = query.eq('client.channel_id', channel);
+      } else {
+        query = query.eq('channelType', channel);
+      }
     }
     if (status !== 'all') {
       query = query.eq('status', status);
@@ -47,10 +52,7 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    // Filter out rows where client didn't match the search (Supabase still returns the row with client: null)
-    const filtered = search
-      ? (bookings || []).filter((b: Record<string, unknown>) => b.client !== null)
-      : (bookings || []);
+    const filtered = bookings || [];
 
     // Stats query (unfiltered totals)
     const { data: allBookings, error: statsError } = await supabase

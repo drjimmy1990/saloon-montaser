@@ -687,7 +687,7 @@ export function CatalogSection() {
                         {product.price}
                       </span>
                       <span className={cn("text-xs text-muted-foreground", rtl && "font-arabic")}>
-                        {rtl ? "ر.س" : "SAR"}
+                        {rtl ? "د.أ" : "JOD"}
                       </span>
                     </div>
                   </div>

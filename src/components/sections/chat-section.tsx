@@ -530,27 +530,6 @@ export function ChatSection() {
                       </div>
                     </div>
                   </button>
-                  {/* Block icon button — always visible for blocked, hover for others */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setBlockDialogContactId(conv.id);
-                    }}
-                    className={cn(
-                      "absolute top-1.5 shrink-0 p-0.5 rounded-sm transition-opacity",
-                      rtl ? "left-1.5" : "right-1.5",
-                      conv.ai_enabled === false
-                        ? "opacity-80 text-orange-500 hover:opacity-100"
-                        : "opacity-0 group-hover:opacity-60 hover:!opacity-100 text-muted-foreground hover:text-orange-500"
-                    )}
-                    title={conv.ai_enabled === false ? (rtl ? "تفعيل البوت" : "Enable AI") : (rtl ? "إيقاف البوت" : "Disable AI")}
-                  >
-                    {conv.ai_enabled === false ? (
-                      <Bot className="w-3 h-3 opacity-50" />
-                    ) : (
-                      <Bot className="w-3 h-3" />
-                    )}
-                  </button>
                 </div>
               );
             })

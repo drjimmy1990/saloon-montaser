@@ -250,7 +250,7 @@ export function SettingsSection() {
                 id="address"
                 value={salonAddress}
                 onChange={(e) => setSalonAddress(e.target.value)}
-                placeholder={rtl ? "شارع العليا، الرياض..." : "123 Main St..."}
+                placeholder={rtl ? "شارع مكة، عمّان..." : "123 Main St..."}
                 className={cn(rtl && "font-arabic text-right")}
                 dir={rtl ? "rtl" : "ltr"}
               />
@@ -263,7 +263,7 @@ export function SettingsSection() {
                 id="whatsapp"
                 value={whatsappNotification}
                 onChange={(e) => setWhatsappNotification(e.target.value)}
-                placeholder="+966500000000"
+                placeholder="962790000000"
                 dir="ltr"
               />
             </div>
