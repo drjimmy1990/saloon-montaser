@@ -180,14 +180,7 @@ const neutralStyles = {
 
 // ─── Initial Data ─────────────────────────────────────────────────────────────
 
-const initialCategories: CategoryItem[] = [
-  { id: "skincare", label: "العناية بالبشرة", color: "sage" },
-  { id: "hair", label: "الشعر", color: "amber" },
-  { id: "nails", label: "الأظافر", color: "pink" },
-  { id: "makeup", label: "المكياج", color: "terracotta" },
-];
-
-// Removed initialProducts mock data
+// No hardcoded categories — they come from the database
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -228,7 +221,7 @@ export function CatalogSection() {
   const { locale } = useAppStore();
   const rtl = isRTL(locale);
 
-  const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -249,6 +242,16 @@ export function CatalogSection() {
   const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
   const [deletingCategory, setDeletingCategory] = useState<CategoryItem | null>(null);
 
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/categories");
+      const data = await res.json();
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch categories", err);
+    }
+  };
+
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
@@ -263,6 +266,7 @@ export function CatalogSection() {
   };
 
   React.useEffect(() => {
+    fetchCategories();
     fetchProducts();
   }, []);
 
@@ -423,27 +427,28 @@ export function CatalogSection() {
     });
   };
 
-  const handleSaveCategory = () => {
-    if (editingCategory) {
-      // Update existing category
-      setCategories((prev) =>
-        prev.map((c) =>
-          c.id === editingCategory.id
-            ? { ...c, label: categoryFormData.label, color: categoryFormData.color }
-            : c
-        )
-      );
-      setEditingCategory(null);
-    } else {
-      // Add new category
-      const slug = slugify(categoryFormData.label) || `cat-${Date.now()}`;
-      const newCategory: CategoryItem = {
-        id: slug,
-        label: categoryFormData.label,
-        color: categoryFormData.color,
-      };
-      setCategories((prev) => [...prev, newCategory]);
+  const handleSaveCategory = async () => {
+    try {
+      if (editingCategory) {
+        // Update existing category via API
+        await fetch(`/api/categories/${editingCategory.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ label: categoryFormData.label, color: categoryFormData.color }),
+        });
+      } else {
+        // Create new category via API
+        await fetch("/api/categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ label: categoryFormData.label, color: categoryFormData.color }),
+        });
+      }
+      await fetchCategories();
+    } catch (err) {
+      console.error("Failed to save category", err);
     }
+    setEditingCategory(null);
     setCategoryFormData(emptyCategoryFormData);
   };
 
@@ -452,15 +457,15 @@ export function CatalogSection() {
     setDeleteCategoryDialogOpen(true);
   };
 
-  const handleConfirmDeleteCategory = () => {
+  const handleConfirmDeleteCategory = async () => {
     if (!deletingCategory) return;
-    // Move products in this category to uncategorized (category: "")
-    setProducts((prev) =>
-      prev.map((p) => (p.category === deletingCategory.id ? { ...p, category: "" } : p))
-    );
-    // Remove the category
-    setCategories((prev) => prev.filter((c) => c.id !== deletingCategory.id));
-    // If we were viewing this category, switch to all
+    try {
+      await fetch(`/api/categories/${deletingCategory.id}`, { method: "DELETE" });
+      await fetchCategories();
+      await fetchProducts(); // Re-fetch products since their category may have been cleared
+    } catch (err) {
+      console.error("Failed to delete category", err);
+    }
     if (activeCategory === deletingCategory.id) {
       setActiveCategory("all");
     }
@@ -682,7 +687,6 @@ export function CatalogSection() {
                       {product.name}
                     </h3>
                     <div className="flex items-center gap-1 mt-1">
-                      <DollarSign className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span className="text-sm font-bold text-primary tabular-nums">
                         {product.price}
                       </span>
