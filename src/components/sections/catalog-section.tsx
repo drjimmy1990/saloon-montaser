@@ -16,6 +16,8 @@ import {
   Tag,
   Settings2,
   Loader2,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { uploadImage, deleteImage } from "@/lib/storage";
 import {
@@ -73,6 +75,7 @@ interface Product {
   availableAtHome: boolean;
   availableAtSalon: boolean;
   notes: string;
+  sortOrder: number;
 }
 
 interface ProductFormData {
@@ -364,19 +367,23 @@ export function CatalogSection() {
           Promise.all(removedImages.map(img => deleteImage(img))).catch(console.error);
         }
 
-        await fetch(`/api/products/${editingProduct.id}`, {
+        const res = await fetch(`/api/products/${editingProduct.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        const updatedProduct = await res.json();
+        // Update in-place to preserve sort order
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, ...updatedProduct } : p));
       } else {
-        await fetch("/api/products", {
+        const res = await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        const newProduct = await res.json();
+        setProducts(prev => [...prev, newProduct]);
       }
-      fetchProducts();
     } catch (err) {
       console.error("Failed to save product", err);
     }
@@ -395,12 +402,37 @@ export function CatalogSection() {
       }
 
       await fetch(`/api/products/${deletingProduct.id}`, { method: "DELETE" });
-      fetchProducts();
+      setProducts(prev => prev.filter(p => p.id !== deletingProduct.id));
     } catch (err) {
       console.error("Failed to delete product", err);
     }
     setDeleteDialogOpen(false);
     setDeletingProduct(null);
+  };
+
+  // ─── Reorder Handlers ──────────────────────────────────────────────────────
+
+  const moveProduct = async (productId: string, direction: "up" | "down") => {
+    const idx = products.findIndex(p => p.id === productId);
+    if (idx === -1) return;
+    if (direction === "up" && idx === 0) return;
+    if (direction === "down" && idx === products.length - 1) return;
+
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    const newProducts = [...products];
+    [newProducts[idx], newProducts[swapIdx]] = [newProducts[swapIdx], newProducts[idx]];
+    setProducts(newProducts);
+
+    // Persist the new order to the database
+    try {
+      await fetch("/api/products", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds: newProducts.map(p => p.id) }),
+      });
+    } catch (err) {
+      console.error("Failed to save product order", err);
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -711,12 +743,31 @@ export function CatalogSection() {
                   </p>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex items-center gap-1 pt-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => moveProduct(product.id, "up")}
+                      title={rtl ? "تحريك لأعلى" : "Move up"}
+                    >
+                      <ArrowUp className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => moveProduct(product.id, "down")}
+                      title={rtl ? "تحريك لأسفل" : "Move down"}
+                    >
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    </Button>
+                    <div className="flex-1" />
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenEdit(product)}
-                      className={cn("gap-1.5 text-xs h-8 flex-1", rtl && "font-arabic")}
+                      className={cn("gap-1.5 text-xs h-8", rtl && "font-arabic")}
                     >
                       <Pencil className="w-3 h-3" />
                       {t(locale, "edit")}
@@ -726,7 +777,7 @@ export function CatalogSection() {
                       size="sm"
                       onClick={() => handleOpenDelete(product)}
                       className={cn(
-                        "gap-1.5 text-xs h-8 flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800/40",
+                        "gap-1.5 text-xs h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800/40",
                         rtl && "font-arabic"
                       )}
                     >
