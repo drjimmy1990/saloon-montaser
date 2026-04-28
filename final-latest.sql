@@ -480,3 +480,63 @@ ADD COLUMN "availableAtSalon" BOOLEAN DEFAULT TRUE;
 ALTER PUBLICATION supabase_realtime ADD TABLE "public"."Message";
 
 ALTER PUBLICATION supabase_realtime ADD TABLE "public"."Client";
+
+-- 2. Set REPLICA IDENTITY FULL so UPDATE events include all columns
+ALTER TABLE "public"."Message" REPLICA IDENTITY FULL;
+
+ALTER TABLE "public"."Client" REPLICA IDENTITY FULL;
+
+-- 3. Enable RLS on both tables (required for Realtime to work with anon key)
+ALTER TABLE "public"."Message" ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE "public"."Client" ENABLE ROW LEVEL SECURITY;
+
+-- 4. Create permissive SELECT policies for the anon role
+--    (Realtime needs SELECT permission to broadcast changes)
+CREATE POLICY "Allow anon select on Message" ON "public"."Message"
+  FOR SELECT TO anon USING (true);
+
+CREATE POLICY "Allow anon select on Client" ON "public"."Client"
+  FOR SELECT TO anon USING (true);
+
+-- 5. Allow service_role full access (used by API routes)
+CREATE POLICY "Allow service_role full access on Message" ON "public"."Message"
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow service_role full access on Client" ON "public"."Client"
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- 6. Allow anon full CRUD (for dashboard operations via anon key)
+CREATE POLICY "Allow anon insert on Message" ON "public"."Message"
+  FOR INSERT TO anon WITH CHECK (true);
+
+CREATE POLICY "Allow anon update on Message" ON "public"."Message"
+  FOR UPDATE TO anon USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow anon delete on Message" ON "public"."Message"
+  FOR DELETE TO anon USING (true);
+
+CREATE POLICY "Allow anon insert on Client" ON "public"."Client"
+  FOR INSERT TO anon WITH CHECK (true);
+
+CREATE POLICY "Allow anon update on Client" ON "public"."Client"
+  FOR UPDATE TO anon USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow anon delete on Client" ON "public"."Client"
+  FOR DELETE TO anon USING (true);
+
+-- Migration: Add sortOrder column to Product table for manual ordering
+-- Run this in Supabase SQL Editor
+
+ALTER TABLE "public"."Product"
+ADD COLUMN IF NOT EXISTS "sortOrder" INTEGER DEFAULT 0;
+
+-- Initialize sortOrder based on current createdAt order (newest = highest number)
+WITH ranked AS (
+  SELECT id, ROW_NUMBER() OVER (ORDER BY "createdAt" ASC) AS rn
+  FROM "public"."Product"
+)
+UPDATE "public"."Product" p
+SET "sortOrder" = r.rn
+FROM ranked r
+WHERE p.id = r.id;
