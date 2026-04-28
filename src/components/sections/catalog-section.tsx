@@ -861,25 +861,29 @@ export function CatalogSection() {
                 <Label className={cn("cursor-pointer", rtl && "font-arabic")} htmlFor="availableAtSalon">
                   {rtl ? "متوفر في الصالون" : "Available at Salon"}
                 </Label>
-                <Switch
-                  id="availableAtSalon"
-                  checked={formData.availableAtSalon}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, availableAtSalon: checked }))
-                  }
-                />
+                <div dir="ltr" className="flex items-center">
+                  <Switch
+                    id="availableAtSalon"
+                    checked={formData.availableAtSalon}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, availableAtSalon: checked }))
+                    }
+                  />
+                </div>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/30">
                 <Label className={cn("cursor-pointer", rtl && "font-arabic")} htmlFor="availableAtHome">
                   {rtl ? "متوفر في المنزل" : "Available at Home"}
                 </Label>
-                <Switch
-                  id="availableAtHome"
-                  checked={formData.availableAtHome}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, availableAtHome: checked }))
-                  }
-                />
+                <div dir="ltr" className="flex items-center">
+                  <Switch
+                    id="availableAtHome"
+                    checked={formData.availableAtHome}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, availableAtHome: checked }))
+                    }
+                  />
+                </div>
               </div>
             </div>
 
