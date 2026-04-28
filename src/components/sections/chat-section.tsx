@@ -328,7 +328,9 @@ export function ChatSection() {
           refetchClients();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("[Realtime] chat-realtime channel status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
