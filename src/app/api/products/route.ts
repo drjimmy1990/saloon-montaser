@@ -28,9 +28,11 @@ export async function POST(request: NextRequest) {
       .insert({
         name: body.name,
         description: body.description ?? '',
-        price: body.price ?? 0,
+        price: body.price ?? '',
         images: body.images ?? [],
         isAvailable: body.isAvailable ?? true,
+        availableAtHome: body.availableAtHome ?? false,
+        availableAtSalon: body.availableAtSalon ?? true,
         category: body.category ?? '',
         notes: body.notes ?? '',
       })

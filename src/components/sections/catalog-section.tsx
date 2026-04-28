@@ -66,10 +66,12 @@ interface Product {
   id: string;
   name: string;
   description: string;
-  price: number;
+  price: string;
   images: string[];
   category: string; // category id or "" for uncategorized
   isAvailable: boolean;
+  availableAtHome: boolean;
+  availableAtSalon: boolean;
   notes: string;
 }
 
@@ -80,6 +82,8 @@ interface ProductFormData {
   images: string[];
   category: string;
   isAvailable: boolean;
+  availableAtHome: boolean;
+  availableAtSalon: boolean;
   notes: string;
 }
 
@@ -191,6 +195,8 @@ const emptyProductFormData: ProductFormData = {
   images: [],
   category: "",
   isAvailable: true,
+  availableAtHome: false,
+  availableAtSalon: true,
   notes: "",
 };
 
@@ -321,10 +327,12 @@ export function CatalogSection() {
     setFormData({
       name: product.name || "",
       description: product.description || "",
-      price: product.price ? String(product.price) : "",
+      price: product.price || "",
       images: product.images || [],
       category: product.category || "",
       isAvailable: product.isAvailable,
+      availableAtHome: product.availableAtHome ?? false,
+      availableAtSalon: product.availableAtSalon ?? true,
       notes: product.notes || "",
     });
     setProductDialogOpen(true);
@@ -336,14 +344,15 @@ export function CatalogSection() {
   };
 
   const handleSaveProduct = async () => {
-    const price = parseFloat(formData.price) || 0;
     const payload = {
       name: formData.name,
       description: formData.description,
-      price,
+      price: formData.price,
       images: formData.images,
       category: formData.category,
       isAvailable: formData.isAvailable,
+      availableAtHome: formData.availableAtHome,
+      availableAtSalon: formData.availableAtSalon,
       notes: formData.notes,
     };
 
@@ -803,14 +812,12 @@ export function CatalogSection() {
                 </Label>
                 <Input
                   id="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
                   value={formData.price}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, price: e.target.value }))
                   }
-                  placeholder="0.00"
+                  placeholder={rtl ? "مثال: 10 أو حسب الطلب" : "e.g. 10 or Varies"}
                   className="tabular-nums"
                   dir="ltr"
                 />
@@ -845,6 +852,34 @@ export function CatalogSection() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            {/* Location Availability Toggles */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/30">
+                <Label className={cn("cursor-pointer", rtl && "font-arabic")} htmlFor="availableAtSalon">
+                  {rtl ? "متوفر في الصالون" : "Available at Salon"}
+                </Label>
+                <Switch
+                  id="availableAtSalon"
+                  checked={formData.availableAtSalon}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, availableAtSalon: checked }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-3 bg-muted/30">
+                <Label className={cn("cursor-pointer", rtl && "font-arabic")} htmlFor="availableAtHome">
+                  {rtl ? "متوفر في المنزل" : "Available at Home"}
+                </Label>
+                <Switch
+                  id="availableAtHome"
+                  checked={formData.availableAtHome}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, availableAtHome: checked }))
+                  }
+                />
               </div>
             </div>
 

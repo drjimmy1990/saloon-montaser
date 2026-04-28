@@ -26,6 +26,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (body.price !== undefined) updateData.price = body.price;
     if (body.images !== undefined) updateData.images = body.images;
     if (body.isAvailable !== undefined) updateData.isAvailable = body.isAvailable;
+    if (body.availableAtHome !== undefined) updateData.availableAtHome = body.availableAtHome;
+    if (body.availableAtSalon !== undefined) updateData.availableAtSalon = body.availableAtSalon;
     if (body.category !== undefined) updateData.category = body.category;
     if (body.notes !== undefined) updateData.notes = body.notes;
 

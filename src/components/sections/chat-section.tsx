@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
 import { t, isRTL } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 import {
   MessageCircle,
   Bot,
@@ -262,6 +263,77 @@ export function ChatSection() {
     observer.observe(el);
     return () => observer.disconnect();
   }, [loadMore]);
+
+  // ─── Supabase Realtime Subscription ────────────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel("chat-realtime")
+      // Listen for new messages inserted into the Message table
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "Message" },
+        (payload) => {
+          const newMsg = payload.new as ChatMessage;
+          setClients((prev) => {
+            // Check if the message's client_id matches any loaded client
+            const clientIdx = prev.findIndex((c) => c.id === newMsg.client_id);
+            if (clientIdx === -1) {
+              // New client we haven't loaded — do a soft refetch
+              refetchClients();
+              return prev;
+            }
+            // Avoid duplicates (e.g. if we already added via optimistic update)
+            const existing = prev[clientIdx];
+            if (existing.messages.some((m) => m.id === newMsg.id)) return prev;
+            // Inject the message into the correct client
+            const updated = [...prev];
+            updated[clientIdx] = {
+              ...existing,
+              messages: [...existing.messages, newMsg],
+            };
+            return updated;
+          });
+        }
+      )
+      // Listen for client row updates (unread_count, last_message_preview, etc.)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "Client" },
+        (payload) => {
+          const updatedClient = payload.new as Partial<Client> & { id: string };
+          setClients((prev) =>
+            prev.map((c) =>
+              c.id === updatedClient.id
+                ? {
+                    ...c,
+                    unread_count: updatedClient.unread_count ?? c.unread_count,
+                    last_message_preview:
+                      updatedClient.last_message_preview ?? c.last_message_preview,
+                    last_interaction_at:
+                      updatedClient.last_interaction_at ?? c.last_interaction_at,
+                    ai_enabled:
+                      updatedClient.ai_enabled ?? c.ai_enabled,
+                  }
+                : c
+            )
+          );
+        }
+      )
+      // Listen for new clients being inserted
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "Client" },
+        () => {
+          // A brand new client appeared — refetch the list
+          refetchClients();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetchClients]);
 
   const activeClient = clients.find((c) => c.id === activeChatId) || null;
 

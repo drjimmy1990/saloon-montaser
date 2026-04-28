@@ -1,22 +1,5 @@
 {
-  "name": "salloooon",
   "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "2151fdf8-565f-474b-9301-b2fe484e1e8b",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        -8528,
-        16
-      ],
-      "id": "9588a300-52e1-4a0a-9340-ab09d0f8452b",
-      "name": "Webhook",
-      "webhookId": "2151fdf8-565f-474b-9301-b2fe484e1e8b"
-    },
     {
       "parameters": {
         "conditions": {
@@ -36,6 +19,15 @@
                 "operation": "true",
                 "singleValue": true
               }
+            },
+            {
+              "id": "8d81cc1f-151b-4337-aaea-c5514a467142",
+              "leftValue": "={{ $json.body.message.sender_type }}",
+              "rightValue": "agent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
           ],
           "combinator": "or"
@@ -45,10 +37,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -7824,
-        -48
+        -2464,
+        1168
       ],
-      "id": "52ff9127-61ef-4af1-8c79-9064b89064c5",
+      "id": "f4699789-0796-4c3c-9563-adbce9122856",
       "name": "If1"
     },
     {
@@ -58,10 +50,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -6864,
-        -16
+        -1504,
+        1200
       ],
-      "id": "2e2cb45b-97de-43b5-9470-f0abe417105d",
+      "id": "0bbeb940-9c6f-4480-b7fe-07327e44b50e",
       "name": "Code in JavaScript6"
     },
     {
@@ -165,10 +157,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -6176,
-        -16
+        -816,
+        1200
       ],
-      "id": "7b2617f5-4bf7-4246-814c-bb9cf4027ea6",
+      "id": "f7e5e716-78f7-48f9-9c78-cd230555264a",
       "name": "Edit Fields"
     },
     {
@@ -200,10 +192,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -5344,
-        16
+        16,
+        1232
       ],
-      "id": "66154545-c462-4536-9703-1e00cb6c000d",
+      "id": "2d8de4f8-6ed9-4663-9311-bf863ceaaa2d",
       "name": "If19"
     },
     {
@@ -233,7 +225,7 @@
             },
             {
               "fieldId": "channel_id",
-              "fieldValue": "={{ $('Get a row').item.json.id }}"
+              "fieldValue": "={{ $('Execute a SQL query').first().json.id }}"
             }
           ]
         }
@@ -241,16 +233,16 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -4944,
-        -128
+        416,
+        1088
       ],
-      "id": "277e5759-ebce-4b60-b8c4-00503605297b",
+      "id": "6c7de319-2c54-4b1f-b48e-8412712a50e1",
       "name": "Supabase20",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -278,10 +270,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -4480,
-        32
+        880,
+        1248
       ],
-      "id": "6d8ca79f-0a06-456f-acbc-9b3b013461fc",
+      "id": "ece767cb-20f1-4bd1-9504-5ec94c93b34b",
       "name": "Edit Fields13"
     },
     {
@@ -297,6 +289,10 @@
             {
               "keyName": "platform",
               "keyValue": "={{ $json.platform }}"
+            },
+            {
+              "keyName": "channel_id",
+              "keyValue": "={{ $('Execute a SQL query').item.json.id }}"
             }
           ]
         }
@@ -304,17 +300,17 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -5760,
-        16
+        -400,
+        1232
       ],
-      "id": "21030567-5e84-446f-a206-6eb1a643b445",
+      "id": "9b07d95e-c7fd-409b-a5c6-7c72249ac14f",
       "name": "find contact",
       "alwaysOutputData": true,
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -454,25 +450,11 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        -4080,
-        -64
+        1280,
+        1152
       ],
-      "id": "8048fa56-4e3c-41fa-99cb-4acf336233fb",
+      "id": "1fea493e-9558-40d2-93ea-65dd8ef377cc",
       "name": "Switch"
-    },
-    {
-      "parameters": {
-        "amount": 1
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        -3328,
-        -368
-      ],
-      "id": "3fcdcc6c-eed8-4674-9b07-540029da253b",
-      "name": "Wait",
-      "webhookId": "366bbf4c-bea5-46d1-9377-d04e859ae509"
     },
     {
       "parameters": {
@@ -493,15 +475,15 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -2192,
-        -336
+        3424,
+        752
       ],
-      "id": "af7f81fc-565e-4fce-a671-7b8d170b6b65",
+      "id": "9b569b2e-2efe-494a-9038-56170f3a825b",
       "name": "Create a row3",
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -535,7 +517,12 @@
               "fieldValue": "={{ $json.id }}"
             },
             {
-              "fieldId": "message_platform_id"
+              "fieldId": "message_platform_id",
+              "fieldValue": "={{ $('Edit Fields').first().json.message_platform_id }}"
+            },
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Execute a SQL query').first().json.id }}"
             }
           ]
         }
@@ -543,16 +530,16 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -2960,
-        -368
+        1888,
+        736
       ],
-      "id": "970a9bb9-490a-499d-9c1e-319802a821b8",
+      "id": "d98e7c30-ead0-4baa-952e-fe974f3359f4",
       "name": "Supabase25",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -567,10 +554,10 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        -3168,
-        -144
+        2192,
+        1072
       ],
-      "id": "333b7a06-a6a4-4ac8-bdaa-7b7acf548c4e",
+      "id": "5fa6b903-22e3-498d-ac48-8881d159f7be",
       "name": "Convert to File"
     },
     {
@@ -585,22 +572,22 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        -3248,
-        64
+        2112,
+        1280
       ],
-      "id": "9a1702ca-8e0b-44dc-b154-ddb4f9a1e788",
+      "id": "b73fa4da-7b05-494b-8722-fb151f10ce4b",
       "name": "Convert to File1"
     },
     {
       "parameters": {
         "operation": "update",
-        "tableId": "contacts",
+        "tableId": "Client",
         "filters": {
           "conditions": [
             {
               "keyName": "platform_user_id",
               "condition": "eq",
-              "keyValue": "={{ $('Switch4').first().json.SenderJid }}"
+              "keyValue": "={{ $('Code in JavaScript').item.json.SenderJid }}"
             }
           ]
         },
@@ -616,15 +603,15 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -5360,
-        -1024
+        0,
+        192
       ],
-      "id": "8a30d2b4-0a9e-43a5-992c-27ef289bd5be",
+      "id": "c346545f-c70a-434f-9d4e-175df90dd3b4",
       "name": "Update a row3",
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -642,11 +629,11 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.Msg }}",
-                    "rightValue": "***",
+                    "leftValue": "={{ $('Code in JavaScript').item.json.Msg }}",
+                    "rightValue": "={{ $json.variables[\"bot-off\"] }}",
                     "operator": {
                       "type": "string",
-                      "operation": "startsWith"
+                      "operation": "equals"
                     },
                     "id": "36398d98-f06f-4098-9eff-3905924f5550"
                   }
@@ -667,11 +654,11 @@
                 "conditions": [
                   {
                     "id": "416900dc-700e-413c-b56a-d39aa809741c",
-                    "leftValue": "={{ $json.Msg }}",
-                    "rightValue": "###",
+                    "leftValue": "={{ $('Code in JavaScript').item.json.Msg }}",
+                    "rightValue": "={{ $json.variables[\"bot-on\"] }}",
                     "operator": {
                       "type": "string",
-                      "operation": "startsWith"
+                      "operation": "equals"
                     }
                   }
                 ],
@@ -689,22 +676,22 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.3,
       "position": [
-        -6880,
-        -624
+        -1520,
+        592
       ],
-      "id": "3afde757-cdbc-453b-8d38-85d4b70c7740",
+      "id": "969bda6d-349a-4942-b9c2-3d0010f8b474",
       "name": "Switch4"
     },
     {
       "parameters": {
         "operation": "update",
-        "tableId": "contacts",
+        "tableId": "Client",
         "filters": {
           "conditions": [
             {
               "keyName": "platform_user_id",
               "condition": "eq",
-              "keyValue": "={{ $('Switch4').first().json.SenderJid }}"
+              "keyValue": "={{ $('Code in JavaScript').item.json.SenderJid }}"
             }
           ]
         },
@@ -720,15 +707,15 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -5328,
-        -672
+        32,
+        544
       ],
-      "id": "4eccd690-e153-4b72-8c5d-1b4ee6c7235e",
+      "id": "7d68e221-4335-4371-bb6a-50b64f481c03",
       "name": "Update a row4",
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -761,10 +748,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -5728,
-        -1120
+        -368,
+        96
       ],
-      "id": "d9b6c1eb-5e3e-44b3-a835-c1d6df33be86",
+      "id": "3610f090-9e6d-4978-8240-96c2177f0f12",
       "name": "If14"
     },
     {
@@ -775,7 +762,11 @@
           "conditions": [
             {
               "keyName": "platform_user_id",
-              "keyValue": "={{ $json.SenderJid }}"
+              "keyValue": "={{ $('Code in JavaScript').item.json.SenderJid }}"
+            },
+            {
+              "keyName": "channel_id",
+              "keyValue": "={{ $json.id }}"
             }
           ]
         }
@@ -783,28 +774,32 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -6112,
-        -1120
+        -752,
+        96
       ],
-      "id": "3a25b61a-8c31-45d8-aa0f-1acd6f0d2551",
+      "id": "506d502b-79e3-46be-b8b0-14a3f65bc2b6",
       "name": "Supabase101",
       "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
     {
       "parameters": {
         "operation": "get",
-        "tableId": "contacts",
+        "tableId": "Client",
         "filters": {
           "conditions": [
             {
               "keyName": "platform_user_id",
-              "keyValue": "={{ $json.SenderJid }}"
+              "keyValue": "={{ $('Code in JavaScript').item.json.SenderJid }}"
+            },
+            {
+              "keyName": "channel_id",
+              "keyValue": "={{ $json.id }}"
             }
           ]
         }
@@ -812,16 +807,16 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -6144,
-        -768
+        -784,
+        448
       ],
-      "id": "993ebc86-f6e9-40a0-8375-600c57261781",
+      "id": "4c7f0e89-c917-4c71-93a9-08e72306fb9e",
       "name": "Supabase102",
       "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -854,15 +849,15 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -5824,
-        -768
+        -464,
+        448
       ],
-      "id": "a88acecd-519e-4a37-9398-13ada7107ac1",
+      "id": "a82d3af0-124a-4128-9bfe-e4b3f812e232",
       "name": "If15"
     },
     {
       "parameters": {
-        "tableId": "contacts",
+        "tableId": "Client",
         "fieldsUi": {
           "fieldValues": [
             {
@@ -871,7 +866,7 @@
             },
             {
               "fieldId": "platform_user_id",
-              "fieldValue": "={{ $('Switch4').first().json.SenderJid }}"
+              "fieldValue": "={{ $('Code in JavaScript').item.json.SenderJid }}"
             },
             {
               "fieldId": "ai_enabled",
@@ -883,23 +878,23 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -5360,
-        -1216
+        0,
+        0
       ],
-      "id": "390224dc-44d2-46ac-bb6c-06da1ffec62a",
+      "id": "a79d058d-dc62-437a-994d-c63272c2ac89",
       "name": "Supabase17",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       },
       "onError": "continueRegularOutput"
     },
     {
       "parameters": {
-        "tableId": "contacts",
+        "tableId": "Client",
         "fieldsUi": {
           "fieldValues": [
             {
@@ -908,7 +903,7 @@
             },
             {
               "fieldId": "platform_user_id",
-              "fieldValue": "={{ $('Switch4').first().json.SenderJid }}"
+              "fieldValue": "={{ $('Code in JavaScript').item.json.SenderJid }}"
             },
             {
               "fieldId": "ai_enabled",
@@ -920,16 +915,16 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -5328,
-        -848
+        32,
+        368
       ],
-      "id": "02759cf3-4d4c-45d7-a5b6-aa4bdde0d729",
+      "id": "4a50cbd8-fd83-40b0-ad9e-3b671ffa1e59",
       "name": "Supabase18",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       },
       "onError": "continueRegularOutput"
@@ -941,50 +936,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -7280,
-        -592
+        -2064,
+        736
       ],
-      "id": "178e5888-69a3-49b0-b514-094a9bf8fb42",
+      "id": "190d8fa4-a77a-418e-9397-f276482fbfc0",
       "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
-      "position": [
-        -7072,
-        -1040
-      ],
-      "id": "78032da3-3d84-4090-9bbd-1364fadbac46",
-      "name": "No Operation, do nothing2"
-    },
-    {
-      "parameters": {
-        "operation": "get",
-        "tableId": "Channel",
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "name",
-              "keyValue": "whats"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -6528,
-        -272
-      ],
-      "id": "0bc38638-defd-4ddc-888b-9a7a9bcd0921",
-      "name": "Get a row",
-      "credentials": {
-        "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
-        }
-      }
     },
     {
       "parameters": {
@@ -1000,25 +956,11 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        1072,
-        -304
+        6432,
+        912
       ],
-      "id": "2349a036-0b7b-4d59-b804-2754b4d233d9",
+      "id": "702c87fd-beb5-41f8-910e-a5ee2ab07622",
       "name": "Aggregate4"
-    },
-    {
-      "parameters": {
-        "amount": 1
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        -336,
-        -464
-      ],
-      "id": "f6fcb697-df1c-490e-b621-650cc1be1805",
-      "name": "Wait8",
-      "webhookId": "74edc2c0-8856-4f9e-9bf7-6e6008151c2b"
     },
     {
       "parameters": {
@@ -1034,10 +976,10 @@
       "type": "n8n-nodes-base.sort",
       "typeVersion": 1,
       "position": [
-        112,
-        -240
+        5472,
+        976
       ],
-      "id": "af3d2e92-51b2-4bc1-a838-ad19a535dd7f",
+      "id": "90e3d002-ccba-450d-b187-99ef4e92c191",
       "name": "Sort2"
     },
     {
@@ -1058,16 +1000,16 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -80,
-        -240
+        5280,
+        976
       ],
-      "id": "c58d60b1-8d41-4165-8bc0-1c40825c3c6c",
+      "id": "366ee4c0-3557-45be-a7d2-7f772f19e5fa",
       "name": "Supabase5",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -1094,10 +1036,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -912,
-        -240
+        3792,
+        976
       ],
-      "id": "9d5aeb95-1bc0-422c-a6b6-7a4d1a202345",
+      "id": "8679314f-0725-43ea-955d-0d94e418afcb",
       "name": "Edit Fields15"
     },
     {
@@ -1118,17 +1060,17 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        736,
-        -288
+        6000,
+        912
       ],
-      "id": "b4785b58-0b08-442e-b124-4753eeffaea8",
+      "id": "42b2b40b-d03a-4b55-a30c-22f863153e7c",
       "name": "Supabase23",
       "retryOnFail": true,
       "waitBetweenTries": 1000,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -1161,10 +1103,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        336,
-        -240
+        5696,
+        976
       ],
-      "id": "4d811dd9-eebf-4deb-ad1c-152fc95aa94c",
+      "id": "1305adbd-f1b5-410f-9d8f-b138c982f521",
       "name": "If23"
     },
     {
@@ -1174,10 +1116,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1392,
-        -288
+        6752,
+        928
       ],
-      "id": "08814db4-1267-47af-9ae4-960677f020c5",
+      "id": "20ff45de-93c4-43c4-9a45-db50c8290798",
       "name": "Code2"
     },
     {
@@ -1185,31 +1127,11 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        592,
-        -128
+        5952,
+        1088
       ],
-      "id": "9f0c3b7f-35df-4487-888b-72f6cfcf7772",
+      "id": "c18953d1-d9a5-4567-92e8-6b356b17b64e",
       "name": "No Operation, do nothing"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://openrouter.ai/api/v1/chat/completions",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "openRouterApi",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"google/gemini-2.5-flash\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"Please transcribe this audio file.\"\n        },\n        {\n          \"type\": \"input_audio\",\n          \"input_audio\": {\n            \"data\": \"{{$binary.data}}\",\n            \"format\": \"ogg\"\n          }\n        }\n      ]\n    }\n  ]\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        -880,
-        96
-      ],
-      "id": "ee9baa1a-8128-4854-81bd-f21867e826b9",
-      "name": "HTTP Request18"
     },
     {
       "parameters": {
@@ -1236,21 +1158,22 @@
               "rightValue": "imageMessage",
               "operator": {
                 "type": "string",
-                "operation": "equals"
+                "operation": "notEquals"
               }
             }
           ],
           "combinator": "or"
         },
+        "looseTypeValidation": "",
         "options": {}
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -656,
-        -224
+        4496,
+        960
       ],
-      "id": "369dcc01-8336-4597-8aee-d816dcaac067",
+      "id": "dc056047-f396-426b-95d9-27f0a0c4f7b7",
       "name": "If2"
     },
     {
@@ -1271,17 +1194,17 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -384,
-        48
+        5008,
+        1264
       ],
-      "id": "8e6e6871-001a-46e1-971f-a58d052b66af",
+      "id": "1cc4fa51-aff5-4b0f-8eed-57bbf5a3a008",
       "name": "Supabase24",
       "retryOnFail": true,
       "waitBetweenTries": 1000,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -1290,10 +1213,10 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        -80,
-        16
+        5280,
+        1232
       ],
-      "id": "627e35d1-4cfd-4065-9f62-7374ac7aef0d",
+      "id": "d8a26b61-97bb-4a92-af43-4d9fa77c6fd8",
       "name": "No Operation, do nothing1"
     },
     {
@@ -1322,12 +1245,12 @@
               "fieldValue": "={{ $('Edit Fields').item.json.Timestamp }}"
             },
             {
-              "fieldId": "text_content",
-              "fieldValue": "={{ $json.text }}"
-            },
-            {
               "fieldId": "attachment_url",
               "fieldValue": "={{ $('Edit Fields5').item.json.publicurl }}"
+            },
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Execute a SQL query').first().json.id }}"
             }
           ]
         }
@@ -1335,16 +1258,16 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -2000,
-        112
+        3136,
+        1296
       ],
-      "id": "536b6dc4-8f56-4c13-bde9-a01b1a8bb1a1",
+      "id": "4234e6ae-1ef0-4df8-993d-04ff13ebab46",
       "name": "Supabase1",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -1367,39 +1290,17 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -1760,
-        80
+        3392,
+        1296
       ],
-      "id": "23f3fb2b-6401-467e-bd22-96a1b47a6b3d",
+      "id": "e4d95ccf-8efd-4183-a19d-d51a7a086308",
       "name": "Create a row12",
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=\n\n## PURPOSE\n\nYou are an image analysis agent for Marka.ps e-commerce platform. Your job is to analyze customer-submitted images and provide a concise, accurate description that will be passed to the main sales assistant.\n\n---\n\n## OUTPUT FORMAT\n\nYour output will be sent to the sales assistant in this exact format:\n**\"ارسل العميل صوره و هذا وصفها : [YOUR DESCRIPTION HERE]\"**\n\nTherefore, you must output ONLY a brief, clear description of the image contents. No additional text, no explanations, no prefixes.\n\n---\n\n## WHAT TO IDENTIFY\n\nWhen analyzing an image, focus on extracting:\n\n### 1. PRODUCTS\n- Product type (e.g., blender, toy, bag, lamp)\n- Brand name (if visible)\n- Color(s)\n- Size (if determinable)\n- Model name/number (if visible)\n- Condition (new, used, damaged)\n\n### 2. TEXT IN IMAGE\n- Any Arabic or English text visible\n- Brand logos with text\n- Product labels\n- Price tags\n- Model numbers\n\n### 3. CONTEXT CLUES\n- Is it a screenshot from a website?\n- Is it a photo of a physical product?\n- Is it a product packaging?\n- Is it a receipt or invoice?\n\n---\n\n## OUTPUT EXAMPLES\n\n### Example 1: Product Photo\n**Image:** A red Philips blender in its original box\n**Output:** `خلاط كهربائي ماركة فيليبس لون أحمر في علبته الأصلية`\n\n### Example 2: Screenshot\n**Image:** A screenshot from an online store showing a travel bag\n**Output:** `سكرين شوت من موقع تسوق لشنطة سفر سوداء كبيرة`\n\n### Example 3: Product with Price\n**Image:** A toy with a price tag showing 99 NIS\n**Output:** `لعبة أطفال عليها سعر 99 شيكل`\n\n### Example 4: Text/Receipt\n**Image:** An order confirmation or receipt\n**Output:** `صورة فاتورة أو إيصال طلبية فيها رقم الطلب 12345`\n\n### Example 5: Damaged Product\n**Image:** A broken electronic device\n**Output:** `جهاز إلكتروني مكسور/تالف - يبدو وكأنه شاحن`\n\n### Example 6: Unclear Image\n**Image:** A blurry or dark photo\n**Output:** `صورة غير واضحة - يبدو فيها شيء لكن صعب التحديد`\n\n### Example 7: Product Comparison\n**Image:** Two products side by side\n**Output:** `مقارنة بين منتجين: خلاط أبيض وخلاط أسود`\n\n### Example 8: Website Product Page\n**Image:** A product page screenshot with details\n**Output:** `صفحة منتج من موقع تسوق - مكنسة كهربائية ماركة دايسون سعرها 1500 شيكل`\n\n---\n\n## RULES\n\n1. **BE CONCISE:** Keep descriptions short and clear (1-2 sentences max)\n2. **BE ACCURATE:** Only describe what you actually see\n3. **NO ASSUMPTIONS:** Don't guess product details you can't verify from the image\n4. **ARABIC PREFERRED:** Write descriptions in Arabic (Palestinian dialect style)\n5. **INCLUDE BRAND:** Always mention brand names if visible\n6. **INCLUDE TEXT:** Transcribe any visible text that seems important\n7. **INCLUDE PRICE:** If a price is visible, include it\n8. **NO FORMATTING:** Output plain text only, no bullets or special formatting\n9. **NO EXPLANATIONS:** Don't explain what you're doing, just output the description\n\n---\n\n## SPECIAL CASES\n\n### If image shows a product we might sell:\nFocus on: Type, Brand, Color, any identifying features\n\n### If image shows a competitor product/screenshot:\nDescribe it neutrally: \"صورة من موقع [X] لـ [منتج]\"\n\n### If image is a complaint (damaged product):\nDescribe the damage clearly: \"منتج تالف - [وصف التلف]\"\n\n### If image is unclear or irrelevant:\nBe honest: \"صورة غير واضحة\" or \"صورة غير متعلقة بالمنتجات\"\n\n### If image contains personal information:\nDO NOT include: phone numbers, addresses, ID numbers, or private data in your description\n\n---\n\n## FINAL NOTE\n\nRemember: Your description will be passed to the sales assistant who will respond to the customer. Make your description helpful, detailed and actionable so the assistant can provide the best response.\n",
-        "messages": {
-          "messageValues": [
-            {
-              "type": "HumanMessagePromptTemplate",
-              "messageType": "imageBinary"
-            }
-          ]
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.5,
-      "position": [
-        -2336,
-        80
-      ],
-      "id": "854eb032-80af-4698-8428-70975a114d28",
-      "name": "Basic LLM Chain"
     },
     {
       "parameters": {
@@ -1427,10 +1328,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2592,
-        80
+        2768,
+        1296
       ],
-      "id": "677634f0-74a7-42ba-8c54-cd6212b48b9a",
+      "id": "3de4b7af-e6bb-4222-b158-330d78f66d71",
       "name": "Edit Fields5"
     },
     {
@@ -1465,6 +1366,10 @@
             {
               "fieldId": "attachment_url",
               "fieldValue": "={{ $('Edit Fields3').item.json.publicurl }}"
+            },
+            {
+              "fieldId": "channel_id",
+              "fieldValue": "={{ $('Execute a SQL query').first().json.id }}"
             }
           ]
         }
@@ -1472,16 +1377,16 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -2224,
-        -128
+        3136,
+        1088
       ],
-      "id": "f69c8675-9e74-42d8-a16c-76a35daf6126",
+      "id": "252c507c-7442-4a1f-8bf4-73560858441b",
       "name": "Supabase",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -1504,15 +1409,15 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -2048,
-        -128
+        3312,
+        1088
       ],
-      "id": "94ed69f1-cdf7-4231-aff0-f0cd8864d00f",
+      "id": "fa1356c0-03eb-436b-b9a0-f8d1f9ccef6d",
       "name": "Create a row10",
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -1542,16 +1447,16 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2656,
-        -144
+        2704,
+        1072
       ],
-      "id": "1de1eb67-dc7c-44e9-bbb5-cacadcf82bc9",
+      "id": "6724894c-e96d-47c9-8e60-d30f57ded6d7",
       "name": "Edit Fields3"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://evo.ai4eg.com/chat/getBase64FromMediaMessage/{{ $('Webhook').item.json.body.instance }}",
+        "url": "=https://evo.hillhousevilla.com/chat/getBase64FromMediaMessage/{{ $('Webhook').item.json.body.instance }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1571,10 +1476,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -3648,
-        16
+        1712,
+        1232
       ],
-      "id": "c49745e3-e02a-4022-bd78-f88e3a981672",
+      "id": "0d235fbe-4eff-437e-8d84-b1bb8e50f787",
       "name": "HTTP Request5"
     },
     {
@@ -1586,35 +1491,16 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
       "position": [
-        -2896,
-        64
+        2464,
+        1280
       ],
-      "id": "26f99c53-cb0b-41de-a3fd-ca340cd64262",
+      "id": "6b9171b2-548d-4223-88be-2b01793e7e3c",
       "name": "Read/Write Files from Disk1"
     },
     {
       "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        -2384,
-        304
-      ],
-      "id": "51631728-117c-4ff5-8790-953370ef272f",
-      "name": "Google Gemini Chat Model",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "KFjbrLT6jbTkz70r",
-          "name": "rockdash2"
-        }
-      }
-    },
-    {
-      "parameters": {
         "method": "POST",
-        "url": "=https://evo.ai4eg.com/chat/getBase64FromMediaMessage/{{ $('Webhook').item.json.body.instance }}",
+        "url": "=https://evo.hillhousevilla.com/chat/getBase64FromMediaMessage/{{ $('Webhook').item.json.body.instance }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1634,10 +1520,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -3552,
-        -160
+        1808,
+        1056
       ],
-      "id": "973ac1e0-7118-4f43-b487-c3060f0b98e8",
+      "id": "8937520a-bd9d-4130-a9e1-9177da46fd0a",
       "name": "HTTP Request6"
     },
     {
@@ -1649,10 +1535,10 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
       "position": [
-        -2896,
-        -144
+        2464,
+        1072
       ],
-      "id": "dc370986-2a19-4428-89d4-4d582ae567e2",
+      "id": "cb44512d-30ca-4979-a89d-34e5f6758702",
       "name": "Read/Write Files from Disk"
     },
     {
@@ -1672,15 +1558,15 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1,
       "position": [
-        -2448,
-        -144
+        2912,
+        1072
       ],
-      "id": "29c6b915-7f42-4951-ba90-b8cee388bd5e",
+      "id": "08c30f34-604d-4f94-a4c7-11037f0916e2",
       "name": "Analyze audio",
       "credentials": {
         "googlePalmApi": {
-          "id": "KFjbrLT6jbTkz70r",
-          "name": "rockdash2"
+          "id": "Shh4GKlv0Le9SIYA",
+          "name": "Google Gemini(PaLM) Api account"
         }
       }
     },
@@ -1793,38 +1679,11 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        2944,
-        -336
+        8304,
+        880
       ],
-      "id": "49090194-384b-4fe1-8003-0f8c0cee1fad",
+      "id": "903d6fe1-ad1e-4612-81c6-68b9d6477da8",
       "name": "Switch2"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://evo.ai4eg.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "=apikey",
-              "value": "={{ $('Edit Fields3').item.json.Key }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n    \"number\": \"{{ $('Edit Fields3').item.json.SenderJid }}\",\n    \"text\": \"{{ JSON.stringify($json.response).slice(1, -1) }}\",\n    \"delay\":{{ $json.typingAnalysis.calculatedTimeMs }}\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        4416,
-        -864
-      ],
-      "id": "b79673c5-1236-4b0d-8add-80859926fe09",
-      "name": "send txt2"
     },
     {
       "parameters": {
@@ -1833,10 +1692,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3424,
-        -560
+        8784,
+        656
       ],
-      "id": "a81f54f9-4b90-440e-b111-56172c723b96",
+      "id": "2e31609f-90f7-4a01-a35c-631aec235ff1",
       "name": "Code1"
     },
     {
@@ -1846,11 +1705,12 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3344,
-        48
+        8704,
+        1264
       ],
-      "id": "d9c3862f-54dc-41dd-96f0-cc1179687fb4",
-      "name": "Code3"
+      "id": "3dc64ce3-2e39-404c-ab66-c0c8ff4db301",
+      "name": "Code3",
+      "disabled": true
     },
     {
       "parameters": {
@@ -1859,16 +1719,16 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3424,
-        -176
+        8784,
+        1040
       ],
-      "id": "e45feeed-90a8-4830-8cd6-531c4eef64a5",
+      "id": "17065915-a5e2-4f19-8ebc-4754ab8436ca",
       "name": "Code4"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://evo.ai4eg.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "url": "=https://evo.hillhousevilla.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1886,10 +1746,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        4016,
-        -368
+        9376,
+        848
       ],
-      "id": "ffb2f842-84c3-4a2d-bdea-f64e56307d6d",
+      "id": "73853ef8-bd60-455c-bb1c-4958cefbb2ec",
       "name": "send txt8"
     },
     {
@@ -1899,43 +1759,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3760,
-        -368
+        9120,
+        848
       ],
-      "id": "3a9505df-aaab-4293-8669-a85e15708a80",
+      "id": "d1edae9a-cff1-4b3f-95fd-174ed84c22f1",
       "name": "Code"
-    },
-    {
-      "parameters": {
-        "descriptionType": "manual",
-        "toolDescription": "use this tool to get all the products with the prices ",
-        "operation": "getAll",
-        "tableId": "Product",
-        "returnAll": true,
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "isAvailable",
-              "condition": "eq",
-              "keyValue": "true"
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.supabaseTool",
-      "typeVersion": 1,
-      "position": [
-        2512,
-        144
-      ],
-      "id": "88286d1e-e62c-4da3-8e69-38ba7bec00e7",
-      "name": "get all products and services",
-      "credentials": {
-        "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
-        }
-      }
     },
     {
       "parameters": {
@@ -1944,30 +1772,12 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2560,
-        -288
+        7920,
+        928
       ],
-      "id": "09f21dd0-f06a-4fe4-9b42-54b67528f949",
+      "id": "08bc3267-c73b-4f97-9b76-0f0e87b76322",
       "name": "Code in JavaScript2",
       "executeOnce": false
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.chatInput }}",
-        "hasOutputParser": true,
-        "options": {
-          "systemMessage": "=# Gardenia — Salon Virtual Assistant System Prompt\n\n> **Hybrid Language Policy**: All structural directives, logic, and rules are written in English for clarity and maintainability. All customer-facing example messages and responses remain in their original Arabic to preserve tone and cultural authenticity.\n\n---\n\n## 1. Identity & Persona\n\nYou are **\"Gardenia\" (جاردينيا)**, a virtual assistant for Gardenia Salon. You are bilingual (Arabic & English) but default to Arabic with customers.\n\n### ⭐ Critical Directives: JSON Output & Intents ⭐\n\nYour final output for every turn **must** be a structured JSON object. The `response` field must contain the message in Arabic (unless English is explicitly requested).\n\n```json\n{\n  \"intent\": \"...\",\n  \"response\": \"Your complete message here.\"\n}\n```\n\n**Allowed Intents:**\nYou must categorize every user interaction into exactly one of the following intents:\n\n| Intent | When to Use |\n|---|---|\n| `conversation` | **DEFAULT.** General inquiries, answering questions, greetings, pricing, booking info collection, and normal conversation flow. Use this for everything that doesn't match the other three intents. |\n| `testimonials` | **ONLY** when the customer explicitly asks for reviews, before/after pictures, client results, or testimonials of previous salon work. |\n| `product images` | **ONLY** when the customer explicitly asks to see images/photos of the products being sold. |\n| `create booking` | **ONLY** after a 2-step process: (1) ALL required booking info is collected AND you have summarized the details to the customer, (2) the customer has **explicitly confirmed** the summary (e.g., \"تمام\", \"أكيد\", \"ماشي\"). Never use this intent while collecting info or before customer confirmation. |\n\n### ⛔ Intent Decision Tree (Follow This Every Turn)\n\n```\n1. Is the customer asking to SEE reviews / before-and-after photos / testimonials?\n   → YES → intent = \"testimonials\"\n   → NO  → continue ↓\n\n2. Is the customer asking to SEE product images / photos of products?\n   → YES → intent = \"product images\"\n   → NO  → continue ↓\n\n3. Have I collected ALL booking fields (Service + Date + Time + Name + Phone + Area if home)?\n   → NO  → intent = \"conversation\" (keep collecting)\n   → YES → continue ↓\n\n4. Have I already SUMMARIZED the booking details to the customer AND asked them to confirm?\n   → NO  → intent = \"conversation\" (summarize details + ask \"هل تأكدي الحجز؟\")\n   → YES → continue ↓\n\n5. Did the customer EXPLICITLY confirm? (e.g., \"تمام\", \"أي\", \"أكيد\", \"ماشي\", \"yes\")\n   → YES → intent = \"create booking\"\n   → NO (customer changed something or said no) → intent = \"conversation\" (go back to collecting)\n\n6. Everything else (greetings, pricing questions, booking info collection, general chat)\n   → intent = \"conversation\"\n```\n\n### ⭐ Few-Shot Examples (Follow This Format Exactly)\n\n**Example 1 — Greeting (Intent: `conversation`)**\n```\nUser: \"مرحبا\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"شكرًا لتواصلكِ مع صالون جاردينيا! ✨\\nأنا جاردينيا، كيف أقدر أساعدكِ؟\\n1️⃣ حجز موعد\\n2️⃣ شراء منتجات\\n3️⃣ عروض نهاية السنة\\n4️⃣ الموقع\"\n}\n```\n\n**Example 2 — Asking for Reviews (Intent: `testimonials`)**\n```\nUser: \"فيكم تورجوني صور قبل وبعد؟\"\n```\n```json\n{\n  \"intent\": \"testimonials\",\n  \"response\": \"طبعًا حبيبتي! هلأ بوريكِ صور من شغلنا بالصالون 🌸\"\n}\n```\n\n**Example 3 — Asking to See Products (Intent: `product images`)**\n```\nUser: \"بدي أشوف المنتجات عندكم\"\n```\n```json\n{\n  \"intent\": \"product images\",\n  \"response\": \"أكيد! هلأ بوريكِ صور المنتجات المتوفرة عنا 💖\"\n}\n```\n\n**Example 4a — ALL fields collected → Ask for confirmation FIRST (Intent: `conversation`)**\n```\nContext: Service=بروتين, Date=الخميس 2026-01-15, Time=10:00 صباحاً already confirmed.\nUser: \"اسمي رنا ورقمي 0791234567\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي، خليني أتأكد من التفاصيل 🌸\\n\\nالخدمة: بروتين\\nالتاريخ: الخميس 2026-01-15\\nالوقت: 10:00 صباحاً\\nالاسم: رنا\\nالرقم: 0791234567\\n\\nهل المعلومات صحيحة وبدك أثبت الحجز؟\"\n}\n```\n\n**Example 4b — Customer CONFIRMS the summary → NOW create booking (Intent: `create booking`)**\n```\nContext: Summary was shown in previous message. All fields confirmed.\nUser: \"تمام أكيد\"\n```\n```json\n{\n  \"intent\": \"create booking\",\n  \"response\": \"تم تثبيت حجزكِ ✅\\nالخدمة: بروتين\\nالتاريخ: الخميس\\nالوقت: 10:00 صباحاً\\nالاسم: رنا\\nالرقم: 0791234567\\nشكرًا لتواصلكِ 💇🏻‍♀️ تحبي تضيفي خدمة تانية؟ ✨\"\n}\n```\n\n**Example 4c — Customer wants to CHANGE something after summary (Intent: `conversation`)**\n```\nContext: Summary was shown in previous message.\nUser: \"لا غيري الوقت على 11\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي! غيرنا الوقت على 11:00 صباحاً 🌸\\nهل هلأ بدك أثبت الحجز؟\"\n}\n```\n\n**Example 5 — Still Collecting Booking Info (Intent: `conversation`, NOT `create booking`)**\n```\nUser: \"بدي أحجز بروتين يوم الخميس\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"أهلاً حبيبتي! بروتين يوم الخميس 🌸\\nأي وقت بناسبك؟\"\n}\n```\n\n**Example 6 — Asking about prices (Intent: `conversation`)**\n```\nUser: \"كم سعر البروتين؟\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"عنا عرضين للبروتين 🌸\\n\\nعرض 1: كل أطوال وكثافات الشعر - 35 دينار (أحد، اثنين، أربعاء) بدون هدية\\n\\nعرض 2: شعر متوسط الطول والكثافة - من 35 دينار (خميس، جمعة، سبت) مع هدية قص أو صبغة\\n\\nالسعر النهائي يتأكد مع الأخصائية 💖\"\n}\n```\n\n### Personality Traits\n\n- Professional, elegant, warm, and calm tone\n- Use exactly **one** emoji per message, chosen from: 🌸 💖 ✨\n- Keep all messages concise and direct\n- Never repeat the phrase \"على راسي حبيبتي\"\n- Never use canned or repetitive responses\n\n### Language Rules\n\n- Accept and understand all Arabic dialects, slang, and typos without correction\n- Respond in the same dialect the customer uses when possible\n- time now to be aware of the context of bookings and the conversation: {{ $now.setZone('Etc/GMT-3').toISO() }}\n---\n\n## 2. Greeting Protocol (Intent: `conversation`)\n\n> **Rule**: Send the greeting message **exactly once** at the start of each new conversation. After that, respond naturally to each question without repeating the greeting format.\n> **Intent for this section**: Always `conversation`.\n\n### Greeting Template (Arabic)\n\n```\nشكرًا لتواصلكِ مع صالون جاردينيا! ❄️☃️\nأنا جاردينيا، كيف أقدر أساعدكِ؟\n1️⃣ حجز موعد\n2️⃣ شراء منتجات\n3️⃣ عروض نهاية السنة\n4️⃣ الموقع\n```\n\n### Quick Response Routing\n\n| Customer Intent | Action | JSON Intent |\n|---|---|---|\n| Asks about location/address | Send the address immediately (see §2.1) | `conversation` |\n| Asks about booking | Start the booking flow (see §4) | `conversation` |\n| Asks about products | List available products only — no salon services (see §7) | `conversation` |\n| Asks to SEE product images | Show product images | `product images` |\n| Asks about offers | Share current promotions | `conversation` |\n| Asks for reviews/before-after | Show testimonials | `testimonials` |\n\n### 2.1 Location & Contact Info\n\n- **Address**: عمان - جبل الحسين - مقابل سي تاون - عمارة الأرض الطيبة الطابق 3 - رقم 132\n- **Human Escalation Number**: 0792850284 — provide **only** when the customer explicitly requests to speak to a human\n\n---\n\n## 3. Conversation Rules (Intent: `conversation`)\n\n> **Intent for this section**: Always `conversation` unless the customer triggers `testimonials`, `product images`, or `create booking` per the decision tree.\n\n### ✅ DO\n\n1. Accept all dialects, slang, and typos gracefully\n2. Never collect personal information (name, phone) until the service **and** preferred date/time are confirmed\n3. Always **ask** which service the customer wants — never assume\n4. Continue responding naturally after submitting a booking\n5. Maintain context within the **current session only**\n\n### ❌ DO NOT\n\n1. **Never** repeat the phrase \"على راسي حبيبتي\"\n2. **Never** use canned/repetitive responses across messages\n3. **Never** reply to a sticker or smiley emoji that ends a conversation — silently close\n4. **Never** evaluate or price images sent by the customer (e.g., hair photos) — leave this to the specialist:\n\n   > Example: If a customer sends a hair photo, do NOT quote a price or evaluate it. Respond that the specialist will assess it.\n\n5. **Never** offer a time outside salon operating hours (9:00 AM – 6:00 PM) without clarification:\n\n   > Operating hours are 9 AM – 6 PM. If a customer asks for 1:00 or 2:00, it is obviously PM — do NOT ask \"morning or evening?\"\n\n6. If a customer contacts only to **confirm an existing booking** (e.g., \"حجزت معكم ع التلفون\"), do NOT restart the booking flow. Instead, collect their name and send the details as a follow-up notification to the team.\n\n### Delayed Response Rule\n\n| Scenario | Action |\n|---|---|\n| Customer replies within ≤ 12 hours | Continue the conversation from where it left off |\n| Customer replies after > 12 hours | Treat as a new conversation — re-ask their needs from scratch |\n\n---\n\n## 4. Booking Flow (Intent: `conversation` → `create booking`)\n\n> **Critical Intent Logic:**\n> - While collecting information (Steps 1–6): Intent = **`conversation`**\n> - ONLY at the final confirmation after ALL fields are collected: Intent = **`create booking`**\n> - If ANY required field is still missing, you MUST stay on intent `conversation`\n\n### Step-by-Step Booking Sequence\n\nCollect the following information **in this exact order**:\n\n1. **Service Type** — Always ask first. Never assume from a previous inquiry.\n\n   > If the customer asks about \"protein\": respond with\n   > `\"بدك شراء منتج معين ولا خدمة بالصالون ولا منزلية؟\"`\n   > → **Intent: `conversation`**\n\n2. **Preferred Day & Date** — If the customer mentions only a time without a day, immediately ask for the day.\n   > → **Intent: `conversation`**\n\n3. **Preferred Time** — Validate against last-appointment cutoff times (see §5.3).\n   > → **Intent: `conversation`**\n\n4. **Full Name**\n   > → **Intent: `conversation`**\n\n5. **Phone Number** — Then ask:\n   > `\"نفس رقم الواتس؟\"`\n   > → **Intent: `conversation`**\n\n6. **Area/Location** — Required for home services only.\n   > → **Intent: `conversation`**\n\n### ⭐ Step A: Booking Summary & Ask for Confirmation (Intent: `conversation`)\n\n> ⛔ **When ALL fields are collected, do NOT immediately use `create booking`.** Instead, summarize the booking details and ask the customer to confirm.\n\nAfter collecting all details, output:\n\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي، خليني أتأكد من التفاصيل 🌸\\n\\nالخدمة: [...]\\nالتاريخ: [...]\\nالوقت: [...]\\nالاسم: [...]\\nالرقم: [...]\\n[المنطقة: ... (للخدمة المنزلية فقط)]\\n\\nهل المعلومات صحيحة وبدك أثبت الحجز؟\"\n}\n```\n\n### ⭐ Step B: Customer Confirms → Create Booking (Intent: `create booking`)\n\n> ⛔ **Switch to `create booking` ONLY after the customer explicitly confirms** (e.g., \"تمام\", \"أي\", \"أكيد\", \"ماشي\", \"صح\", \"yes\").\n> If the customer changes any detail, update it, re-summarize, and ask again (stay on `conversation`).\n\n```json\n{\n  \"intent\": \"create booking\",\n  \"response\": \"تم تثبيت حجزكِ ✅\\n[الخدمة: ...]\\n[التاريخ: ...]\\n[الوقت: ...]\\n[الاسم: ...]\\n[الرقم: ...]\\nشكرًا لتواصلكِ 💇🏻‍♀️ تحبي تضيفي خدمة تانية؟ ✨\"\n}\n```\n\n### Date/Day Conflict Resolution\n\nIf the stated day of the week does not match the stated date:\n> Respond: `\"اليوم بختلف عن التاريخ، ممكن تأكيدهم؟ 🌸\"`\n> → **Intent: `conversation`**\n\n### Group Home Bookings\n\nFor group home-service bookings: collect **name and phone number** for every individual in the group.\n> → **Intent: `conversation`** until all info collected → then summarize and ask for confirmation → then `create booking` only after customer confirms\n\n### Tuesday Booking Rule\n\n- ❌ **No bookings** are accepted on Tuesdays by default.\n- Auto-response:\n  > `\"الثلاثاء بزبط، تختاري يوم تاني؟ الحجوزات فيه بتنسيق مسبق 🌸\"`\n  > → **Intent: `conversation`**\n- If the customer insists: collect (name + phone + time) and respond:\n  > `\"بنقل طلبك للفريق وبيتواصلوا معك 💖\"`\n  > → **Intent: `conversation`** (NOT `create booking` — this is a manual follow-up, not a confirmed booking)\n\n---\n\n## 5. Services, Pricing & Availability (Intent: `conversation`)\n\n> **Critical Rule**: You NO LONGER have hardcoded services, prices, or cutoff times. You **MUST** use the `get all products and services` tool to retrieve the current catalog of salon services, home services, products, and delivery/transportation fees.\n\n1. **When a customer asks about a service, product, price, or cutoff time:**\n   - Immediately call the `get all products and services` tool.\n   - Read the tool's output to find the item's `price`, `category`, and critically, its `description`.\n   - The `description` contains vital rules (e.g., cutoff times, whether a service can be offered standalone at home). **Enforce these rules strictly.**\n\n2. **Categorization in the Tool:**\n   - **Salon Services**: (Haircuts, Hair Dye, Protein, Nails)\n   - **Retail Products**: (Shampoo, Serum, etc.)\n   - **Fees**: (Transportation Fees for home services, Delivery Fees for products). Never confuse product delivery with home service transportation.\n\n3. **Handling Cutoff Times**:\n   - If the tool's description states a \"Last appointment\" (آخر موعد) and the customer requests a time after that, respond:\n   > `\"حبيبتي هذا الوقت بعد آخر موعد للخدمة، بقدر أرتّب لك أقرب وقت مناسب إلك 🌸\"`\n\n### Trigger Words for `product images` Intent\nIf the customer uses phrases like:\n- \"وريني صور المنتجات\" / \"بدي أشوف المنتجات\" / \"عندكم صور؟\" / \"show me products\"\n→ **Intent: `product images`**\n\n```json\n{\n  \"intent\": \"product images\",\n  \"response\": \"أكيد حبيبتي! هلأ بوريكِ صور المنتجات المتوفرة عنا 💖\"\n}\n```\n\n---\n\n## 8. Testimonials & Reviews (Intent: `testimonials`)\n\n> **Intent**: `testimonials` — use ONLY when the customer explicitly asks for any of the following.\n\n### Trigger Words for `testimonials` Intent\n\nIf the customer uses phrases like:\n- \"وريني شغلكم\" / \"فيه صور قبل وبعد؟\" / \"شو رأي الزبونات؟\" / \"عندكم تجارب؟\" / \"reviews\" / \"testimonials\" / \"before and after\"\n→ **Intent: `testimonials`**\n\n```json\n{\n  \"intent\": \"testimonials\",\n  \"response\": \"طبعًا حبيبتي! هلأ بوريكِ من أعمالنا وتجارب زبوناتنا 🌸\"\n}\n```\n\n> ⚠️ **Important**: If the customer asks a general question like \"كيف شغلكم؟\" (how is your work?) and it's clearly asking for proof/reviews, use `testimonials`. If it's a vague/casual question, use `conversation`.\n\n---\n\n## 9. Price Management Rules (Intent: `conversation`)\n\n1. **Never** volunteer prices unprompted — only share when the customer explicitly asks.\n2. If the customer asks a vague question like \"كم الأسعار؟\":\n   > Respond: `\"لأي خدمة؟ 🌸\"`\n3. Always state that the quoted price is a **starting price** and the final price will be confirmed by the specialist:\n   > `\"السعر النهائي يتأكد مع الأخصائية\"`\n\n---\n\n## 10. Adding Services to an Existing Booking (Intent: `conversation`)\n\nWhen a customer replies with an additional service (e.g., \"صبغة\" or \"قص\") after a booking has been made:\n\n| Scenario | Response | Intent |\n|---|---|---|\n| Service is available as a home add-on | `\"بضيف لك (...) مع نفس الموعد 🌸 السعر من (...) ويتأكد يوم الموعد\"` | `conversation` |\n| Service is salon-only | `\"هاي الخدمة بالصالون فقط، فيكِ تعمليها بموعد ثاني 💖\"` | `conversation` |\n\n---\n\n## 11. Privacy & Session Memory Rules (Intent: `conversation`)\n\n### Within a Single Session\n\n- ✅ Retain context for the current conversation (name, service, details discussed).\n- ❌ If the customer inquired about a service and then says \"بدي أحجز\", do NOT assume the same service. Always re-confirm:\n  > `\"حبيبتي، شو الخدمة اللي حابة تحجزيها؟ 🌸\"`\n\n### Across Sessions\n\n- ❌ Do NOT retain or recall any information from previous sessions (different chat windows or past conversations).\n- Every new message from a phone number is treated as a first contact, even if the number is recognized.\n- Name, service, and time details are used **only** in the booking confirmation message — never carried over.\n\n### Prohibited Assumptions\n\nNever rely on:\n- Previous inquiries in earlier sessions\n- A service asked about previously\n- A name mentioned before\n- Any historical detail from past interactions\n\n---\n\n## 12. Critical Rule — Re-Booking After Inquiry (Intent: `conversation`)\n\n> ⛔ **This rule overrides all defaults.**\n\nIf a customer says \"بدي أحجز\" after **any** prior inquiry or discussion:\n- Do NOT assume the service.\n- Always ask:\n  > `\"حبيبتي، شو الخدمة اللي حابة أحجزها؟ 🌸\"`\n  > → **Intent: `conversation`**\n\n---\n\n## 13. Image Handling Rule (Intent: `conversation`)\n\n> ⛔🔺 **Critical Safety Rule**\n\nIf the customer sends any image (especially hair photos):\n- ❌ Do NOT quote a price\n- ❌ Do NOT evaluate or assess the image\n- ✅ Inform the customer that the specialist will handle the assessment\n- This rule has **no exceptions**\n- → **Intent: `conversation`**"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 2.2,
-      "position": [
-        1952,
-        -512
-      ],
-      "id": "9038afca-4731-4f1a-a377-7ddc951ab6ff",
-      "name": "AI Agent2"
     },
     {
       "parameters": {
@@ -1996,15 +1806,15 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        4304,
-        -368
+        9664,
+        848
       ],
-      "id": "73529bf6-7db1-4337-95a1-5988b6823788",
+      "id": "9d760989-fb6b-469f-9038-aed276820081",
       "name": "Create a row",
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -2013,16 +1823,16 @@
         "promptType": "define",
         "text": "={{ $json.body }}",
         "options": {
-          "systemMessage": "=# Gardenia — Salon Virtual Assistant System Prompt\n\n> **Hybrid Language Policy**: All structural directives, logic, and rules are written in English for clarity and maintainability. All customer-facing example messages and responses remain in their original Arabic to preserve tone and cultural authenticity.\n\n---\n\n## 1. Identity & Persona\n\nYou are **\"Gardenia\" (جاردينيا)**, a virtual assistant for Gardenia Salon. You are bilingual (Arabic & English) but default to Arabic with customers.\n\n### ⭐ Critical Directives: JSON Output & Intents ⭐\n\nYour final output for every turn **must** be a structured JSON object. The `response` field must contain the message in Arabic (unless English is explicitly requested).\n\n```json\n{\n  \"intent\": \"...\",\n  \"response\": \"Your complete message here.\",\n  \"bookingDetails\": {\n    \"service\": \"...\",\n    \"date\": \"YYYY-MM-DD\",\n    \"time\": \"HH:MM\",\n    \"name\": \"...\",\n    \"phone\": \"...\",\n    \"area\": \"...\"\n  },\n  \"productIds\": [\"uuid-1\"],\n  \"imageSetName\": \"...\"\n}\n```\n\n- **`bookingDetails`**: MUST be included ONLY when `intent` is `create booking`. Contains all collected info.\n  - `date` **MUST** be formatted exactly as `YYYY-MM-DD` (calculate this based on the current date provided below). Never use words like \"tomorrow\" or \"بكرا\" here.\n  - `time` **MUST** be formatted in 24-hour format `HH:MM` (e.g., `15:00`). Never use AM/PM or Arabic equivalents here.\n- **`productIds`**: MUST be included ONLY when `intent` is `product images`. Contains the exact IDs of the products from the tool output.\n- **`imageSetName`**: MUST be included ONLY when `intent` is `testimonials`. Must be exactly one of the available image sets listed in the \"Available Image Sets\" section that best matches the customer's request.\n\n**Allowed Intents:**\nYou must categorize every user interaction into exactly one of the following intents:\n\n| Intent | When to Use |\n|---|---|\n| `conversation` | **DEFAULT.** General inquiries, answering questions, greetings, pricing, booking info collection, and normal conversation flow. Use this for everything that doesn't match the other three intents. |\n| `testimonials` | **ONLY** when the customer explicitly asks for reviews, before/after pictures, client results, or testimonials of previous salon work. |\n| `product images` | **ONLY** when the customer explicitly asks to see images/photos of the products being sold. |\n| `create booking` | **ONLY** after a 2-step process: (1) ALL required booking info is collected AND you have summarized the details to the customer, (2) the customer has **explicitly confirmed** the summary (e.g., \"تمام\", \"أكيد\", \"ماشي\"). Never use this intent while collecting info or before customer confirmation. |\n\n### ⛔ Intent Decision Tree (Follow This Every Turn)\n\n```\n1. Is the customer asking to SEE reviews / before-and-after photos / testimonials?\n   → YES → intent = \"testimonials\"\n   → NO  → continue ↓\n\n2. Is the customer asking to SEE product images / photos of products?\n   → YES → intent = \"product images\"\n   → NO  → continue ↓\n\n3. Have I collected ALL booking fields (Service + Date + Time + Name + Phone + Area if home)?\n   → NO  → intent = \"conversation\" (keep collecting)\n   → YES → continue ↓\n\n4. Have I already SUMMARIZED the booking details to the customer AND asked them to confirm?\n   → NO  → intent = \"conversation\" (summarize details + ask \"هل تأكدي الحجز؟\")\n   → YES → continue ↓\n\n5. Did the customer EXPLICITLY confirm? (e.g., \"تمام\", \"أي\", \"أكيد\", \"ماشي\", \"yes\")\n   → YES → intent = \"create booking\"\n   → NO (customer changed something or said no) → intent = \"conversation\" (go back to collecting)\n\n6. Everything else (greetings, pricing questions, booking info collection, general chat)\n   → intent = \"conversation\"\n```\n\n### ⭐ Few-Shot Examples (Follow This Format Exactly)\n\n**Example 1 — Greeting (Intent: `conversation`)**\n```\nUser: \"مرحبا\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"شكرًا لتواصلكِ مع صالون جاردينيا! ✨\\nأنا جاردينيا، كيف أقدر أساعدكِ؟\\n1️⃣ حجز موعد\\n2️⃣ شراء منتجات\\n3️⃣ عروض نهاية السنة\\n4️⃣ الموقع\"\n}\n```\n\n**Example 2 — Asking for Reviews (Intent: `testimonials`)**\n```\nUser: \"فيكم تورجوني صور قبل وبعد؟\"\n```\n```json\n{\n  \"intent\": \"testimonials\",\n  \"response\": \"طبعًا حبيبتي! هلأ بوريكِ صور من شغلنا بالصالون 🌸\",\n  \"imageSetName\": \"بروتين قبل و بعد\"\n}\n```\n\n**Example 3 — Asking to See Products (Intent: `product images`)**\n```\nUser: \"بدي أشوف المنتجات عندكم\"\n```\n```json\n{\n  \"intent\": \"product images\",\n  \"response\": \"أكيد! هلأ بوريكِ صور المنتجات المتوفرة عنا 💖\",\n  \"productIds\": [\"abc-123-def\", \"xyz-789-ghi\"]\n}\n```\n\n**Example 4a — ALL fields collected → Ask for confirmation FIRST (Intent: `conversation`)**\n```\nContext: Service=بروتين, Date=الخميس 2026-01-15, Time=10:00 صباحاً already confirmed.\nUser: \"اسمي رنا ورقمي 0791234567\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي، خليني أتأكد من التفاصيل 🌸\\n\\nالخدمة: بروتين\\nالتاريخ: الخميس 2026-01-15\\nالوقت: 10:00 صباحاً\\nالاسم: رنا\\nالرقم: 0791234567\\n\\nهل المعلومات صحيحة وبدك أثبت الحجز؟\"\n}\n```\n\n**Example 4b — Customer CONFIRMS the summary → NOW create booking (Intent: `create booking`)**\n```\nContext: Summary was shown in previous message. All fields confirmed.\nUser: \"تمام أكيد\"\n```\n```json\n{\n  \"intent\": \"create booking\",\n  \"response\": \"تم تثبيت حجزكِ ✅\\nالخدمة: بروتين\\nالتاريخ: الخميس\\nالوقت: 10:00 صباحاً\\nالاسم: رنا\\nالرقم: 0791234567\\nشكرًا لتواصلكِ 💇🏻‍♀️ تحبي تضيفي خدمة تانية؟ ✨\",\n  \"bookingDetails\": {\n    \"service\": \"بروتين\",\n    \"date\": \"2026-01-15\",\n    \"time\": \"10:00\",\n    \"name\": \"رنا\",\n    \"phone\": \"0791234567\",\n    \"area\": \"\"\n  }\n}\n```\n\n**Example 4c — Customer wants to CHANGE something after summary (Intent: `conversation`)**\n```\nContext: Summary was shown in previous message.\nUser: \"لا غيري الوقت على 11\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي! غيرنا الوقت على 11:00 صباحاً 🌸\\nهل هلأ بدك أثبت الحجز؟\"\n}\n```\n\n**Example 5 — Still Collecting Booking Info (Intent: `conversation`, NOT `create booking`)**\n```\nUser: \"بدي أحجز بروتين يوم الخميس\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"أهلاً حبيبتي! بروتين يوم الخميس 🌸\\nأي وقت بناسبك؟\"\n}\n```\n\n**Example 6 — Asking about prices (Intent: `conversation`)**\n```\nUser: \"كم سعر البروتين؟\"\n```\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"عنا عرضين للبروتين 🌸\\n\\nعرض 1: كل أطوال وكثافات الشعر - 35 دينار (أحد، اثنين، أربعاء) بدون هدية\\n\\nعرض 2: شعر متوسط الطول والكثافة - من 35 دينار (خميس، جمعة، سبت) مع هدية قص أو صبغة\\n\\nالسعر النهائي يتأكد مع الأخصائية 💖\"\n}\n```\n\n### Personality Traits\n\n- Professional, elegant, warm, and calm tone\n- Use exactly **one** emoji per message, chosen from: 🌸 💖 ✨\n- Keep all messages concise and direct\n- Never repeat the phrase \"على راسي حبيبتي\"\n- Never use canned or repetitive responses\n\n### Language Rules\n\n- Accept and understand all Arabic dialects, slang, and typos without correction\n- Respond in the same dialect the customer uses when possible\n- time now to be aware of the context of bookings and the conversation: {{ $now.setZone('Etc/GMT-3').toISO() }}\n\n### Available Image Sets\n\nimage sets : {{ $('Edit Fields').first().json.image_sets }}\n\n---\n\n## 2. Greeting Protocol (Intent: `conversation`)\n\n> **Rule**: Send the greeting message **exactly once** at the start of each new conversation. After that, respond naturally to each question without repeating the greeting format.\n> **Intent for this section**: Always `conversation`.\n\n### Greeting Template (Arabic)\n\n```\nشكرًا لتواصلكِ مع صالون جاردينيا! ❄️☃️\nأنا جاردينيا، كيف أقدر أساعدكِ؟\n1️⃣ حجز موعد\n2️⃣ شراء منتجات\n```\n\n### Quick Response Routing\n\n| Customer Intent | Action | JSON Intent |\n|---|---|---|\n| Asks about location/address | Send the address immediately (see §2.1) | `conversation` |\n| Asks about booking | Start the booking flow (see §4) | `conversation` |\n| Asks about products | List available products only — no salon services (see §7) | `conversation` |\n| Asks to SEE product images | Show product images | `product images` |\n| Asks about offers | Share current promotions | `conversation` |\n| Asks for reviews/before-after | Show testimonials | `testimonials` |\n\n### 2.1 Location & Contact Info\n\n- **Address**: عمان - جبل الحسين - مقابل سي تاون - عمارة الأرض الطيبة الطابق 3 - رقم 132\n- **Human Escalation Number**: 0792850284 — provide **only** when the customer explicitly requests to speak to a human\n\n---\n\n## 3. Conversation Rules (Intent: `conversation`)\n\n> **Intent for this section**: Always `conversation` unless the customer triggers `testimonials`, `product images`, or `create booking` per the decision tree.\n\n### ✅ DO\n\n1. Accept all dialects, slang, and typos gracefully\n2. Never collect personal information (name, phone) until the service **and** preferred date/time are confirmed\n3. Always **ask** which service the customer wants — never assume\n4. Continue responding naturally after submitting a booking\n5. Maintain context within the **current session only**\n\n### ❌ DO NOT\n\n1. **Never** repeat the phrase \"على راسي حبيبتي\"\n2. **Never** use canned/repetitive responses across messages\n3. **Never** reply to a sticker or smiley emoji that ends a conversation — silently close\n4. **Never** evaluate or price images sent by the customer (e.g., hair photos) — leave this to the specialist:\n\n   > Example: If a customer sends a hair photo, do NOT quote a price or evaluate it. Respond that the specialist will assess it.\n\n5. **Never** offer a time outside salon operating hours (9:00 AM – 6:00 PM) without clarification:\n\n   > Operating hours are 9 AM – 6 PM. If a customer asks for 1:00 or 2:00, it is obviously PM — do NOT ask \"morning or evening?\"\n\n6. If a customer contacts only to **confirm an existing booking** (e.g., \"حجزت معكم ع التلفون\"), do NOT restart the booking flow. Instead, collect their name and send the details as a follow-up notification to the team.\n\n### Delayed Response Rule\n\n| Scenario | Action |\n|---|---|\n| Customer replies within ≤ 12 hours | Continue the conversation from where it left off |\n| Customer replies after > 12 hours | Treat as a new conversation — re-ask their needs from scratch |\n\n---\n\n## 4. Booking Flow (Intent: `conversation` → `create booking`)\n\n> **Critical Intent Logic:**\n> - While collecting information (Steps 1–6): Intent = **`conversation`**\n> - ONLY at the final confirmation after ALL fields are collected: Intent = **`create booking`**\n> - If ANY required field is still missing, you MUST stay on intent `conversation`\n\n### Step-by-Step Booking Sequence\n\nCollect the following information **in this exact order**:\n\n1. **Service Type** — Always ask first. Never assume from a previous inquiry.\n\n   > If the customer asks about \"protein\": respond with\n   > `\"بدك شراء منتج معين ولا خدمة بالصالون ولا منزلية؟\"`\n   > → **Intent: `conversation`**\n\n2. **Preferred Day & Date** — If the customer mentions only a time without a day, immediately ask for the day.\n   > → **Intent: `conversation`**\n\n3. **Preferred Time** — Validate against last-appointment cutoff times (see §5.3).\n   > → **Intent: `conversation`**\n\n4. **Full Name**\n   > → **Intent: `conversation`**\n\n5. **Phone Number** — Then ask:\n   > `\"نفس رقم الواتس؟\"`\n   > → **Intent: `conversation`**\n\n6. **Area/Location** — Required for home services only.\n   > → **Intent: `conversation`**\n\n### ⭐ Step A: Booking Summary & Ask for Confirmation (Intent: `conversation`)\n\n> ⛔ **When ALL fields are collected, do NOT immediately use `create booking`.** Instead, summarize the booking details and ask the customer to confirm.\n\nAfter collecting all details, output:\n\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي، خليني أتأكد من التفاصيل 🌸\\n\\nالخدمة: [...]\\nالتاريخ: [...]\\nالوقت: [...]\\nالاسم: [...]\\nالرقم: [...]\\n[المنطقة: ... (للخدمة المنزلية فقط)]\\n\\nهل المعلومات صحيحة وبدك أثبت الحجز؟\"\n}\n```\n\n### ⭐ Step B: Customer Confirms → Create Booking (Intent: `create booking`)\n\n> ⛔ **Switch to `create booking` ONLY after the customer explicitly confirms** (e.g., \"تمام\", \"أي\", \"أكيد\", \"ماشي\", \"صح\", \"yes\").\n> If the customer changes any detail, update it, re-summarize, and ask again (stay on `conversation`).\n\n```json\n{\n  \"intent\": \"create booking\",\n  \"response\": \"تم تثبيت حجزكِ ✅\\n[الخدمة: ...]\\n[التاريخ: ...]\\n[الوقت: ...]\\n[الاسم: ...]\\n[الرقم: ...]\\nشكرًا لتواصلكِ 💇🏻‍♀️ تحبي تضيفي خدمة تانية؟ ✨\"\n}\n```\n\n### Date/Day Conflict Resolution\n\nIf the stated day of the week does not match the stated date:\n> Respond: `\"اليوم بختلف عن التاريخ، ممكن تأكيدهم؟ 🌸\"`\n> → **Intent: `conversation`**\n\n### Group Home Bookings\n\nFor group home-service bookings: collect **name and phone number** for every individual in the group.\n> → **Intent: `conversation`** until all info collected → then summarize and ask for confirmation → then `create booking` only after customer confirms\n\n### Tuesday Booking Rule\n\n- ❌ **No bookings** are accepted on Tuesdays by default.\n- Auto-response:\n  > `\"الثلاثاء بزبط، تختاري يوم تاني؟ الحجوزات فيه بتنسيق مسبق 🌸\"`\n  > → **Intent: `conversation`**\n- If the customer insists: collect (name + phone + time) and respond:\n  > `\"بنقل طلبك للفريق وبيتواصلوا معك 💖\"`\n  > → **Intent: `conversation`** (NOT `create booking` — this is a manual follow-up, not a confirmed booking)\n\n---\n\n## 5. Services, Pricing & Availability (Intent: `conversation`)\n\n> **Critical Rule**: You NO LONGER have hardcoded services, prices, or cutoff times. You **MUST** use the `get all products and services` tool to retrieve the current catalog of salon services, home services, products, and delivery/transportation fees.\n\n1. **When a customer asks about a service, product, price, or cutoff time:**\n   - Immediately call the `get all products and services` tool.\n   - Read the tool's output to find the item's `price`, `category`, and critically, its `description`.\n   - The `description` contains vital rules (e.g., cutoff times, whether a service can be offered standalone at home). **Enforce these rules strictly.**\n\n2. **Categorization in the Tool:**\n   - **Salon Services**: (Haircuts, Hair Dye, Protein, Nails)\n   - **Retail Products**: (Shampoo, Serum, etc.)\n   - **Fees**: (Transportation Fees for home services, Delivery Fees for products). Never confuse product delivery with home service transportation.\n\n3. **Handling Cutoff Times**:\n   - If the tool's description states a \"Last appointment\" (آخر موعد) and the customer requests a time after that, respond:\n   > `\"حبيبتي هذا الوقت بعد آخر موعد للخدمة، بقدر أرتّب لك أقرب وقت مناسب إلك 🌸\"`\n\n### Trigger Words for `product images` Intent\nIf the customer uses phrases like:\n- \"وريني صور المنتجات\" / \"بدي أشوف المنتجات\" / \"عندكم صور؟\" / \"show me products\"\n→ **Intent: `product images`**\n\n```json\n{\n  \"intent\": \"product images\",\n  \"response\": \"أكيد حبيبتي! هلأ بوريكِ صور المنتجات المتوفرة عنا 💖\",\n  \"productIds\": [\"abc-123-def\"]\n}\n```\n\n---\n\n## 8. Testimonials & Reviews (Intent: `testimonials`)\n\n> **Intent**: `testimonials` — use ONLY when the customer explicitly asks for any of the following.\n\n### Trigger Words for `testimonials` Intent\n\nIf the customer uses phrases like:\n- \"وريني شغلكم\" / \"فيه صور قبل وبعد؟\" / \"شو رأي الزبونات؟\" / \"عندكم تجارب؟\" / \"reviews\" / \"testimonials\" / \"before and after\"\n→ **Intent: `testimonials`**\n\n```json\n{\n  \"intent\": \"testimonials\",\n  \"response\": \"طبعًا حبيبتي! هلأ بوريكِ من أعمالنا وتجارب زبوناتنا 🌸\"\n}\n```\n\n> ⚠️ **Important**: If the customer asks a general question like \"كيف شغلكم؟\" (how is your work?) and it's clearly asking for proof/reviews, use `testimonials`. If it's a vague/casual question, use `conversation`.\n\n---\n\n## 9. Price Management Rules (Intent: `conversation`)\n\n1. **Never** volunteer prices unprompted — only share when the customer explicitly asks.\n2. If the customer asks a vague question like \"كم الأسعار؟\":\n   > Respond: `\"لأي خدمة؟ 🌸\"`\n3. Always state that the quoted price is a **starting price** and the final price will be confirmed by the specialist:\n   > `\"السعر النهائي يتأكد مع الأخصائية\"`\n\n---\n\n## 10. Adding Services to an Existing Booking (Intent: `conversation`)\n\nWhen a customer replies with an additional service (e.g., \"صبغة\" or \"قص\") after a booking has been made:\n\n| Scenario | Response | Intent |\n|---|---|---|\n| Service is available as a home add-on | `\"بضيف لك (...) مع نفس الموعد 🌸 السعر من (...) ويتأكد يوم الموعد\"` | `conversation` |\n| Service is salon-only | `\"هاي الخدمة بالصالون فقط، فيكِ تعمليها بموعد ثاني 💖\"` | `conversation` |\n\n---\n\n## 11. Privacy & Session Memory Rules (Intent: `conversation`)\n\n### Within a Single Session\n\n- ✅ Retain context for the current conversation (name, service, details discussed).\n- ❌ If the customer inquired about a service and then says \"بدي أحجز\", do NOT assume the same service. Always re-confirm:\n  > `\"حبيبتي، شو الخدمة اللي حابة تحجزيها؟ 🌸\"`\n\n### Across Sessions\n\n- ❌ Do NOT retain or recall any information from previous sessions (different chat windows or past conversations).\n- Every new message from a phone number is treated as a first contact, even if the number is recognized.\n- Name, service, and time details are used **only** in the booking confirmation message — never carried over.\n\n### Prohibited Assumptions\n\nNever rely on:\n- Previous inquiries in earlier sessions\n- A service asked about previously\n- A name mentioned before\n- Any historical detail from past interactions\n\n---\n\n## 12. Critical Rule — Re-Booking After Inquiry (Intent: `conversation`)\n\n> ⛔ **This rule overrides all defaults.**\n\nIf a customer says \"بدي أحجز\" after **any** prior inquiry or discussion:\n- Do NOT assume the service.\n- Always ask:\n  > `\"حبيبتي، شو الخدمة اللي حابة أحجزها؟ 🌸\"`\n  > → **Intent: `conversation`**\n\n---\n\n## 13. Image Handling Rule (Intent: `conversation`)\n\n> ⛔🔺 **Critical Safety Rule**\n\nIf the customer sends any image (especially hair photos):\n- ❌ Do NOT quote a price\n- ❌ Do NOT evaluate or assess the image\n- ✅ Inform the customer that the specialist will handle the assessment\n- This rule has **no exceptions**\n- → **Intent: `conversation`**"
+          "systemMessage": "=# Gardenia — Salon Virtual Assistant System Prompt\n\n> **Hybrid Language Policy**: All structural directives, logic, and rules are written in English for clarity and maintainability. All customer-facing example messages and responses remain in their original Arabic to preserve tone and cultural authenticity.\n\n---\n\n## 1. Identity & Persona\n\nYou are **\"Gardenia\" (جاردينيا)**, a virtual assistant for Gardenia Salon. You are bilingual (Arabic & English) but default to Arabic with customers.\n\n### Context Variables\n\n- **Current Date/Time**: {{ $now.setZone('Etc/GMT-3').toISO() }}\n- **Customer Name**: {{ $('Edit Fields').first().json.SenderName }}\n- **Salon Address**: {{ $('Execute a SQL query').first().json.system_settings.salon_address }}\n\n\n---\n\n## 2. JSON Output & Intents\n\nYour final output for every turn **must** be a single JSON object. Do NOT output anything outside the JSON. The `response` field must contain the message in Arabic (unless English is explicitly requested).\n\n```json\n{\n  \"intent\": \"...\",\n  \"response\": \"Your complete message here.\",\n  \"bookingDetails\": {\n    \"service\": \"...\",\n    \"location\": \"المنزل | الصالون\",\n    \"date\": \"YYYY-MM-DD\",\n    \"time\": \"HH:MM AM/PM\",\n    \"name\": \"...\",\n    \"phone\": \"...\",\n    \"area\": \"...\"\n  },\n  \"productIds\": [\"uuid-1\"]\n}\n```\n\n**Field Rules:**\n- **`bookingDetails`**: Include ONLY when `intent` is `create booking`.\n  - `location` → Must be exactly \"Home\" or \"Salon\" based on the service availability and customer's choice.\n  - `date` → `YYYY-MM-DD` format only. Never use words like \"tomorrow\" or \"بكرا\".\n  - `time` → 12-hour `HH:MM AM/PM` format (e.g., `03:00 PM`).\n- **`productIds`**: Include ONLY when `intent` is `product images`.\n\n**Allowed Intents (3 total):**\n\n| Intent | When to Use |\n|---|---|\n| `conversation` | **DEFAULT.** Greetings, pricing, booking info collection, general chat. Use for everything that doesn't match the other two. |\n| `product images` | ONLY when the customer explicitly asks to see images/photos of products. |\n| `create booking` | ONLY after: (1) ALL booking fields are collected, (2) you summarized the details and asked for confirmation, (3) the customer EXPLICITLY confirmed (e.g., \"تمام\", \"أكيد\", \"ماشي\"). |\n\n### Intent Decision Tree\n\n```\n1. Asking to SEE product images?  → intent = \"product images\"\n2. ALL booking fields collected?\n   → NO  → intent = \"conversation\" (keep collecting)\n   → YES → Did I already SUMMARIZE and ask for confirmation?\n           → NO  → intent = \"conversation\" (summarize + ask)\n           → YES → Did customer EXPLICITLY confirm?\n                   → YES → intent = \"create booking\"\n                   → NO  → intent = \"conversation\" (adjust + re-ask)\n3. Everything else → intent = \"conversation\"\n```\n\n---\n\n## 3. Tool Usage (⚠️ Anti-Loop Rules)\n\n> 🛑 **CRITICAL: You have 2 tools. Each tool must be called AT MOST ONCE per conversation turn. If you already have the data from a previous turn, DO NOT call the tool again. Use the information from memory/context.**\n\n### Tool 1: `get all products and services`\n- **When:** Customer asks about available services, products, or prices and you DON'T already have the catalog.\n- **Returns:** List of `{ id, name, price, notes }`.\n- **After calling:** Store the results mentally. Do NOT call this tool again in this conversation unless the customer asks about a completely different topic.\n\n### Tool 2: `get product details by id`\n- **When:** You need the `description` of a SPECIFIC service to check home/salon availability or cutoff times, AND you already have the `id` from Tool 1.\n- **Returns:** `{ name, description, price, images, notes }`.\n- **After calling:** Store the results mentally. Do NOT call this tool again for the same service.\n\n### ⛔ Strict Anti-Loop Rules\n\n1. **NEVER call a tool if you already have the answer** from a previous tool call or from conversation context.\n2. **NEVER call Tool 2 without first having the `id`** from Tool 1.\n3. **Maximum tool calls per turn: 2** (one Tool 1 + one Tool 2). If you already called them, just respond.\n4. If a tool returns an error or empty result, respond to the customer gracefully — do NOT retry.\n5. **If the `notes` field from Tool 1 already answers the customer's question** (e.g., it contains home/salon info or cutoff times), do NOT call Tool 2.\n\n---\n\n## 4. Personality & Language\n\n### Personality Traits\n- Professional, elegant, warm, and calm tone\n- Use exactly **one** emoji per message, chosen from: 🌸 💖 ✨\n- Keep messages concise and direct\n- Never repeat the phrase \"على راسي حبيبتي\"\n- Never use canned or repetitive responses\n\n### Language Rules\n- Accept all Arabic dialects, slang, and typos without correction\n- Respond in the same dialect the customer uses when possible\n- If {{ customer_name }} is available, use it naturally in conversation (e.g., \"أهلاً [name]\")\n\n---\n\n## 5. Greeting Protocol\n\n> **Rule**: Send the greeting message **exactly once** at the start of a new conversation. After that, respond naturally.\n> **Intent**: Always `conversation`.\n\n### Greeting Template\n\n```\nشكرًا لتواصلكِ مع صالون جاردينيا! ✨\nأنا جاردينيا، كيف أقدر أساعدكِ؟\n1️⃣ حجز موعد\n2️⃣ شراء منتجات\n```\n\n### Quick Response Routing\n\n| Customer Intent | Action | JSON Intent |\n|---|---|---|\n| Asks about location/address | Send {{ salon_address }} | `conversation` |\n| Asks about booking | Start the booking flow (§7) | `conversation` |\n| Asks about products | Call Tool 1 (if not already called), list products | `conversation` |\n| Asks to SEE product images | Return product IDs | `product images` |\n| Asks about offers | Share current promotions | `conversation` |\n\n\n---\n\n## 6. Conversation Rules\n\n> **Intent**: Always `conversation` unless the decision tree directs otherwise.\n\n### ✅ DO\n1. Accept all dialects, slang, and typos gracefully\n2. Never collect personal info (name, phone) until service AND date/time are confirmed\n3. Always **ask** which service — never assume\n4. Continue naturally after a booking is submitted\n\n### ❌ DO NOT\n1. Never repeat \"على راسي حبيبتي\"\n2. Never use canned/repetitive responses\n3. Never reply to a sticker or smiley that ends a conversation — silently close\n4. Never evaluate or price customer images (e.g., hair photos) — the specialist handles this\n5. Never offer a time outside operating hours (9:00 AM – 6:00 PM). If customer says 1:00 or 2:00, it's obviously PM — do NOT ask \"morning or evening?\"\n6. If the customer only wants to **confirm an existing booking** (e.g., \"حجزت معكم ع التلفون\"), do NOT restart the booking flow. Collect their name and forward to the team.\n\n### Delayed Response Rule\n\n| Scenario | Action |\n|---|---|\n| Reply within ≤ 12 hours | Continue from where it left off |\n| Reply after > 12 hours | Treat as new conversation |\n\n---\n\n## 7. Booking Flow\n\n> **Intent Logic:**\n> - While collecting info: `conversation`\n> - After ALL fields collected + summarized + customer confirmed: `create booking`\n\n### Step-by-Step Sequence\n\n1. **Service Type** — Always ask. Never assume.\n   > If customer says \"بدي أحجز\" after ANY prior discussion, always ask: \"شو الخدمة اللي حابة تحجزيها؟ 🌸\"\n\n2. **Service Location (Home vs Salon)** — After identifying the service:\n   - Check the service's `notes` or `description` (from Tool 1 or Tool 2) to see if it's available at Home, Salon, or both.\n   - If **both**: Ask \"حبيبتي بدك الخدمة بالصالون ولا بالبيت؟ 🌸\" and set `location` accordingly.\n   - If **salon only**: Set `location` to \"Salon\", inform the customer and proceed.\n   - If **home only**: Set `location` to \"Home\", inform the customer and proceed.\n\n3. **Preferred Day & Date** — If only time is mentioned, ask for the day.\n\n4. **Preferred Time** — Validate against cutoff times from service details.\n\n5. **Full Name**\n\n6. **Phone Number** — Then ask: \"نفس رقم الواتس؟\"\n\n7. **Area/Location** — Required ONLY for home services.\n\n### Step A: Summary & Confirmation (Intent: `conversation`)\n\n> ⛔ When ALL fields are collected, do NOT use `create booking` yet. Summarize and ask for confirmation.\n\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي، خليني أتأكد من التفاصيل 🌸\\n\\nالخدمة: [...]\\nالمكان: [الصالون / البيت]\\nالتاريخ: [...]\\nالوقت: [...]\\nالاسم: [...]\\nالرقم: [...]\\n[المنطقة: ... (للمنزلية فقط)]\\n\\nهل المعلومات صحيحة وبدك أثبت الحجز؟\"\n}\n```\n\n### Step B: Customer Confirms (Intent: `create booking`)\n\n> ⛔ ONLY after explicit confirmation (\"تمام\", \"أي\", \"أكيد\", \"ماشي\", \"yes\").\n\n```json\n{\n  \"intent\": \"create booking\",\n  \"response\": \"تم تثبيت حجزكِ ✅\\nالخدمة: [...]\\nالمكان: [...]\\nالتاريخ: [...]\\nالوقت: [...]\\nالاسم: [...]\\nالرقم: [...]\\nشكرًا لتواصلكِ 💇🏻‍♀️ تحبي تضيفي خدمة تانية؟ ✨\",\n  \"bookingDetails\": {\n    \"service\": \"...\",\n    \"date\": \"YYYY-MM-DD\",\n    \"time\": \"HH:MM AM/PM\",\n    \"name\": \"...\",\n    \"phone\": \"...\",\n    \"area\": \"...\"\n  }\n}\n```\n\n### Special Booking Rules\n\n**Date/Day Conflict:**\nIf stated day doesn't match the date: \"اليوم بختلف عن التاريخ، ممكن تأكيدهم؟ 🌸\"\n\n**Group Home Bookings:**\nCollect name + phone for every individual. Summarize all, then confirm.\n\n**Tuesday Rule:**\n- ❌ No bookings on Tuesdays by default.\n- Response: \"الثلاثاء بزبط، تختاري يوم تاني؟ الحجوزات فيه بتنسيق مسبق 🌸\"\n- If insists: collect (name + phone + time), respond: \"بنقل طلبك للفريق وبيتواصلوا معك 💖\" — Intent stays `conversation`.\n\n---\n\n## 8. Services & Pricing\n\n> **All prices come from the tools.** You have NO hardcoded prices.\n\n1. **Never** volunteer prices unprompted — only share when asked.\n2. If customer asks vaguely \"كم الأسعار؟\": Respond \"لأي خدمة؟ 🌸\"\n3. Always state the price is a **starting price**: \"السعر النهائي يتأكد مع الأخصائية\"\n4. **Cutoff Times**: If the service details mention \"آخر موعد\" and the customer's requested time exceeds it: \"حبيبتي هذا الوقت بعد آخر موعد للخدمة، بقدر أرتّب لك أقرب وقت مناسب إلك 🌸\"\n\n### Categorization\n- **Salon Services**: Haircuts, Hair Dye, Protein, Nails, etc.\n- **Retail Products**: Shampoo, Serum, etc.\n- **Fees**: Transportation (home services) vs Delivery (products) — never confuse them.\n\n---\n\n## 9. Product Images\n\n### Product Images (Intent: `product images`)\nTrigger: \"وريني صور المنتجات\" / \"بدي أشوف المنتجات\" / \"عندكم صور؟\"\n→ Call Tool 1 (if not called yet) to get product IDs, then respond:\n```json\n{\n  \"intent\": \"product images\",\n  \"response\": \"أكيد حبيبتي! هلأ بوريكِ صور المنتجات المتوفرة عنا 💖\",\n  \"productIds\": [\"id-from-tool-1\"]\n}\n```\n\n---\n\n## 10. Adding Services to Existing Booking\n\n| Scenario | Response | Intent |\n|---|---|---|\n| Available as home add-on | \"بضيف لك (...) مع نفس الموعد 🌸 السعر من (...) ويتأكد يوم الموعد\" | `conversation` |\n| Salon-only | \"هاي الخدمة بالصالون فقط، فيكِ تعمليها بموعد ثاني 💖\" | `conversation` |\n\n---\n\n## 11. Image Handling\n\n> ⛔🔺 **Critical Safety Rule — No Exceptions**\n\nIf the customer sends any image (especially hair photos):\n- ❌ Do NOT quote a price\n- ❌ Do NOT evaluate or assess the image\n- ✅ Respond that the specialist will handle the assessment\n- → **Intent: `conversation`**\n\n---\n\n## 12. Few-Shot Examples\n\n**Example 1 — Greeting**\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"شكرًا لتواصلكِ مع صالون جاردينيا! ✨\\nأنا جاردينيا، كيف أقدر أساعدكِ؟\\n1️⃣ حجز موعد\\n2️⃣ شراء منتجات\"\n}\n```\n\n**Example 2 — Asking to See Products**\n```json\n{\n  \"intent\": \"product images\",\n  \"response\": \"أكيد حبيبتي! هلأ بوريكِ صور المنتجات المتوفرة عنا 💖\",\n  \"productIds\": [\"product-uuid-from-tool\"]\n}\n```\n\n**Example 3 — Asking for Prices (Tool 1 already called)**\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"سعر البروتين بيبدأ من [price from tool] 🌸\\nالسعر النهائي يتأكد مع الأخصائية 💖\"\n}\n```\n\n**Example 4 — Summary before confirmation**\n```json\n{\n  \"intent\": \"conversation\",\n  \"response\": \"تمام حبيبتي، خليني أتأكد من التفاصيل 🌸\\n\\nالخدمة: بروتين\\nالمكان: الصالون\\nالتاريخ: الخميس 2026-01-15\\nالوقت: 10:00\\nالاسم: رنا\\nالرقم: 0791234567\\n\\nهل المعلومات صحيحة وبدك أثبت الحجز؟\"\n}\n```\n\n**Example 5 — Customer confirms**\n```json\n{\n  \"intent\": \"create booking\",\n  \"response\": \"تم تثبيت حجزكِ ✅\\nالخدمة: بروتين\\nالمكان: الصالون\\nالتاريخ: الخميس\\nالوقت: 10:00\\nالاسم: رنا\\nالرقم: 0791234567\\nشكرًا لتواصلكِ 💇🏻‍♀️ تحبي تضيفي خدمة تانية؟ ✨\",\n  \"bookingDetails\": {\n    \"service\": \"بروتين\",\n    \"location\": \"Salon\",\n    \"date\": \"2026-01-15\",\n    \"time\": \"10:00 AM\",\n    \"name\": \"رنا\",\n    \"phone\": \"0791234567\",\n    \"area\": \"\"\n  }\n}\n```\n\n---\n\n**CRITICAL NOTES:**\n- NEVER ASSUME OR MENTION PRODUCTS OR SERVICES OR INFORMATION YOU DON'T HAVE.\n- NEVER call a tool more than once for the same data.\n- If a tool fails, respond gracefully — do NOT retry in a loop.\n"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        1872,
-        -304
+        7424,
+        912
       ],
-      "id": "1441677c-10c5-4bcd-ba95-7c2618d35464",
+      "id": "a8de5f48-a947-4b50-b769-fc263eec8f73",
       "name": "AI Agent1"
     },
     {
@@ -2054,22 +1864,22 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        4528,
-        -368
+        9888,
+        848
       ],
-      "id": "b99aa6f7-8df1-4710-9258-ad9555dcc6de",
+      "id": "4f50ab02-b1d0-4586-a3b0-9bb8567d108b",
       "name": "Update a row",
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://evo.ai4eg.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "url": "=https://evo.hillhousevilla.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2087,10 +1897,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3712,
-        -576
+        9072,
+        640
       ],
-      "id": "e6af3289-fe8b-4f19-9e56-cba91abcf560",
+      "id": "b172897f-9084-479e-aece-b87fb253747b",
       "name": "send txt"
     },
     {
@@ -2128,23 +1938,23 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        4064,
-        -576
+        9424,
+        640
       ],
-      "id": "2cb8d131-2a47-40e5-bebb-2fb60a1d67b5",
+      "id": "1b9a7be4-350c-45f2-ae4a-04c6315f31b7",
       "name": "Supabase27",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://evo.ai4eg.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "url": "=https://evo.hillhousevilla.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2162,11 +1972,12 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3760,
-        48
+        9120,
+        1264
       ],
-      "id": "b2d26aa4-d9dd-4ab4-9972-5c3efb9c4ba3",
-      "name": "send txt1"
+      "id": "95a676aa-5108-4558-9e95-98080952df9c",
+      "name": "send txt1",
+      "disabled": true
     },
     {
       "parameters": {
@@ -2203,23 +2014,24 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        4032,
-        48
+        9392,
+        1264
       ],
-      "id": "ef8d8732-4282-43f4-9469-b35abea3681b",
+      "id": "8886614c-f391-453e-bda8-dadd4e64f0bd",
       "name": "Supabase28",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
-      }
+      },
+      "disabled": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://evo.ai4eg.com/message/sendMedia/{{ $('Edit Fields').first().json.Instance }}",
+        "url": "=https://evo.hillhousevilla.com/message/sendMedia/{{ $('Edit Fields').first().json.Instance }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2259,14 +2071,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        4896,
-        48
+        10256,
+        1264
       ],
-      "id": "fd71a0eb-b9de-4c07-b849-67d1979ce412",
+      "id": "f789a6cf-9bd3-4ee3-82b4-cfa7ac5b51e2",
       "name": "HTTP Request12",
       "retryOnFail": true,
       "waitBetweenTries": 5000,
-      "maxTries": 5
+      "maxTries": 5,
+      "disabled": true
     },
     {
       "parameters": {
@@ -2275,11 +2088,12 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4352,
-        48
+        9712,
+        1264
       ],
-      "id": "037b5d98-b7e0-43da-960d-14f539fbaaa0",
-      "name": "Code in JavaScript1"
+      "id": "bfd41a7f-cdb4-4185-9ada-5dfb9dc61abf",
+      "name": "Code in JavaScript1",
+      "disabled": true
     },
     {
       "parameters": {
@@ -2289,11 +2103,12 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        4560,
-        48
+        9920,
+        1264
       ],
-      "id": "fd8699d5-e9bf-4912-9f09-0780adf9160b",
-      "name": "Split Out"
+      "id": "33028caa-6d49-4df9-8ccf-ca475ffcacc0",
+      "name": "Split Out",
+      "disabled": true
     },
     {
       "parameters": {
@@ -2330,16 +2145,16 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        4816,
-        -368
+        10176,
+        848
       ],
-      "id": "a96112fb-9e84-467b-8355-de126bbdc453",
+      "id": "fbcd9b76-2282-4cf2-b277-f9605a9731a9",
       "name": "Supabase26",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -2378,44 +2193,45 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        5184,
-        48
+        10544,
+        1264
       ],
-      "id": "7859d25f-a9ed-488d-b387-38ae853dd277",
+      "id": "34eca9f9-1586-4fd7-9b93-3cfcac853abd",
       "name": "Supabase29",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
-      }
+      },
+      "disabled": true
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT \n  c.*,\n  (\n    SELECT json_agg(\n      json_build_object(\n        'id', p.id,\n        'name', p.name,\n        'price', p.price,\n        'images', p.images\n      )\n    )\n    FROM public.\"Product\" p\n    WHERE p.\"isAvailable\" = true\n  ) as active_products,\n  (\n    SELECT json_object_agg(key, value)\n    FROM public.\"SystemSetting\"\n  ) as system_settings\nFROM public.\"Channel\" c\nWHERE c.name = 'whats'\nLIMIT 1;\n",
+        "query": "SELECT \n  c.*,\n  (\n    SELECT json_agg(\n      json_build_object(\n        'id', p.id,\n        'name', p.name,\n        'price', p.price,\n        'images', p.images\n      )\n    )\n    FROM public.\"Product\" p\n    WHERE p.\"isAvailable\" = true\n  ) as active_products,\n  (\n    SELECT json_object_agg(key, value)\n    FROM public.\"SystemSetting\"\n  ) as system_settings\nFROM public.\"Channel\" c\nWHERE c.name = '{{ $json.Instance }}'\nLIMIT 1;",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -6496,
-        0
+        -1264,
+        1200
       ],
-      "id": "65bb773e-5951-405b-bb91-5e9fae7cff79",
+      "id": "6239c369-7873-4746-ad9e-f999543559af",
       "name": "Execute a SQL query",
       "credentials": {
         "postgres": {
-          "id": "F4KT8MX3x5S53qyf",
-          "name": "Postgres account 4"
+          "id": "dH1BI8z5tUb79WG6",
+          "name": "Postgres account"
         }
       }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://evo.ai4eg.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "url": "=https://evo.hillhousevilla.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2433,10 +2249,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3744,
-        -176
+        9104,
+        1040
       ],
-      "id": "3cd08fef-5e0e-423e-996a-72716607e9a0",
+      "id": "6637fde6-33c2-406a-b7ea-608307bce80a",
       "name": "send txt3"
     },
     {
@@ -2446,10 +2262,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        4304,
-        -176
+        9664,
+        1040
       ],
-      "id": "6143a1b8-2a73-4d4c-90be-4c2cf94f0299",
+      "id": "ece6a041-8d04-494c-9d62-0781fe9e57a5",
       "name": "Code in JavaScript3"
     },
     {
@@ -2487,23 +2303,23 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        3984,
-        -176
+        9344,
+        1040
       ],
-      "id": "2952d3c3-7c25-480d-a55b-8163e6b1f653",
+      "id": "0dc853c7-5548-4a4c-8412-ade85c8f3730",
       "name": "Supabase30",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://evo.ai4eg.com/message/sendMedia/{{ $('Edit Fields').first().json.Instance }}",
+        "url": "=https://evo.hillhousevilla.com/message/sendMedia/{{ $('Edit Fields').first().json.Instance }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -2543,10 +2359,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        4928,
-        -160
+        10288,
+        1056
       ],
-      "id": "1f915b76-0dc8-4571-9f14-94f758d10147",
+      "id": "0399dc02-a711-4c5a-ae16-8688302bf988",
       "name": "HTTP Request13",
       "retryOnFail": true,
       "waitBetweenTries": 5000,
@@ -2587,16 +2403,16 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        5296,
-        -176
+        10656,
+        1040
       ],
-      "id": "1e5e4819-d759-4cbd-8072-a641aeaac26f",
+      "id": "386381bb-5f00-4893-81d3-3386806dc796",
       "name": "Supabase31",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -2608,27 +2424,11 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        4576,
-        -160
+        9936,
+        1056
       ],
-      "id": "ee3f5a98-d921-4ea9-8467-9d8a5cc3897d",
+      "id": "b6a14806-87ba-47ff-b9f2-721d83ed4c02",
       "name": "Split Out1"
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "61125f9b-475b-49f1-b7dd-094f9584f9cc",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [
-        -9360,
-        880
-      ],
-      "id": "c4b18cbc-f7c3-4944-b697-5a64ae0e00e4",
-      "name": "Webhook1",
-      "webhookId": "61125f9b-475b-49f1-b7dd-094f9584f9cc"
     },
     {
       "parameters": {
@@ -2637,7 +2437,7 @@
           "fieldValues": [
             {
               "fieldId": "channel_id",
-              "fieldValue": "=26d9092b-269d-4318-98e5-e15d23f0dc21"
+              "fieldValue": "={{ $('Execute a SQL query1').item.json.id }}"
             },
             {
               "fieldId": "sender_type",
@@ -2661,16 +2461,16 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -5408,
-        -416
+        -48,
+        800
       ],
-      "id": "5eea04d7-562d-419f-bda9-cbcb8e5f3f62",
+      "id": "dc6d90da-46b6-4b6b-8e45-523555a35b93",
       "name": "Supabase32",
       "retryOnFail": true,
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
@@ -2682,7 +2482,11 @@
           "conditions": [
             {
               "keyName": "platform_user_id",
-              "keyValue": "={{ $json.SenderJid }}"
+              "keyValue": "={{ $json.SenderJid || $('Code in JavaScript').item.json.SenderJid }}"
+            },
+            {
+              "keyName": "channel_id",
+              "keyValue": "={{ $json.id }}"
             }
           ]
         }
@@ -2690,58 +2494,28 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -5952,
-        -416
+        -592,
+        800
       ],
-      "id": "98b77194-6d8a-4992-ae19-1f139f3d45c0",
+      "id": "206d4d6e-5b6c-4a1c-a5a5-3cc90e66607e",
       "name": "Get a row1",
       "credentials": {
         "supabaseApi": {
-          "id": "FGYOe1jcApU3WtbS",
-          "name": "Supabase account 3"
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
         }
       }
     },
     {
       "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "={{ $('Edit Fields').item.json.SenderJid }}",
-        "contextWindowLength": 10
-      },
-      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
-      "typeVersion": 1.3,
-      "position": [
-        1888,
-        272
-      ],
-      "id": "9f745125-e544-45f2-991a-c8cc606eb025",
-      "name": "Simple Memory"
-    },
-    {
-      "parameters": {
-        "sessionIdType": "customKey",
-        "sessionKey": "={{ $('Edit Fields').item.json.SenderJid }}",
-        "contextWindowLength": 20
-      },
-      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
-      "typeVersion": 1.3,
-      "position": [
-        1888,
-        -80
-      ],
-      "id": "6cb07feb-6605-4e11-ae4c-e977da02eebb",
-      "name": "Simple Memory1"
-    },
-    {
-      "parameters": {
         "toolDescription": "use this tool to get all the products with the prices ",
-        "url": "https://vftatwykyypaisjmkcql.supabase.co/rest/v1/Product",
+        "url": "https://xehnjefzyvbtaybjszzm.supabase.co/rest/v1/Product",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             {
               "name": "select",
-              "value": "id,name,price,images"
+              "value": "id,name,price,notes"
             },
             {
               "name": "isAvailable",
@@ -2754,11 +2528,11 @@
           "parameters": [
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdGF0d3lreXlwYWlzam1rY3FsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njk2MTMyNCwiZXhwIjoyMDkyNTM3MzI0fQ.A-KRW4TPIvgBJwKa1hwOWO1ki8vN7g-r3Cj291zpjsk"
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlaG5qZWZ6eXZidGF5YmpzenptIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzA1MzYxMSwiZXhwIjoyMDkyNjI5NjExfQ.oLo938393r-Ql2lmsWY-tZzEv4oR2kH4wv_TtgvYCQU"
             },
             {
               "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmdGF0d3lreXlwYWlzam1rY3FsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njk2MTMyNCwiZXhwIjoyMDkyNTM3MzI0fQ.A-KRW4TPIvgBJwKa1hwOWO1ki8vN7g-r3Cj291zpjsk"
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlaG5qZWZ6eXZidGF5YmpzenptIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzA1MzYxMSwiZXhwIjoyMDkyNjI5NjExfQ.oLo938393r-Ql2lmsWY-tZzEv4oR2kH4wv_TtgvYCQU"
             }
           ]
         },
@@ -2767,234 +2541,310 @@
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.3,
       "position": [
-        2080,
-        -128
+        7408,
+        1120
       ],
-      "id": "2e36ac90-5930-4f4e-9f2a-64c1680d3bef",
+      "id": "4a75e775-ad77-4a93-8ba6-62a2e0ee90ac",
       "name": "get all products and services1"
     },
     {
       "parameters": {
-        "model": "gemma4:31b-cloud",
+        "operation": "executeQuery",
+        "query": "SELECT \n  c.*,\n  (\n    SELECT json_agg(\n      json_build_object(\n        'id', p.id,\n        'name', p.name,\n        'price', p.price,\n        'images', p.images\n      )\n    )\n    FROM public.\"Product\" p\n    WHERE p.\"isAvailable\" = true\n  ) as active_products,\n  (\n    SELECT json_object_agg(key, value)\n    FROM public.\"SystemSetting\"\n  ) as system_settings\nFROM public.\"Channel\" c\nWHERE c.name = '{{ $('Webhook').item.json.body.instance || $('Webhook').item.json.body.channel.name }}'\nLIMIT 1;",
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1792,
+        672
+      ],
+      "id": "0fc99572-b307-45a5-ac5e-1519a8f17ac3",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "dH1BI8z5tUb79WG6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50d4a87a-cc92-4afd-abbc-c7f6f702890c",
+              "name": "message",
+              "value": "=حجز جديد\nنوع الخدمه:{{ $('Code').item.json.bookingDetails.service }}|\nالمكان : {{ $('Code').item.json.bookingDetails.location }}\nالتاريخ:{{ $('Code').item.json.bookingDetails.date }} {{ $('Code').item.json.bookingDetails.time }}\nالاسم:{{ $('Code').item.json.bookingDetails.name }}\nرقم الموبايل:{{ $('Code').item.json.bookingDetails.phone }}\nالعنوان:{{ $('Code').item.json.bookingDetails.area }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        10400,
+        848
+      ],
+      "id": "69e74361-6d12-4582-b116-1605a2732bd6",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e39658b1-4960-4611-b0f4-33e94ac07810",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2928,
+        1168
+      ],
+      "id": "24e79372-dae5-438c-b5cb-307fc994af6d",
+      "name": "Webhook",
+      "webhookId": "e39658b1-4960-4611-b0f4-33e94ac07810"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4928,
+        720
+      ],
+      "id": "1706a883-1575-450d-bc23-9d1aecf82838",
+      "name": "Wait",
+      "webhookId": "147e1a90-39a5-440e-ab1a-2df41f786f83"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        1744,
-        -80
+        7264,
+        1232
       ],
-      "id": "9a27922a-961d-4fe4-bf6b-f26138fad69f",
-      "name": "Ollama Chat Model",
+      "id": "4d455ea1-2057-4c50-89a7-ba527563da40",
+      "name": "Google Gemini Chat Model1",
       "credentials": {
-        "ollamaApi": {
-          "id": "onxMheT2Sfe0xQpG",
-          "name": "Ollama account"
+        "googlePalmApi": {
+          "id": "Shh4GKlv0Le9SIYA",
+          "name": "Google Gemini(PaLM) Api account"
         }
       }
+    },
+    {
+      "parameters": {
+        "model": "x-ai/grok-4.1-fast",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        7200,
+        1136
+      ],
+      "id": "7a8ad91e-e323-4c53-8348-66ad08e3185a",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "JtmAWiYGjaSMVTYf",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://evo.hillhousevilla.com/message/sendText/{{ $('Webhook').item.json.body.instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=apikey",
+              "value": "={{ $('Edit Fields').item.json.Key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"number\": \"{{ $('Execute a SQL query').item.json.system_settings.order_notification_whatsapp }}@s.whatsapp.net\",\n    \"text\": \"{{ JSON.stringify($json.message).slice(1, -1) }}\",\n    \"delay\":2000\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        10672,
+        864
+      ],
+      "id": "97a7dda6-8639-446e-b37a-2e6d597113e8",
+      "name": "send txt2"
+    },
+    {
+      "parameters": {
+        "toolDescription": "use this tool to get a specific product details by its ID. The input should be the product UUID.",
+        "url": "https://xehnjefzyvbtaybjszzm.supabase.co/rest/v1/Product",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "name,description,price,images,notes"
+            },
+            {
+              "name": "id",
+              "value": "=eq.{{ $fromAI('product_id', 'The UUID of the product to retrieve') }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlaG5qZWZ6eXZidGF5YmpzenptIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzA1MzYxMSwiZXhwIjoyMDkyNjI5NjExfQ.oLo938393r-Ql2lmsWY-tZzEv4oR2kH4wv_TtgvYCQU"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhlaG5qZWZ6eXZidGF5YmpzenptIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzA1MzYxMSwiZXhwIjoyMDkyNjI5NjExfQ.oLo938393r-Ql2lmsWY-tZzEv4oR2kH4wv_TtgvYCQU"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.pgrst.object+json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        7584,
+        1120
+      ],
+      "id": "aa8e1471-7c4d-4418-b1d0-0252008e5f4f",
+      "name": "get product details by id1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Edit Fields').item.json.SenderJid }}",
+        "tableName": "saloon2",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        7072,
+        1136
+      ],
+      "id": "4e3906cb-977c-434c-b13e-8a8a125b7b8c",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "dH1BI8z5tUb79WG6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Set your desired wait time in seconds here\nconst waitTimeSeconds = $('Execute a SQL query').first().json.variables.delay; \n\nreturn new Promise((resolve) => {\n    setTimeout(() => {\n        resolve($input.all()); // $input.all() is the modern n8n way to pass items through\n    }, waitTimeSeconds * 1000); \n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4944,
+        896
+      ],
+      "id": "cb5f3e6e-a824-48dc-a27a-037627c70bfe",
+      "name": "Wait1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c0bf3914-7b62-459b-93aa-4117e52ada61",
+              "leftValue": "={{ $('Execute a SQL query').first().json.isActive }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4000,
+        976
+      ],
+      "id": "f02ba0c5-3ff2-4390-af0b-30b60c8906ca",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "queue",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "sender_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Edit Fields').item.json.SenderJid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4368,
+        1264
+      ],
+      "id": "0266a0fb-f8d9-4fc6-8401-8508c7fac57d",
+      "name": "Supabase34",
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "supabaseApi": {
+          "id": "gRUDtlyheaGPjedv",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4624,
+        1264
+      ],
+      "id": "7298ac38-dc96-4f2b-907d-00a6c852655d",
+      "name": "No Operation, do nothing2"
     }
   ],
-  "pinData": {
-    "Webhook": [
-      {
-        "json": {
-          "headers": {
-            "host": "n8n.asra3.com",
-            "x-real-ip": "172.70.246.201",
-            "x-forwarded-for": "152.53.146.113, 172.70.246.201",
-            "x-forwarded-proto": "https",
-            "connection": "Upgrade",
-            "content-length": "1421",
-            "accept": "application/json, text/plain, */*",
-            "accept-encoding": "gzip, br",
-            "user-agent": "axios/1.12.2",
-            "cf-ray": "9f14f8bd59d7bb9b-FRA",
-            "content-type": "application/json",
-            "cdn-loop": "cloudflare; loops=1",
-            "cf-connecting-ip": "152.53.146.113",
-            "cf-ipcountry": "DE",
-            "cf-visitor": "{\"scheme\":\"https\"}"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "event": "messages.upsert",
-            "instance": "saloon",
-            "data": {
-              "key": {
-                "remoteJid": "42034995970062@lid",
-                "remoteJidAlt": "201099238811@s.whatsapp.net",
-                "fromMe": false,
-                "id": "ACD39D25C2394AD01E24A4D574519E92",
-                "participant": "",
-                "addressingMode": "lid"
-              },
-              "pushName": null,
-              "status": "DELIVERY_ACK",
-              "message": {
-                "conversation": "شكرا",
-                "messageContextInfo": {
-                  "deviceListMetadata": {
-                    "senderKeyIndexes": [],
-                    "recipientKeyIndexes": [],
-                    "senderKeyHash": {
-                      "0": 225,
-                      "1": 130,
-                      "2": 2,
-                      "3": 134,
-                      "4": 132,
-                      "5": 62,
-                      "6": 158,
-                      "7": 76,
-                      "8": 187,
-                      "9": 227
-                    },
-                    "senderTimestamp": {
-                      "low": 1776043000,
-                      "high": 0,
-                      "unsigned": true
-                    },
-                    "recipientKeyHash": {
-                      "0": 175,
-                      "1": 204,
-                      "2": 171,
-                      "3": 0,
-                      "4": 91,
-                      "5": 38,
-                      "6": 167,
-                      "7": 190,
-                      "8": 85,
-                      "9": 53
-                    },
-                    "recipientTimestamp": {
-                      "low": 1776957684,
-                      "high": 0,
-                      "unsigned": true
-                    }
-                  },
-                  "deviceListMetadataVersion": 2,
-                  "messageSecret": {
-                    "0": 194,
-                    "1": 237,
-                    "2": 72,
-                    "3": 113,
-                    "4": 241,
-                    "5": 247,
-                    "6": 185,
-                    "7": 204,
-                    "8": 60,
-                    "9": 93,
-                    "10": 162,
-                    "11": 200,
-                    "12": 209,
-                    "13": 105,
-                    "14": 228,
-                    "15": 107,
-                    "16": 163,
-                    "17": 17,
-                    "18": 55,
-                    "19": 238,
-                    "20": 235,
-                    "21": 200,
-                    "22": 197,
-                    "23": 219,
-                    "24": 187,
-                    "25": 78,
-                    "26": 239,
-                    "27": 85,
-                    "28": 80,
-                    "29": 57,
-                    "30": 162,
-                    "31": 145
-                  }
-                }
-              },
-              "messageType": "conversation",
-              "messageTimestamp": 1777032278,
-              "instanceId": "6839d2f7-72b0-438e-a2cd-130b963b22a7",
-              "source": "android"
-            },
-            "destination": "https://n8n.asra3.com/webhook/2151fdf8-565f-474b-9301-b2fe484e1e8b",
-            "date_time": "2026-04-24T09:04:38.540Z",
-            "sender": "201201104696@s.whatsapp.net",
-            "server_url": "http://152.53.146.113:8080",
-            "apikey": "FA3AD00DB9E4-4576-9193-BDB8D326A6E7"
-          },
-          "webhookUrl": "https://n8n.asra3.com/webhook/2151fdf8-565f-474b-9301-b2fe484e1e8b",
-          "executionMode": "production"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Webhook1": [
-      {
-        "json": {
-          "headers": {
-            "host": "n8n.asra3.com",
-            "x-real-ip": "172.68.234.122",
-            "x-forwarded-for": "41.235.207.74, 172.68.234.122",
-            "x-forwarded-proto": "https",
-            "connection": "Upgrade",
-            "content-length": "897",
-            "accept": "*/*",
-            "accept-language": "*",
-            "accept-encoding": "gzip, br",
-            "user-agent": "node",
-            "cf-ray": "9f15246b9dcde181-MRS",
-            "sec-fetch-mode": "cors",
-            "content-type": "application/json",
-            "cdn-loop": "cloudflare; loops=1",
-            "cf-connecting-ip": "41.235.207.74",
-            "cf-ipcountry": "EG",
-            "cf-visitor": "{\"scheme\":\"https\"}"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "event": "message.sent",
-            "message": {
-              "id": "597a5d66-2a5e-4797-9321-3f1219d76491",
-              "channel_id": null,
-              "client_id": "3bf716b5-26c1-4bf4-98ce-909abcc2a9b5",
-              "message_platform_id": null,
-              "sender_type": "agent",
-              "content_type": "text",
-              "text_content": "hi",
-              "attachment_url": "",
-              "is_read_by_agent": false,
-              "sent_at": "2026-04-24T12:34:27.278192+00:00",
-              "platform_timestamp": "2026-04-24T12:34:28.081+00:00"
-            },
-            "client": {
-              "id": "3bf716b5-26c1-4bf4-98ce-909abcc2a9b5",
-              "name": "ساره",
-              "phone": "201099238811",
-              "address": "وسط المدينة",
-              "notes": "",
-              "createdAt": "2026-04-23T18:37:51.663725+00:00",
-              "updatedAt": "2026-04-24T12:34:27.278192+00:00",
-              "channel_id": "26d9092b-269d-4318-98e5-e15d23f0dc21",
-              "platform": "whatsapp",
-              "platform_user_id": "201099238811@s.whatsapp.net",
-              "avatar_url": null,
-              "last_interaction_at": "2026-04-24T12:34:27.278192+00:00",
-              "last_message_preview": "hi",
-              "unread_count": 0,
-              "status": "active",
-              "ai_enabled": true
-            }
-          },
-          "webhookUrl": "https://n8n.asra3.com/webhook/61125f9b-475b-49f1-b7dd-094f9584f9cc",
-          "executionMode": "production"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
   "connections": {
     "If1": {
       "main": [
@@ -3091,7 +2941,7 @@
       "main": [
         [
           {
-            "node": "Wait",
+            "node": "Supabase25",
             "type": "main",
             "index": 0
           }
@@ -3112,11 +2962,11 @@
         ]
       ]
     },
-    "Wait": {
+    "Create a row3": {
       "main": [
         [
           {
-            "node": "Supabase25",
+            "node": "Edit Fields15",
             "type": "main",
             "index": 0
           }
@@ -3128,6 +2978,28 @@
         [
           {
             "node": "Create a row3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
             "type": "main",
             "index": 0
           }
@@ -3221,27 +3093,11 @@
       "main": [
         [
           {
-            "node": "Switch4",
+            "node": "Execute a SQL query1",
             "type": "main",
             "index": 0
           }
         ]
-      ]
-    },
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "If1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get a row": {
-      "main": [
-        []
       ]
     },
     "Aggregate4": {
@@ -3249,17 +3105,6 @@
         [
           {
             "node": "Code2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait8": {
-      "main": [
-        [
-          {
-            "node": "Supabase5",
             "type": "main",
             "index": 0
           }
@@ -3292,7 +3137,7 @@
       "main": [
         [
           {
-            "node": "If2",
+            "node": "If",
             "type": "main",
             "index": 0
           }
@@ -3343,7 +3188,7 @@
       "main": [
         [
           {
-            "node": "Wait8",
+            "node": "Wait1",
             "type": "main",
             "index": 0
           }
@@ -3368,17 +3213,6 @@
         ]
       ]
     },
-    "Create a row3": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields15",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Supabase1": {
       "main": [
         [
@@ -3390,11 +3224,11 @@
         ]
       ]
     },
-    "Basic LLM Chain": {
+    "Create a row12": {
       "main": [
         [
           {
-            "node": "Supabase1",
+            "node": "Edit Fields15",
             "type": "main",
             "index": 0
           }
@@ -3405,7 +3239,7 @@
       "main": [
         [
           {
-            "node": "Basic LLM Chain",
+            "node": "Supabase1",
             "type": "main",
             "index": 0
           }
@@ -3423,88 +3257,11 @@
         ]
       ]
     },
-    "HTTP Request5": {
-      "main": [
-        [
-          {
-            "node": "Convert to File1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Convert to File1": {
-      "main": [
-        [
-          {
-            "node": "Read/Write Files from Disk1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Read/Write Files from Disk1": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields5",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Google Gemini Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create a row12": {
+    "Create a row10": {
       "main": [
         [
           {
             "node": "Edit Fields15",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request6": {
-      "main": [
-        [
-          {
-            "node": "Convert to File",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Convert to File": {
-      "main": [
-        [
-          {
-            "node": "Read/Write Files from Disk",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Read/Write Files from Disk": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields3",
             "type": "main",
             "index": 0
           }
@@ -3522,22 +3279,55 @@
         ]
       ]
     },
-    "Analyze audio": {
+    "HTTP Request5": {
       "main": [
         [
           {
-            "node": "Supabase",
+            "node": "Convert to File1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Create a row10": {
+    "Read/Write Files from Disk1": {
       "main": [
         [
           {
-            "node": "Edit Fields15",
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request6": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze audio": {
+      "main": [
+        [
+          {
+            "node": "Supabase",
             "type": "main",
             "index": 0
           }
@@ -3631,11 +3421,6 @@
         ]
       ]
     },
-    "get all products and services": {
-      "ai_tool": [
-        []
-      ]
-    },
     "Code in JavaScript2": {
       "main": [
         [
@@ -3647,22 +3432,22 @@
         ]
       ]
     },
-    "AI Agent1": {
+    "Create a row": {
       "main": [
         [
           {
-            "node": "Code in JavaScript2",
+            "node": "Update a row",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Create a row": {
+    "AI Agent1": {
       "main": [
         [
           {
-            "node": "Update a row",
+            "node": "Code in JavaScript2",
             "type": "main",
             "index": 0
           }
@@ -3691,6 +3476,11 @@
         ]
       ]
     },
+    "Supabase27": {
+      "main": [
+        []
+      ]
+    },
     "send txt1": {
       "main": [
         [
@@ -3707,6 +3497,17 @@
         [
           {
             "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request12": {
+      "main": [
+        [
+          {
+            "node": "Supabase29",
             "type": "main",
             "index": 0
           }
@@ -3735,11 +3536,11 @@
         ]
       ]
     },
-    "HTTP Request12": {
+    "Supabase26": {
       "main": [
         [
           {
-            "node": "Supabase29",
+            "node": "Edit Fields1",
             "type": "main",
             "index": 0
           }
@@ -3768,6 +3569,17 @@
         ]
       ]
     },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Supabase30": {
       "main": [
         [
@@ -3784,17 +3596,6 @@
         [
           {
             "node": "Supabase31",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code in JavaScript3": {
-      "main": [
-        [
-          {
-            "node": "Split Out1",
             "type": "main",
             "index": 0
           }
@@ -3823,27 +3624,6 @@
         ]
       ]
     },
-    "Simple Memory": {
-      "ai_memory": [
-        []
-      ]
-    },
-    "Simple Memory1": {
-      "ai_memory": [
-        [
-          {
-            "node": "AI Agent1",
-            "type": "ai_memory",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Webhook1": {
-      "main": [
-        []
-      ]
-    },
     "get all products and services1": {
       "ai_tool": [
         [
@@ -3855,7 +3635,50 @@
         ]
       ]
     },
-    "Ollama Chat Model": {
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Switch4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "send txt2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "OpenRouter Chat Model": {
       "ai_languageModel": [
         [
           {
@@ -3865,17 +3688,80 @@
           }
         ]
       ]
+    },
+    "get product details by id1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Supabase5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase34",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase34": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1"
+  "pinData": {
+    "Wait": [
+      {
+        "message_id": "41",
+        "uuid": "d23ee298-d4a2-44d5-81b7-bbd36cead024"
+      }
+    ]
   },
-  "versionId": "abf00001-73d7-4860-aa31-bb3bcb14984a",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "c522d6cf09b0723c95e34292cfbafc5cdf9b6368e7bfb1a7b64562f91c23ca99"
-  },
-  "id": "JmWJDeeV8lYOzp5T",
-  "tags": []
+    "instanceId": "8058b24dc6c79b677fbf7b800be0467c500e9187a000f5c5723b31b872437123"
+  }
 }
