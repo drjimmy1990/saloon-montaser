@@ -75,6 +75,7 @@ interface Product {
   availableAtHome: boolean;
   availableAtSalon: boolean;
   notes: string;
+  bookingDeadline: string;
   sortOrder: number;
 }
 
@@ -88,6 +89,7 @@ interface ProductFormData {
   availableAtHome: boolean;
   availableAtSalon: boolean;
   notes: string;
+  bookingDeadline: string;
 }
 
 interface CategoryFormData {
@@ -201,6 +203,7 @@ const emptyProductFormData: ProductFormData = {
   availableAtHome: false,
   availableAtSalon: true,
   notes: "",
+  bookingDeadline: "",
 };
 
 const emptyCategoryFormData: CategoryFormData = {
@@ -337,6 +340,7 @@ export function CatalogSection() {
       availableAtHome: product.availableAtHome ?? false,
       availableAtSalon: product.availableAtSalon ?? true,
       notes: product.notes || "",
+      bookingDeadline: product.bookingDeadline || "",
     });
     setProductDialogOpen(true);
   };
@@ -357,6 +361,7 @@ export function CatalogSection() {
       availableAtHome: formData.availableAtHome,
       availableAtSalon: formData.availableAtSalon,
       notes: formData.notes,
+      bookingDeadline: formData.bookingDeadline,
     };
 
     try {
@@ -1015,6 +1020,26 @@ export function CatalogSection() {
                 }
                 placeholder={rtl ? "ملاحظات للاستخدام الداخلي (لن تظهر للعميل)" : "Internal notes (hidden from customers)"}
                 rows={2}
+                className={cn(rtl && "text-right font-arabic")}
+                dir={rtl ? "rtl" : "ltr"}
+              />
+            </div>
+
+            {/* Booking Deadline */}
+            <div className="space-y-2">
+              <Label className={cn("block", rtl && "text-right font-arabic")} htmlFor="bookingDeadline">
+                {rtl ? "آخر موعد للحجز" : "Booking Deadline"}
+              </Label>
+              <Input
+                id="bookingDeadline"
+                value={formData.bookingDeadline}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    bookingDeadline: e.target.value,
+                  }))
+                }
+                placeholder={rtl ? "4" : "e.g. 24 hours before appointment"}
                 className={cn(rtl && "text-right font-arabic")}
                 dir={rtl ? "rtl" : "ltr"}
               />

@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
         availableAtSalon: body.availableAtSalon ?? true,
         category: body.category ?? '',
         notes: body.notes ?? '',
+        bookingDeadline: body.bookingDeadline ?? '',
         sortOrder: nextSortOrder,
       })
       .select()
